@@ -43,6 +43,28 @@ graph TB
     end
 ```
 
+## Quick Install
+
+**Want to get everything set up automatically?** Run the installation script:
+
+```bash
+./install.sh
+```
+
+This script will:
+- Check and install all prerequisites (Docker, Python, Node.js, Ollama)
+- Install system dependencies
+- Set up Bench and Frappe Framework
+- Install all KoraFlow modules
+- Build Docker images
+- Run the ingestion pipeline
+- Build the FAISS vector index
+- Start all services
+
+**Just run the script and everything will be set up!** The script takes 30-60 minutes depending on your internet connection.
+
+For manual installation, see the [Quick Start](#quick-start) section below.
+
 ## Prerequisites
 
 - **Docker**: Installed and running
