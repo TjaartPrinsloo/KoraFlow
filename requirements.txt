@@ -1,0 +1,6 @@
+# KoraFlow Root Requirements
+# Individual services have their own requirements.txt files
+
+# Common dependencies
+pyyaml>=6.0
+

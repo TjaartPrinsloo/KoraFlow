@@ -37,8 +37,9 @@ yarn-error.log*
 .docker/
 
 # Frappe/Bench
+# Note: apps/ is allowed here for KoraFlow source apps
+# Bench-installed apps should be in bench/apps/ which is outside this repo
 sites/
-apps/
 logs/
 config/
 .env

@@ -1,0 +1,80 @@
+# KoraFlow LLM Configuration
+
+# GitHub Repositories to Ingest
+repositories:
+  - name: frappe
+    url: https://github.com/frappe/frappe.git
+    branch: version-14
+  - name: erpnext
+    url: https://github.com/frappe/erpnext.git
+    branch: version-14
+  - name: hr
+    url: https://github.com/frappe/hr.git
+    branch: develop
+  - name: healthcare
+    url: https://github.com/frappe/healthcare.git
+    branch: version-14
+  - name: crm
+    url: https://github.com/frappe/crm.git
+    branch: develop
+  - name: helpdesk
+    url: https://github.com/frappe/helpdesk.git
+    branch: develop
+  - name: insights
+    url: https://github.com/frappe/insights.git
+    branch: develop
+
+# Documentation URLs
+documentation:
+  - url: https://docs.frappe.io
+    base_path: /docs
+  - url: https://frappe.io/products
+    base_path: /products
+
+# Ollama Configuration
+ollama:
+  host: host.docker.internal
+  port: 11434
+  model: llama3
+  embedding_model: nomic-embed-text
+  temperature: 0.7
+  max_tokens: 2048
+
+# Chunking Configuration
+chunking:
+  chunk_size: 1000
+  chunk_overlap: 200
+  min_chunk_size: 100
+
+# Retrieval Configuration
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.0  # Lower threshold to allow more results
+  max_context_length: 4000
+
+# FAISS Configuration
+faiss:
+  index_type: "L2"
+  dimension: 768  # Default for nomic-embed-text, adjust based on embedding model
+  nprobe: 10
+  index_path: "/app/indices/koraflow_index"
+
+# Embedding Configuration
+embeddings:
+  model: all-MiniLM-L6-v2  # Using sentence-transformers model (lightweight, fast)
+  batch_size: 32
+  device: cpu  # Use 'cuda' if GPU available
+
+# Paths
+paths:
+  repos: "/app/repos"
+  docs: "/app/docs"
+  chunks: "/app/chunks"
+  indices: "/app/indices"
+
+# Metadata Files
+metadata:
+  repos: "repo_metadata.json"
+  chunks: "chunk_metadata.json"
+  index: "index_metadata.json"
+

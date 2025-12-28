@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  ingestion:
+    build:
+      context: ./ingestion
+      dockerfile: Dockerfile
+    volumes:
+      - ./repos:/app/repos
+      - ./docs:/app/docs
+      - ./chunks:/app/chunks
+      - ./config.yml:/app/config.yml:ro
+      - ./repo_metadata.json:/app/repo_metadata.json:rw
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - koraflow-network
+
+  vector_store:
+    build:
+      context: ./vector_store
+      dockerfile: Dockerfile
+    volumes:
+      - ./vector_store/indices:/app/indices
+      - ./chunks:/app/chunks:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./index_metadata.json:/app/index_metadata.json
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - koraflow-network
+    depends_on:
+      - ingestion
+
+  llm_service:
+    build:
+      context: ./llm_service
+      dockerfile: Dockerfile
+    volumes:
+      - ./vector_store/indices:/app/indices:ro
+      - ./config.yml:/app/config.yml:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OLLAMA_HOST=${OLLAMA_HOST:-host.docker.internal}
+      - OLLAMA_PORT=${OLLAMA_PORT:-11434}
+    ports:
+      - "8000:8000"
+    networks:
+      - koraflow-network
+    depends_on:
+      - vector_store
+
+networks:
+  koraflow-network:
+    driver: bridge
+
+volumes:
+  faiss_indices:
+  chunks_data:
+

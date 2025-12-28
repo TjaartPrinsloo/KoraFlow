@@ -1,0 +1,47 @@
+/**
+ * KoraFlow Core Styles
+ * Custom styling for KoraFlow platform
+ */
+
+/* KoraFlow branding colors */
+:root {
+	--koraflow-primary: #2e7d32;
+	--koraflow-secondary: #66bb6a;
+	--koraflow-accent: #1b5e20;
+}
+
+/* Module management styles */
+.koraflow-module-card {
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+	padding: 16px;
+	margin-bottom: 16px;
+	background: white;
+}
+
+.koraflow-module-card.enabled {
+	border-left: 4px solid var(--koraflow-primary);
+}
+
+.koraflow-module-card.disabled {
+	border-left: 4px solid #ccc;
+	opacity: 0.7;
+}
+
+.koraflow-module-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.koraflow-module-title {
+	font-size: 18px;
+	font-weight: 600;
+	color: #333;
+}
+
+.koraflow-module-toggle {
+	cursor: pointer;
+}
+
