@@ -1,0 +1,38 @@
+{
+  "doctype": "DocType",
+  "name": "{{ doctype_name }}",
+  "module": "{{ module_name }}",
+  "custom": 1,
+  "fields": [
+    {% for field in fields %}
+    {
+      "fieldname": "{{ field.fieldname }}",
+      "fieldtype": "{{ field.fieldtype }}",
+      "label": "{{ field.label }}",
+      {% if field.reqd %} "reqd": 1,{% endif %}
+      {% if field.options %} "options": "{{ field.options }}",{% endif %}
+      {% if field.default %} "default": "{{ field.default }}",{% endif %}
+      {% if field.read_only %} "read_only": 1,{% endif %}
+      {% if field.in_list_view %} "in_list_view": 1,{% endif %}
+      {% if field.in_standard_filter %} "in_standard_filter": 1,{% endif %}
+      "idx": {{ loop.index }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "submit": 1,
+      "cancel": 1,
+      "amend": 1
+    }
+  ],
+  "title_field": "{{ title_field }}",
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}
+

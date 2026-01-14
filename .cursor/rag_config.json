@@ -1,0 +1,8 @@
+{
+  "rag_endpoint": "http://localhost:8001/query",
+  "auto_detect_ollama": true,
+  "ollama_check_url": "http://localhost:11434/api/tags",
+  "fallback_to_direct_ollama": true,
+  "enabled": true
+}
+

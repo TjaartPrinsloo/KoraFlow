@@ -1,0 +1,26 @@
+# In hooks.py
+doc_events = {
+    "{{ doctype }}": {
+        "{{ event }}": "{{ app_name }}.utils.{{ function_name }}"
+    }
+}
+
+# In utils.py
+import frappe
+from frappe import _
+
+def {{ function_name }}(doc, method):
+    """
+    {{ description }}
+    
+    Args:
+        doc: {{ doctype }} document
+        method: Event method name
+    """
+    {% if automation_logic %}
+    # {{ automation_logic }}
+    {% endif %}
+    
+    # Your automation code here
+    pass
+

@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "prescription",
+  "patient",
+  "stock_entry",
+  "batch",
+  "pharmacist",
+  "section_patient",
+  "patient_acknowledgment",
+  "counseling_record",
+  "storage_instructions",
+  "section_adverse",
+  "adverse_event_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "prescription",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Prescription",
+   "options": "GLP-1 Patient Prescription",
+   "reqd": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient",
+   "options": "Patient",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "label": "Batch",
+   "options": "Batch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "pharmacist",
+   "fieldtype": "Link",
+   "label": "Pharmacist",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_patient",
+   "fieldtype": "Section Break",
+   "label": "Patient Handover"
+  },
+  {
+   "fieldname": "patient_acknowledgment",
+   "fieldtype": "Check",
+   "label": "Patient Acknowledgment"
+  },
+  {
+   "fieldname": "counseling_record",
+   "fieldtype": "Text Editor",
+   "label": "Counseling Record"
+  },
+  {
+   "fieldname": "storage_instructions",
+   "fieldtype": "Small Text",
+   "label": "Storage Instructions"
+  },
+  {
+   "fieldname": "section_adverse",
+   "fieldtype": "Section Break",
+   "label": "Adverse Events"
+  },
+  {
+   "fieldname": "adverse_event_notes",
+   "fieldtype": "Text Editor",
+   "label": "Adverse Event Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2025-01-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "GLP-1 Dispense Confirmation",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Pharmacist",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Compliance Officer"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

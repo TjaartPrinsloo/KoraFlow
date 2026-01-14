@@ -1,15 +1,11 @@
 
-
-web: bench serve  --port 8000
-
+web: ./bench_wrapper.sh serve --port 8080
 
 socketio: /Users/tjaartprinsloo/.nvm/versions/node/v18.20.8/bin/node apps/frappe/socketio.js
 
+# watch: ./bench_wrapper.sh watch  # Disabled - optional development feature, causing startup issues
 
-watch: bench watch
+schedule: ./bench_wrapper.sh schedule
 
-
-schedule: bench schedule
-
-worker: OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES NO_PROXY=* bench worker 1>> logs/worker.log 2>> logs/worker.error.log
+worker: OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES NO_PROXY=* ./bench_wrapper.sh worker 1>> logs/worker.log 2>> logs/worker.error.log
 

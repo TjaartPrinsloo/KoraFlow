@@ -1,0 +1,639 @@
+{
+ "accept_payment": 0,
+ "allow_comments": 0,
+ "allow_delete": 0,
+ "allow_edit": 1,
+ "allow_incomplete": 0,
+ "allow_multiple": 0,
+ "allow_print": 0,
+ "amount": 0.0,
+ "amount_based_on_field": 0,
+ "button_label": "Submit Intake Form",
+ "creation": "2025-01-23 00:00:00.000000",
+ "currency": "USD",
+ "doc_type": "GLP-1 Intake Submission",
+ "docstatus": 0,
+ "doctype": "Web Form",
+ "idx": 0,
+ "introduction_text": "<h3>Clinical Intake & Metabolic Screening Protocol</h3><p>Subject: GLP-1/GIP Agonist Eligibility and Safety Assessment</p><p>Please complete all sections of this intake form. This information is required to assess your eligibility for GLP-1/GIP agonist medications.</p>",
+ "is_standard": 0,
+ "login_required": 1,
+ "max_attachment_size": 0,
+ "modified": "2025-01-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "glp1-intake",
+ "owner": "Administrator",
+ "payment_button_label": "Buy Now",
+ "published": 1,
+ "route": "glp1-intake",
+ "route_to_success_link": 0,
+ "show_attachments": 0,
+ "show_in_grid": 0,
+ "show_sidebar": 1,
+ "sidebar_items": [],
+ "success_message": "Thank you for completing the intake form. Your patient profile has been created.",
+ "success_url": "/me",
+ "title": "GLP-1 Intake Form",
+ "web_form_fields": [
+  {
+   "fieldname": "section_1_personal_vitals",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 1: Personal Identification and Vital Metrics",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "First Name",
+   "read_only": 0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Last Name",
+   "read_only": 0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "dob",
+   "fieldtype": "Date",
+   "hidden": 0,
+   "label": "Date of Birth",
+   "read_only": 0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "sex",
+   "fieldtype": "Link",
+   "hidden": 0,
+   "label": "Gender",
+   "options": "Gender",
+   "read_only": 0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Email",
+   "options": "Email",
+   "read_only": 0,
+   "reqd": 1,
+   "default": ""
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Mobile",
+   "options": "Phone",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_intake_vitals",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Vital Metrics",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_height_unit",
+   "fieldtype": "Select",
+   "hidden": 0,
+   "label": "Height Unit",
+   "options": "\nFeet/Inches\nCentimeters",
+   "read_only": 0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "intake_height_feet",
+   "fieldtype": "Int",
+   "hidden": 0,
+   "label": "Height (Feet)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_height_inches",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "Height (Inches)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_height_cm",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "Height (cm)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "column_break_intake_1",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_weight_unit",
+   "fieldtype": "Select",
+   "hidden": 0,
+   "label": "Weight Unit",
+   "options": "\nPounds\nKilograms",
+   "read_only": 0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "intake_weight_pounds",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "Weight (lbs)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_weight_kg",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "Weight (kg)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_bp_systolic",
+   "fieldtype": "Int",
+   "hidden": 0,
+   "label": "Blood Pressure (Systolic) mmHg",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_bp_diastolic",
+   "fieldtype": "Int",
+   "hidden": 0,
+   "label": "Blood Pressure (Diastolic) mmHg",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_heart_rate",
+   "fieldtype": "Int",
+   "hidden": 0,
+   "label": "Resting Heart Rate (BPM)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_2_high_risk",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 2: High-Risk Clinical Screening and Oncology Vigilance",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_mtc",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Medullary Thyroid Carcinoma (MTC)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_men2",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Multiple Endocrine Neoplasia Type 2 (MEN 2)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_pancreatitis",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Pancreatitis",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_gallstones",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Gallstones",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_gallbladder_removal",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Gallbladder Removal",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "column_break_gastro",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_gastroparesis",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Diagnosed with Gastroparesis",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_frequent_nausea",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Frequent Nausea",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_early_fullness",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Early Fullness",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_3_organ_systems",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 3: Organ Systems Review and Laboratory Integration",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_kidney_disease",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Kidney Disease",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_egfr",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "eGFR (mL/min/1.73m²)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_creatinine",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "Creatinine",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "column_break_renal",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_diabetic_retinopathy",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Diabetic Retinopathy (if Diabetic)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_last_eye_exam",
+   "fieldtype": "Date",
+   "hidden": 0,
+   "label": "Date of Last Dilated Eye Exam",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_heart_attack",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Heart Attack",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_stroke",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Stroke",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_heart_failure",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "History of Heart Failure",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_4_medication",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 4: Current Medication and Substance Review",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_taking_insulin",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Taking Insulin",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_taking_sulfonylureas",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Taking Sulfonylureas (e.g., Glipizide, Glyburide)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_insulin_dose",
+   "fieldtype": "Small Text",
+   "hidden": 0,
+   "label": "Current Dose (if Yes)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "column_break_meds",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_narrow_window_drugs",
+   "fieldtype": "Small Text",
+   "hidden": 0,
+   "label": "Narrow Therapeutic Window Drugs (e.g., Warfarin, Digoxin, Lithium, Levothyroxine)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_5_glp1_history",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 5: Longitudinal GLP-1 History and Titration Dynamics",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_med_ozempic",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Ozempic",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_med_wegovy",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Wegovy",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_med_mounjaro",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Mounjaro",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_med_zepbound",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Zepbound",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_highest_dose",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Highest Dose Reached",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_last_dose_date",
+   "fieldtype": "Date",
+   "hidden": 0,
+   "label": "Date of Last Dose",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "column_break_side_effects",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_se_nausea",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Nausea",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_se_vomiting",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Vomiting",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_se_diarrhea",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Diarrhea",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_se_constipation",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Constipation",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_se_reflux",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Reflux",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_se_severity",
+   "fieldtype": "Int",
+   "hidden": 0,
+   "label": "Severity (1-10)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_6_psychological",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 6: Psychological Readiness (SCOFF Questionnaire)",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_scoff_1",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Do you make yourself Sick because you feel uncomfortably full?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_scoff_2",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Do you worry you have lost Control over how much you eat?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_scoff_3",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Have you recently lost more than One stone (14 lbs) in 3 months?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_scoff_4",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Do you believe yourself to be Fat when others say you are thin?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_scoff_5",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Would you say that Food dominates your life?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "column_break_motivation",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_motivation_health",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Motivation: Health",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_motivation_appearance",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Motivation: Appearance",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_motivation_mobility",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Motivation: Mobility",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_goal_weight",
+   "fieldtype": "Float",
+   "hidden": 0,
+   "label": "Goal Weight",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_7_reproductive",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Section 7: Reproductive Health and Teratogenicity Safety",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_pregnant",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Are you pregnant?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_breastfeeding",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Are you breastfeeding?",
+   "read_only": 0,
+   "reqd": 0
+  },
+  {
+   "fieldname": "intake_planning_conceive",
+   "fieldtype": "Check",
+   "hidden": 0,
+   "label": "Planning to conceive?",
+   "read_only": 0,
+   "reqd": 0
+  }
+ ]
+}

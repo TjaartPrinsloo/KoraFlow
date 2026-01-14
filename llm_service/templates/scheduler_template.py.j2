@@ -1,0 +1,42 @@
+# In hooks.py
+scheduler_events = {
+    {% if frequency == 'all' %}
+    "all": [
+        "{{ app_name }}.utils.{{ function_name }}"
+    ],
+    {% elif frequency == 'daily' %}
+    "daily": [
+        "{{ app_name }}.utils.{{ function_name }}"
+    ],
+    {% elif frequency == 'hourly' %}
+    "hourly": [
+        "{{ app_name }}.utils.{{ function_name }}"
+    ],
+    {% elif frequency == 'weekly' %}
+    "weekly": [
+        "{{ app_name }}.utils.{{ function_name }}"
+    ],
+    {% elif frequency == 'monthly' %}
+    "monthly": [
+        "{{ app_name }}.utils.{{ function_name }}"
+    ],
+    {% endif %}
+}
+
+# In utils.py
+import frappe
+from frappe import _
+
+
+def {{ function_name }}():
+    """
+    Scheduled task: {{ description }}
+    Runs {{ frequency }}
+    """
+    # Your scheduled task logic here
+    {% if task_logic %}
+    # {{ task_logic }}
+    {% endif %}
+    
+    frappe.logger().info(f"Scheduled task {{ function_name }} executed")
+

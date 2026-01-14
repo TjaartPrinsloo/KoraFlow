@@ -1,0 +1,149 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Patient Dashboard") }}{% endblock %}
+
+{% block page_content %}
+<div class="patient-dashboard">
+	<div class="page-header">
+		<h1>{{ _("Welcome, {0}").format(patient.patient_name or patient.first_name) }}</h1>
+		<p class="text-muted">{{ _("Patient Dashboard") }}</p>
+	</div>
+
+	<div class="row">
+		<!-- Patient Information Card -->
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-header">
+					<h5>{{ _("Patient Information") }}</h5>
+				</div>
+				<div class="card-body">
+					<dl class="row">
+						<dt class="col-sm-4">{{ _("Name") }}:</dt>
+						<dd class="col-sm-8">{{ patient.patient_name or (patient.first_name + " " + (patient.last_name or "")) }}</dd>
+						
+						<dt class="col-sm-4">{{ _("Email") }}:</dt>
+						<dd class="col-sm-8">{{ patient.email or "-" }}</dd>
+						
+						<dt class="col-sm-4">{{ _("Mobile") }}:</dt>
+						<dd class="col-sm-8">{{ patient.mobile or "-" }}</dd>
+						
+						{% if patient.dob %}
+						<dt class="col-sm-4">{{ _("Date of Birth") }}:</dt>
+						<dd class="col-sm-8">{{ frappe.format_date(patient.dob) }}</dd>
+						{% endif %}
+						
+						<dt class="col-sm-4">{{ _("Status") }}:</dt>
+						<dd class="col-sm-8">
+							<span class="badge badge-{{ 'success' if patient.status == 'Active' else 'secondary' }}">
+								{{ patient.status }}
+							</span>
+						</dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+
+		<!-- Intake Form Status Card -->
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-header">
+					<h5>{{ _("GLP-1 Intake Form") }}</h5>
+				</div>
+				<div class="card-body">
+					{% if intake_status.status == "completed" %}
+						<div class="alert alert-success">
+							<i class="fa fa-check-circle"></i>
+							<strong>{{ _("Completed") }}</strong>
+							{% if intake_status.completion_date %}
+								<br><small>{{ _("Completed on: {0}").format(frappe.format_datetime(intake_status.completion_date)) }}</small>
+							{% endif %}
+						</div>
+						<a href="/glp1-intake" class="btn btn-sm btn-outline-primary">
+							{{ _("View Form") }}
+						</a>
+					{% elif intake_status.status == "draft" %}
+						<div class="alert alert-warning">
+							<i class="fa fa-clock-o"></i>
+							<strong>{{ _("Draft") }}</strong>
+							<p class="mb-0">{{ _("Your intake form is saved as draft. Please complete it.") }}</p>
+						</div>
+						<a href="/glp1-intake" class="btn btn-sm btn-primary">
+							{{ _("Continue Form") }}
+						</a>
+					{% else %}
+						<div class="alert alert-info">
+							<i class="fa fa-info-circle"></i>
+							<strong>{{ _("Not Started") }}</strong>
+							<p class="mb-0">{{ _("Please complete your GLP-1 intake form to continue.") }}</p>
+						</div>
+						<a href="/glp1-intake" class="btn btn-sm btn-primary">
+							{{ _("Start Intake Form") }}
+						</a>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Recent Intake Forms -->
+	{% if intake_forms %}
+	<div class="row mt-4">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-header">
+					<h5>{{ _("Recent Intake Forms") }}</h5>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-sm">
+							<thead>
+								<tr>
+									<th>{{ _("Form ID") }}</th>
+									<th>{{ _("Status") }}</th>
+									<th>{{ _("Created") }}</th>
+									<th>{{ _("Completed") }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for form in intake_forms %}
+								<tr>
+									<td>{{ form.name }}</td>
+									<td>
+										<span class="badge badge-{{ 'success' if form.form_status == 'Completed' else 'warning' }}">
+											{{ form.form_status }}
+										</span>
+									</td>
+									<td>{{ frappe.format_datetime(form.creation) }}</td>
+									<td>{{ frappe.format_datetime(form.completion_date) if form.completion_date else "-" }}</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	{% endif %}
+</div>
+
+<style>
+.patient-dashboard {
+	padding: 20px;
+}
+.card {
+	margin-bottom: 20px;
+	border: 1px solid #dee2e6;
+	border-radius: 0.25rem;
+}
+.card-header {
+	background-color: #f8f9fa;
+	border-bottom: 1px solid #dee2e6;
+	padding: 0.75rem 1.25rem;
+}
+.card-body {
+	padding: 1.25rem;
+}
+</style>
+{% endblock %}
+

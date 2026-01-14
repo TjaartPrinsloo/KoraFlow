@@ -1,0 +1,106 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container my-5">
+	<div class="row justify-content-center">
+		<div class="col-md-8">
+			<div class="card shadow-sm">
+				<div class="card-body text-center p-5">
+					<div class="mb-4">
+						<i class="fa fa-clock-o fa-4x text-primary mb-3"></i>
+						<h1 class="display-4 mb-3">Thank You!</h1>
+						<h2 class="text-muted mb-4">Your Intake Form Has Been Submitted</h2>
+					</div>
+					
+					<div class="alert alert-info mb-4">
+						<p class="mb-2"><strong>Your profile is currently under review by our medical team.</strong></p>
+						<p class="mb-0">We will carefully review your intake form and medical information to ensure you're a good candidate for GLP-1/GIP agonist therapy.</p>
+					</div>
+					
+					<div class="mb-4">
+						<h4>What Happens Next?</h4>
+						<div class="text-left mt-3">
+							<div class="d-flex mb-3">
+								<div class="flex-shrink-0">
+									<span class="badge bg-primary rounded-circle p-2 me-3">1</span>
+								</div>
+								<div>
+									<strong>Medical Review</strong>
+									<p class="text-muted mb-0">Our medical staff will review your intake form and medical history.</p>
+								</div>
+							</div>
+							<div class="d-flex mb-3">
+								<div class="flex-shrink-0">
+									<span class="badge bg-primary rounded-circle p-2 me-3">2</span>
+								</div>
+								<div>
+									<strong>Profile Activation</strong>
+									<p class="text-muted mb-0">Once approved, your profile will be activated by our medical team.</p>
+								</div>
+							</div>
+							<div class="d-flex">
+								<div class="flex-shrink-0">
+									<span class="badge bg-primary rounded-circle p-2 me-3">3</span>
+								</div>
+								<div>
+									<strong>Email Notification</strong>
+									<p class="text-muted mb-0">You'll receive an email with your login credentials and temporary password.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					{% if video_url %}
+					<div class="mb-4">
+						<h4>Learn More About Our Program</h4>
+						<div class="embed-responsive embed-responsive-16by9">
+							<iframe class="embed-responsive-item" src="{{ video_url }}" allowfullscreen></iframe>
+						</div>
+					</div>
+					{% endif %}
+					
+					<div class="mt-5">
+						<p class="text-muted">
+							<small>If you have any questions, please contact our support team.</small>
+						</p>
+						<a href="/" class="btn btn-primary">Return to Home</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+.badge.bg-primary {
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+}
+.embed-responsive {
+	position: relative;
+	display: block;
+	width: 100%;
+	padding: 0;
+	overflow: hidden;
+}
+.embed-responsive::before {
+	content: "";
+	display: block;
+	padding-top: 56.25%;
+}
+.embed-responsive .embed-responsive-item {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+</style>
+{% endblock %}
+

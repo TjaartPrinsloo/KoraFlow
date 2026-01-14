@@ -1,0 +1,36 @@
+"""
+Patch: {{ patch_name }}
+{{ description }}
+"""
+
+import frappe
+
+
+def execute():
+    """
+    {{ description }}
+    """
+    {% if action == 'add_field' %}
+    # Add custom field
+    if not frappe.db.exists("Custom Field", {"dt": "{{ doctype }}", "fieldname": "{{ fieldname }}"}):
+        field = frappe.get_doc({
+            "doctype": "Custom Field",
+            "dt": "{{ doctype }}",
+            "fieldname": "{{ fieldname }}",
+            "fieldtype": "{{ fieldtype }}",
+            "label": "{{ label }}",
+            {% if options %} "options": "{{ options }}",{% endif %}
+            {% if default %} "default": "{{ default }}",{% endif %}
+        })
+        field.insert(ignore_permissions=True)
+        frappe.db.commit()
+    {% elif action == 'migrate' %}
+    # Migration logic
+    # TODO: Implement migration
+    pass
+    {% elif action == 'update' %}
+    # Update existing records
+    # TODO: Implement update logic
+    pass
+    {% endif %}
+

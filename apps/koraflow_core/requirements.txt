@@ -1,0 +1,2 @@
+xero-python>=3.0.0
+python-dateutil

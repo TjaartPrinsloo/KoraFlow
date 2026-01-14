@@ -1,0 +1,36 @@
+"""
+Background Job: {{ job_name }}
+{{ description }}
+"""
+
+import frappe
+from frappe import _
+
+
+def {{ function_name }}({% if params %}{{ params|join(', ') }}{% endif %}):
+    """
+    Background job function
+    
+    Args:
+        {% for param in params %}
+        {{ param }}: {{ param_description }}
+        {% endfor %}
+    """
+    # Your background job logic here
+    {% if job_logic %}
+    # {{ job_logic }}
+    {% endif %}
+    
+    frappe.logger().info(f"Background job {{ function_name }} completed")
+
+
+# To enqueue this job:
+# frappe.enqueue(
+#     "{{ app_name }}.utils.{{ function_name }}",
+#     queue="default",
+#     timeout=300,
+#     {% if params %}
+#     {{ params|join(',\n    ') }}
+#     {% endif %}
+# )
+

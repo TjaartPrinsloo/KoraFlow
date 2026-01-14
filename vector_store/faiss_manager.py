@@ -17,9 +17,32 @@ from tqdm import tqdm
 
 def load_config():
     """Load configuration from config.yml"""
-    config_path = Path("/app/config.yml")
+    # Try local path first, then Docker path
+    local_config = Path(__file__).parent.parent / "config.yml"
+    docker_config = Path("/app/config.yml")
+    
+    if local_config.exists():
+        config_path = local_config
+    elif docker_config.exists():
+        config_path = docker_config
+    else:
+        raise FileNotFoundError(f"config.yml not found")
+    
     with open(config_path, 'r') as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+        
+        # Adjust paths for local execution
+        project_chunks = Path(__file__).parent.parent / "chunks"
+        if not Path(config['paths']['chunks']).exists() and project_chunks.exists():
+            config['paths']['chunks'] = str(project_chunks)
+        
+        # Adjust index path for local execution
+        if '/app/' in config['faiss']['index_path']:
+            project_indices = Path(__file__).parent.parent / "vector_store" / "indices"
+            project_indices.mkdir(parents=True, exist_ok=True)
+            config['faiss']['index_path'] = str(project_indices / "koraflow_index")
+        
+        return config
 
 
 class FAISSManager:

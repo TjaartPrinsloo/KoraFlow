@@ -1,0 +1,114 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("My Referrals") }}{% endblock %}
+
+{% block page_content %}
+<div class="container my-5">
+	<div class="row">
+		<div class="col-12">
+			<h1 class="mb-4">{{ _("My Referrals") }}</h1>
+			
+			<!-- Summary Cards -->
+			<div class="row mb-4">
+				<div class="col-md-3 mb-3">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title text-muted">{{ _("Total Referrals") }}</h5>
+							<h2 class="mb-0">{{ summary.total_referrals }}</h2>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3 mb-3">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title text-muted">{{ _("In Progress") }}</h5>
+							<h2 class="mb-0">{{ summary.in_progress }}</h2>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3 mb-3">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title text-muted">{{ _("Converted") }}</h5>
+							<h2 class="mb-0">{{ summary.converted }}</h2>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3 mb-3">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title text-muted">{{ _("Invoiced") }}</h5>
+							<h2 class="mb-0">{{ summary.invoiced }}</h2>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Referrals Table -->
+			<div class="card">
+				<div class="card-header">
+					<h5 class="mb-0">{{ _("Referrals") }}</h5>
+				</div>
+				<div class="card-body">
+					{% if referrals %}
+					<div class="table-responsive">
+						<table class="table table-hover">
+							<thead>
+								<tr>
+									<th>{{ _("Name") }}</th>
+									<th>{{ _("Status") }}</th>
+									<th>{{ _("Referral Date") }}</th>
+									<th>{{ _("Last Updated") }}</th>
+									<th>{{ _("Actions") }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for referral in referrals %}
+								<tr>
+									<td>{{ referral.full_name or (referral.first_name + " " + referral.last_name) }}</td>
+									<td>
+										<span class="badge badge-{{ get_status_badge_color(referral.referral_status) }}">
+											{{ referral.referral_status }}
+										</span>
+									</td>
+									<td>{{ frappe.format(referral.referral_date, {"fieldtype": "Date"}) }}</td>
+									<td>{{ frappe.format(referral.last_updated, {"fieldtype": "Datetime"}) }}</td>
+									<td>
+										<a href="/my-referrals/{{ referral.name }}" class="btn btn-sm btn-primary">
+											{{ _("View") }}
+										</a>
+										<a href="/my-referrals/{{ referral.name }}#queries" class="btn btn-sm btn-outline-secondary ml-1">
+											{{ _("Ask Question") }}
+										</a>
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% else %}
+					<p class="text-muted text-center py-5">{{ _("No referrals found") }}</p>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+.card {
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-body h2 {
+	color: #333;
+	font-weight: 600;
+}
+.badge {
+	padding: 4px 8px;
+	border-radius: 4px;
+}
+</style>
+{% endblock %}
+

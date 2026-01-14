@@ -8,6 +8,7 @@ import os
 import json
 import yaml
 import faiss
+import requests
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -16,11 +17,28 @@ import uvicorn
 
 from ollama_client import OllamaClient
 from faiss_manager import FAISSManager
+from task_router import TaskRouter
+from cache import QueryCache
+from handlers import (
+    DocTypeHandler, HookHandler, PatchHandler, PermissionHandler,
+    ReportHandler, APIHandler, JobHandler, SchedulerHandler, UXHandler,
+    CodeReviewHandler
+)
 
 
 def load_config():
     """Load configuration from config.yml"""
-    config_path = Path("/app/config.yml")
+    # Try local path first, then Docker path
+    local_config = Path(__file__).parent.parent / "config.yml"
+    docker_config = Path("/app/config.yml")
+    
+    if local_config.exists():
+        config_path = local_config
+    elif docker_config.exists():
+        config_path = docker_config
+    else:
+        raise FileNotFoundError(f"config.yml not found at {local_config} or {docker_config}")
+    
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
 
@@ -50,8 +68,66 @@ class RAGResponse(BaseModel):
 class RAGPipeline:
     def __init__(self, config):
         self.config = config
+        
+        # Auto-detect Ollama connection
+        self._auto_detect_ollama()
+        
         self.ollama = OllamaClient(config)
         self.faiss_manager = FAISSManager(config)
+        
+        # Initialize task router
+        self.task_router = TaskRouter()
+        
+        # Initialize cache if enabled
+        cache_enabled = config.get('task_routing', {}).get('cache_enabled', True)
+        self.cache = QueryCache() if cache_enabled else None
+        
+        # Initialize handlers
+        self.handlers = {
+            'doctype': DocTypeHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'hook': HookHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'patch': PatchHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'permission': PermissionHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'report': ReportHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'api': APIHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'job': JobHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'scheduler': SchedulerHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'ux': UXHandler(config, self.faiss_manager, self.ollama, self.cache),
+            'code_review': CodeReviewHandler(config, self.faiss_manager, self.ollama, self.cache),
+        }
+    
+    def _auto_detect_ollama(self):
+        """Auto-detect and configure Ollama connection"""
+        import requests
+        
+        # Try localhost first
+        ollama_hosts = ['localhost', '127.0.0.1']
+        ollama_port = self.config.get('ollama', {}).get('port', 11434)
+        
+        # Check if host is already set to docker internal
+        current_host = self.config.get('ollama', {}).get('host', 'localhost')
+        if current_host == 'host.docker.internal':
+            # Try localhost when running locally
+            for host in ollama_hosts:
+                try:
+                    url = f"http://{host}:{ollama_port}/api/tags"
+                    response = requests.get(url, timeout=2)
+                    if response.status_code == 200:
+                        self.config['ollama']['host'] = host
+                        return
+                except:
+                    continue
+        else:
+            # Check if current host is accessible
+            try:
+                url = f"http://{current_host}:{ollama_port}/api/tags"
+                response = requests.get(url, timeout=2)
+                if response.status_code == 200:
+                    return
+            except:
+                pass
+        
+        # If we get here, Ollama might not be running - keep original config
     
     def format_citation(self, chunk_metadata):
         """Format citation according to specification"""
@@ -129,7 +205,49 @@ Please provide a helpful answer based on the context above. Include citations in
         return prompt, citations
     
     def generate_answer(self, query, top_k=None):
-        """Generate answer using RAG pipeline"""
+        """Generate answer using RAG pipeline with task routing"""
+        # Check if task routing is enabled
+        routing_enabled = self.config.get('task_routing', {}).get('enabled', True)
+        
+        if routing_enabled:
+            # Detect task type
+            task_type, params = self.task_router.detect_task(query)
+            
+            # Use task-specific handler if available
+            if task_type != 'generic' and task_type in self.handlers:
+                try:
+                    handler_response = self.handlers[task_type].generate(query, params)
+                    
+                    # Convert handler response to RAGResponse format
+                    formatted_citations = [
+                        Citation(
+                            source=cit,
+                            repo=cit.split('/')[0] if '/' in cit else 'unknown',
+                            path=cit.split('/', 1)[1] if '/' in cit else cit,
+                            commit='unknown',
+                            line_ranges={},
+                            score=0.8,
+                            content_preview=''
+                        )
+                        for cit in handler_response.get('citations', [])
+                    ]
+                    
+                    return RAGResponse(
+                        answer=handler_response['answer'],
+                        citations=formatted_citations,
+                        retrieved_chunks=handler_response.get('retrieved_chunks', 0)
+                    )
+                except Exception as e:
+                    # Fallback to generic if handler fails
+                    import traceback
+                    print(f"Handler {task_type} failed, falling back to generic: {e}")
+                    traceback.print_exc()
+        
+        # Fallback to generic RAG
+        return self._generate_generic_answer(query, top_k)
+    
+    def _generate_generic_answer(self, query, top_k=None):
+        """Generate answer using generic RAG pipeline"""
         # Step 1: Retrieve context
         retrieved_chunks = self.retrieve_context(query, top_k)
         
@@ -179,10 +297,14 @@ pipeline = RAGPipeline(config)
 async def health_check():
     """Health check endpoint"""
     ollama_available = pipeline.ollama.is_available()
+    cache_stats = pipeline.cache.stats() if pipeline.cache else None
+    
     return {
         "status": "healthy" if ollama_available else "degraded",
         "ollama_available": ollama_available,
-        "index_size": pipeline.faiss_manager.index.ntotal
+        "index_size": pipeline.faiss_manager.index.ntotal,
+        "task_routing_enabled": pipeline.config.get('task_routing', {}).get('enabled', True),
+        "cache_stats": cache_stats
     }
 
 
@@ -199,5 +321,7 @@ async def query(request: QueryRequest):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    port = int(os.getenv("RAG_PORT", "8001"))  # Use 8001 to avoid conflict with Frappe
+    uvicorn.run(app, host="0.0.0.0", port=port)
 

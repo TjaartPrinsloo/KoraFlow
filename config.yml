@@ -30,6 +30,8 @@ documentation:
     base_path: /docs
   - url: https://frappe.io/products
     base_path: /products
+  - url: https://thecourierguy.co.za/api-docs
+    base_path: /api-docs
 
 # Ollama Configuration
 ollama:
@@ -77,4 +79,62 @@ metadata:
   repos: "repo_metadata.json"
   chunks: "chunk_metadata.json"
   index: "index_metadata.json"
+
+# Task Routing Configuration
+task_routing:
+  enabled: true
+  cache_enabled: true
+  cache_ttl: 3600  # 1 hour default TTL
+  
+  tasks:
+    doctype:
+      top_k: 2
+      max_context_chars: 300
+      use_template: true
+      temperature: 0.3
+    hook:
+      top_k: 1
+      max_context_chars: 200
+      use_template: true
+      temperature: 0.3
+    patch:
+      top_k: 2
+      max_context_chars: 400
+      use_template: true
+      temperature: 0.3
+    permission:
+      top_k: 1
+      max_context_chars: 200
+      use_template: true
+      temperature: 0.3
+    report:
+      top_k: 2
+      max_context_chars: 400
+      use_template: true
+      temperature: 0.3
+    api:
+      top_k: 2
+      max_context_chars: 300
+      use_template: true
+      temperature: 0.3
+    job:
+      top_k: 2
+      max_context_chars: 300
+      use_template: true
+      temperature: 0.3
+    scheduler:
+      top_k: 1
+      max_context_chars: 200
+      use_template: true
+      temperature: 0.3
+    ux:
+      top_k: 1
+      max_context_chars: 200
+      use_template: true
+      temperature: 0.3
+    code_review:
+      top_k: 5
+      max_context_chars: 1000
+      use_template: false
+      temperature: 0.3
 

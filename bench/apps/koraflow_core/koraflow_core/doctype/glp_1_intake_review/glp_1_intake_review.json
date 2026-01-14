@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "intake_submission",
+  "reviewer",
+  "status",
+  "section_review",
+  "review_notes",
+  "section_suggestion",
+  "suggested_prescription"
+ ],
+ "fields": [
+  {
+   "fieldname": "intake_submission",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Intake Submission",
+   "options": "GLP-1 Intake Submission",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "reviewer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Reviewer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nPending\nApproved\nDeclined\nNeeds More Info",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_review",
+   "fieldtype": "Section Break",
+   "label": "Review Details"
+  },
+  {
+   "fieldname": "review_notes",
+   "fieldtype": "Text Editor",
+   "label": "Review Notes"
+  },
+  {
+   "fieldname": "section_suggestion",
+   "fieldtype": "Section Break",
+   "label": "Suggested Prescription"
+  },
+  {
+   "fieldname": "suggested_prescription",
+   "fieldtype": "Link",
+   "label": "Suggested Prescription (Draft Only)",
+   "options": "GLP-1 Patient Prescription",
+   "depends_on": "eval:doc.status == 'Approved'"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2025-01-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "GLP-1 Intake Review",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Nurse",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Healthcare Practitioner"
+  },
+  {
+   "read": 1,
+   "role": "Compliance Officer"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

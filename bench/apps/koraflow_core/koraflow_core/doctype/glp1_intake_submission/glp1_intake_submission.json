@@ -1,0 +1,551 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2025-01-23 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_1_personal_vitals",
+  "first_name",
+  "last_name",
+  "dob",
+  "sex",
+  "column_break_1",
+  "email",
+  "mobile",
+  "id_number__passport_number",
+  "section_intake_vitals",
+  "intake_height_unit",
+  "intake_height_feet",
+  "intake_height_inches",
+  "intake_height_cm",
+  "column_break_intake_1",
+  "intake_weight_unit",
+  "intake_weight_pounds",
+  "intake_weight_kg",
+  "intake_bp_systolic",
+  "intake_bp_diastolic",
+  "intake_heart_rate",
+  "section_2_high_risk",
+  "intake_mtc",
+  "intake_men2",
+  "intake_pancreatitis",
+  "intake_gallstones",
+  "intake_gallbladder_removal",
+  "column_break_gastro",
+  "intake_gastroparesis",
+  "intake_frequent_nausea",
+  "intake_early_fullness",
+  "section_3_organ_systems",
+  "intake_kidney_disease",
+  "intake_egfr",
+  "intake_creatinine",
+  "column_break_renal",
+  "intake_diabetic_retinopathy",
+  "intake_last_eye_exam",
+  "intake_heart_attack",
+  "intake_stroke",
+  "intake_heart_failure",
+  "section_4_medication",
+  "intake_taking_insulin",
+  "intake_taking_sulfonylureas",
+  "intake_insulin_dose",
+  "column_break_meds",
+  "intake_narrow_window_drugs",
+  "section_5_glp1_history",
+  "intake_med_ozempic",
+  "intake_med_wegovy",
+  "intake_med_mounjaro",
+  "intake_med_zepbound",
+  "intake_highest_dose",
+  "intake_last_dose_date",
+  "column_break_side_effects",
+  "intake_se_nausea",
+  "intake_se_vomiting",
+  "intake_se_diarrhea",
+  "intake_se_constipation",
+  "intake_se_reflux",
+  "intake_se_severity",
+  "section_6_psychological",
+  "intake_scoff_1",
+  "intake_scoff_2",
+  "intake_scoff_3",
+  "intake_scoff_4",
+  "intake_scoff_5",
+  "column_break_motivation",
+  "intake_motivation_health",
+  "intake_motivation_appearance",
+  "intake_motivation_mobility",
+  "intake_goal_weight",
+  "section_7_reproductive",
+  "intake_pregnant",
+  "intake_breastfeeding",
+  "intake_planning_conceive"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_1_personal_vitals",
+   "fieldtype": "Section Break",
+   "label": "Section 1: Personal Identification and Vital Metrics"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dob",
+   "fieldtype": "Date",
+   "label": "Date of Birth",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sex",
+   "fieldtype": "Link",
+   "label": "Gender",
+   "options": "Gender",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile",
+   "options": "Phone",
+   "unique": 1
+  },
+  {
+   "fieldname": "id_number__passport_number",
+   "fieldtype": "Data",
+   "label": "ID Number / Passport Number",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "section_intake_vitals",
+   "fieldtype": "Section Break",
+   "label": "Vital Metrics"
+  },
+  {
+   "fieldname": "intake_height_unit",
+   "fieldtype": "Select",
+   "label": "Height Unit",
+   "options": "\nFeet/Inches\nCentimeters",
+   "reqd": 1
+  },
+  {
+   "fieldname": "intake_height_feet",
+   "fieldtype": "Int",
+   "label": "Height (Feet)"
+  },
+  {
+   "fieldname": "intake_height_inches",
+   "fieldtype": "Float",
+   "label": "Height (Inches)"
+  },
+  {
+   "fieldname": "intake_height_cm",
+   "fieldtype": "Float",
+   "label": "Height (cm)"
+  },
+  {
+   "fieldname": "column_break_intake_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "intake_weight_unit",
+   "fieldtype": "Select",
+   "label": "Weight Unit",
+   "options": "\nPounds\nKilograms",
+   "reqd": 1
+  },
+  {
+   "fieldname": "intake_weight_pounds",
+   "fieldtype": "Float",
+   "label": "Weight (lbs)"
+  },
+  {
+   "fieldname": "intake_weight_kg",
+   "fieldtype": "Float",
+   "label": "Weight (kg)"
+  },
+  {
+   "fieldname": "intake_bp_systolic",
+   "fieldtype": "Int",
+   "label": "Blood Pressure (Systolic) mmHg"
+  },
+  {
+   "fieldname": "intake_bp_diastolic",
+   "fieldtype": "Int",
+   "label": "Blood Pressure (Diastolic) mmHg"
+  },
+  {
+   "fieldname": "intake_heart_rate",
+   "fieldtype": "Int",
+   "label": "Resting Heart Rate (BPM)"
+  },
+  {
+   "fieldname": "section_2_high_risk",
+   "fieldtype": "Section Break",
+   "label": "Section 2: High-Risk Clinical Screening and Oncology Vigilance"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_mtc",
+   "fieldtype": "Check",
+   "label": "History of Medullary Thyroid Carcinoma (MTC)"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_men2",
+   "fieldtype": "Check",
+   "label": "History of Multiple Endocrine Neoplasia Type 2 (MEN 2)"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_pancreatitis",
+   "fieldtype": "Check",
+   "label": "History of Pancreatitis"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_gallstones",
+   "fieldtype": "Check",
+   "label": "History of Gallstones"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_gallbladder_removal",
+   "fieldtype": "Check",
+   "label": "Gallbladder Removal"
+  },
+  {
+   "fieldname": "column_break_gastro",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_gastroparesis",
+   "fieldtype": "Check",
+   "label": "Diagnosed with Gastroparesis"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_frequent_nausea",
+   "fieldtype": "Check",
+   "label": "Frequent Nausea"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_early_fullness",
+   "fieldtype": "Check",
+   "label": "Early Fullness"
+  },
+  {
+   "fieldname": "section_3_organ_systems",
+   "fieldtype": "Section Break",
+   "label": "Section 3: Organ Systems Review and Laboratory Integration"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_kidney_disease",
+   "fieldtype": "Check",
+   "label": "History of Kidney Disease"
+  },
+  {
+   "fieldname": "intake_egfr",
+   "fieldtype": "Float",
+   "label": "eGFR (mL/min/1.73m²)"
+  },
+  {
+   "fieldname": "intake_creatinine",
+   "fieldtype": "Float",
+   "label": "Creatinine"
+  },
+  {
+   "fieldname": "column_break_renal",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_diabetic_retinopathy",
+   "fieldtype": "Check",
+   "label": "Diabetic Retinopathy (if Diabetic)"
+  },
+  {
+   "fieldname": "intake_last_eye_exam",
+   "fieldtype": "Date",
+   "label": "Date of Last Dilated Eye Exam"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_heart_attack",
+   "fieldtype": "Check",
+   "label": "History of Heart Attack"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_stroke",
+   "fieldtype": "Check",
+   "label": "History of Stroke"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_heart_failure",
+   "fieldtype": "Check",
+   "label": "History of Heart Failure"
+  },
+  {
+   "fieldname": "section_4_medication",
+   "fieldtype": "Section Break",
+   "label": "Section 4: Current Medication and Substance Review"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_taking_insulin",
+   "fieldtype": "Check",
+   "label": "Taking Insulin"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_taking_sulfonylureas",
+   "fieldtype": "Check",
+   "label": "Taking Sulfonylureas (e.g., Glipizide, Glyburide)"
+  },
+  {
+   "fieldname": "intake_insulin_dose",
+   "fieldtype": "Small Text",
+   "label": "Current Dose (if Yes)"
+  },
+  {
+   "fieldname": "column_break_meds",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "intake_narrow_window_drugs",
+   "fieldtype": "Small Text",
+   "label": "Narrow Therapeutic Window Drugs (e.g., Warfarin, Digoxin, Lithium, Levothyroxine)"
+  },
+  {
+   "fieldname": "section_5_glp1_history",
+   "fieldtype": "Section Break",
+   "label": "Section 5: Longitudinal GLP-1 History and Titration Dynamics"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_med_ozempic",
+   "fieldtype": "Check",
+   "label": "Ozempic"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_med_wegovy",
+   "fieldtype": "Check",
+   "label": "Wegovy"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_med_mounjaro",
+   "fieldtype": "Check",
+   "label": "Mounjaro"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_med_zepbound",
+   "fieldtype": "Check",
+   "label": "Zepbound"
+  },
+  {
+   "fieldname": "intake_highest_dose",
+   "fieldtype": "Data",
+   "label": "Highest Dose Reached"
+  },
+  {
+   "fieldname": "intake_last_dose_date",
+   "fieldtype": "Date",
+   "label": "Date of Last Dose"
+  },
+  {
+   "fieldname": "column_break_side_effects",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_se_nausea",
+   "fieldtype": "Check",
+   "label": "Nausea"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_se_vomiting",
+   "fieldtype": "Check",
+   "label": "Vomiting"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_se_diarrhea",
+   "fieldtype": "Check",
+   "label": "Diarrhea"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_se_constipation",
+   "fieldtype": "Check",
+   "label": "Constipation"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_se_reflux",
+   "fieldtype": "Check",
+   "label": "Reflux"
+  },
+  {
+   "fieldname": "intake_se_severity",
+   "fieldtype": "Int",
+   "label": "Severity (1-10)"
+  },
+  {
+   "fieldname": "section_6_psychological",
+   "fieldtype": "Section Break",
+   "label": "Section 6: Psychological Readiness (SCOFF Questionnaire)"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_scoff_1",
+   "fieldtype": "Check",
+   "label": "Do you make yourself Sick because you feel uncomfortably full?"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_scoff_2",
+   "fieldtype": "Check",
+   "label": "Do you worry you have lost Control over how much you eat?"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_scoff_3",
+   "fieldtype": "Check",
+   "label": "Have you recently lost more than One stone (14 lbs) in 3 months?"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_scoff_4",
+   "fieldtype": "Check",
+   "label": "Do you believe yourself to be Fat when others say you are thin?"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_scoff_5",
+   "fieldtype": "Check",
+   "label": "Would you say that Food dominates your life?"
+  },
+  {
+   "fieldname": "column_break_motivation",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_motivation_health",
+   "fieldtype": "Check",
+   "label": "Motivation: Health"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_motivation_appearance",
+   "fieldtype": "Check",
+   "label": "Motivation: Appearance"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_motivation_mobility",
+   "fieldtype": "Check",
+   "label": "Motivation: Mobility"
+  },
+  {
+   "fieldname": "intake_goal_weight",
+   "fieldtype": "Float",
+   "label": "Goal Weight"
+  },
+  {
+   "fieldname": "section_7_reproductive",
+   "fieldtype": "Section Break",
+   "label": "Section 7: Reproductive Health and Teratogenicity Safety"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_pregnant",
+   "fieldtype": "Check",
+   "label": "Are you pregnant?"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_breastfeeding",
+   "fieldtype": "Check",
+   "label": "Are you breastfeeding?"
+  },
+  {
+   "default": 0,
+   "fieldname": "intake_planning_conceive",
+   "fieldtype": "Check",
+   "label": "Planning to conceive?"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "GLP-1 Intake Submission",
+ "custom": 1,
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Patient",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
+}
+

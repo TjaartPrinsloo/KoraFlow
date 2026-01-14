@@ -1,0 +1,27 @@
+// {{ component_name }} Component
+// {{ description }}
+
+frappe.ui.form.on("{{ doctype }}", {
+    {% if event == 'refresh' %}
+    refresh: function(frm) {
+        // Add custom UI elements
+        {% if button %}
+        frm.add_custom_button(__("{{ button_label }}"), function() {
+            // Button click handler
+            {{ button_action }}
+        });
+        {% endif %}
+    },
+    {% elif event == 'onload' %}
+    onload: function(frm) {
+        // Initialize form
+        {{ init_logic }}
+    },
+    {% elif event == 'field' %}
+    {{ field_name }}: function(frm) {
+        // Field change handler
+        {{ field_logic }}
+    },
+    {% endif %}
+});
+

@@ -15,15 +15,95 @@ from tqdm import tqdm
 
 def load_config():
     """Load configuration from config.yml"""
-    config_path = Path("/app/config.yml")
+    # Try local path first, then Docker path
+    local_config = Path(__file__).parent.parent / "config.yml"
+    docker_config = Path("/app/config.yml")
+    
+    if local_config.exists():
+        config_path = local_config
+    elif docker_config.exists():
+        config_path = docker_config
+    else:
+        raise FileNotFoundError(f"config.yml not found at {local_config} or {docker_config}")
+    
     with open(config_path, 'r') as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+        
+        # Adjust paths for local execution
+        project_docs = Path(__file__).parent.parent / "docs"
+        project_chunks = Path(__file__).parent.parent / "chunks"
+        if not Path(config['paths']['docs']).exists() and project_docs.exists():
+            config['paths']['docs'] = str(project_docs)
+        if not Path(config['paths']['chunks']).exists() and project_chunks.exists():
+            config['paths']['chunks'] = str(project_chunks)
+        
+        return config
 
 
 def create_chunk_id(source, path, line_start, line_end):
     """Create unique chunk ID"""
     content = f"{source}:{path}:{line_start}:{line_end}"
     return hashlib.md5(content.encode()).hexdigest()
+
+
+def detect_task_metadata(file_path, content):
+    """
+    Detect task-specific metadata from file path and content
+    
+    Returns:
+        dict with task_type, file_pattern, keywords
+    """
+    metadata = {
+        'task_type': None,
+        'file_pattern': None,
+        'keywords': []
+    }
+    
+    path_str = str(file_path).lower()
+    content_lower = content.lower()
+    
+    # Detect task type from file path
+    if 'hooks.py' in path_str:
+        metadata['task_type'] = 'hook'
+        metadata['file_pattern'] = '**/hooks.py'
+        metadata['keywords'] = ['hook', 'doc_events', 'scheduler_events']
+    elif 'patches' in path_str and path_str.endswith('.py'):
+        metadata['task_type'] = 'patch'
+        metadata['file_pattern'] = '**/patches/**/*.py'
+        metadata['keywords'] = ['patch', 'execute', 'migrate']
+    elif 'report' in path_str and path_str.endswith('.py'):
+        metadata['task_type'] = 'report'
+        metadata['file_pattern'] = '**/report/**/*.py'
+        metadata['keywords'] = ['report', 'query', 'execute']
+    elif 'api' in path_str and path_str.endswith('.py'):
+        metadata['task_type'] = 'api'
+        metadata['file_pattern'] = '**/api/**/*.py'
+        metadata['keywords'] = ['@frappe.whitelist', 'api', 'endpoint']
+    elif path_str.endswith('.js') or path_str.endswith('.vue'):
+        metadata['task_type'] = 'ux'
+        metadata['file_pattern'] = '**/*.js'
+        metadata['keywords'] = ['frappe.ui.form', 'refresh', 'onload']
+    elif 'doctype' in path_str and path_str.endswith('.json'):
+        metadata['task_type'] = 'doctype'
+        metadata['file_pattern'] = '**/*doctype*.json'
+        metadata['keywords'] = ['doctype', 'docfield', 'field']
+    
+    # Detect from content if not detected from path
+    if not metadata['task_type']:
+        if 'has_permission' in content_lower or 'permission_query_conditions' in content_lower:
+            metadata['task_type'] = 'permission'
+            metadata['keywords'] = ['permission', 'has_permission', 'role']
+        elif 'frappe.enqueue' in content_lower or 'background' in content_lower:
+            metadata['task_type'] = 'job'
+            metadata['keywords'] = ['frappe.enqueue', 'background', 'job']
+        elif 'scheduler_events' in content_lower:
+            metadata['task_type'] = 'scheduler'
+            metadata['keywords'] = ['scheduler_events', 'daily', 'hourly']
+        elif 'doctype' in content_lower and 'field' in content_lower:
+            metadata['task_type'] = 'doctype'
+            metadata['keywords'] = ['doctype', 'field']
+    
+    return metadata
 
 
 def chunk_code_file(parsed_file, config):
@@ -52,6 +132,9 @@ def chunk_code_file(parsed_file, config):
             
             chunk_content = ''.join(lines[line_start-1:line_end])
             
+            # Detect task metadata
+            task_metadata = detect_task_metadata(file_path, chunk_content)
+            
             chunk = {
                 'chunk_id': create_chunk_id(repo, file_path, line_start, line_end),
                 'source': f"{repo}/{file_path}",
@@ -65,7 +148,8 @@ def chunk_code_file(parsed_file, config):
                 'metadata': {
                     'function_name': func['name'],
                     'docstring': func.get('docstring'),
-                    'args': func.get('args', [])
+                    'args': func.get('args', []),
+                    **task_metadata
                 },
                 'chunk_timestamp': datetime.now().isoformat()
             }
@@ -76,6 +160,9 @@ def chunk_code_file(parsed_file, config):
             line_end = cls.get('line_end', line_start + 100)
             
             chunk_content = ''.join(lines[line_start-1:line_end])
+            
+            # Detect task metadata
+            task_metadata = detect_task_metadata(file_path, chunk_content)
             
             chunk = {
                 'chunk_id': create_chunk_id(repo, file_path, line_start, line_end),
@@ -90,7 +177,8 @@ def chunk_code_file(parsed_file, config):
                 'metadata': {
                     'class_name': cls['name'],
                     'docstring': cls.get('docstring'),
-                    'bases': cls.get('bases', [])
+                    'bases': cls.get('bases', []),
+                    **task_metadata
                 },
                 'chunk_timestamp': datetime.now().isoformat()
             }
@@ -105,6 +193,9 @@ def chunk_code_file(parsed_file, config):
             
             chunk_content = ''.join(chunk_lines)
             
+            # Detect task metadata
+            task_metadata = detect_task_metadata(file_path, chunk_content)
+            
             chunk = {
                 'chunk_id': create_chunk_id(repo, file_path, line_start, line_end),
                 'source': f"{repo}/{file_path}",
@@ -115,7 +206,7 @@ def chunk_code_file(parsed_file, config):
                 'headings': [],
                 'line_ranges': {'start': line_start, 'end': line_end},
                 'content': chunk_content,
-                'metadata': {},
+                'metadata': task_metadata,
                 'chunk_timestamp': datetime.now().isoformat()
             }
             chunks.append(chunk)
@@ -157,6 +248,9 @@ def chunk_documentation(doc_file, config):
             chunk_content = '\n\n'.join(current_chunk)
             chunk_id = create_chunk_id('docs', url, 0, 0)
             
+            # Detect task metadata for docs
+            task_metadata = detect_task_metadata(url, chunk_content)
+            
             chunk = {
                 'chunk_id': chunk_id,
                 'source': url,
@@ -169,7 +263,8 @@ def chunk_documentation(doc_file, config):
                 'content': chunk_content,
                 'metadata': {
                     'title': doc_data.get('title', ''),
-                    'url': url
+                    'url': url,
+                    **task_metadata
                 },
                 'chunk_timestamp': datetime.now().isoformat()
             }
@@ -234,6 +329,12 @@ def main():
     
     # Chunk documentation files
     docs_dir = Path(config['paths']['docs'])
+    if not docs_dir.exists():
+        # Try to create or use project-relative path
+        project_docs = Path(__file__).parent.parent / "docs"
+        if project_docs.exists():
+            docs_dir = project_docs
+    
     if docs_dir.exists():
         print("Chunking documentation files...")
         doc_files = list(docs_dir.glob("*.json"))

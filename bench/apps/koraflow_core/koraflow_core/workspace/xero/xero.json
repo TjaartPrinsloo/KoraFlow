@@ -1,0 +1,29 @@
+{
+    "charts": [],
+    "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Xero Integration</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Xero Settings\", \"col\": 3}}]",
+    "docstatus": 0,
+    "doctype": "Workspace",
+    "icon": "file-text",
+    "label": "Xero",
+    "links": [
+        {
+            "hidden": 0,
+            "label": "Xero Settings",
+            "link_to": "Xero Settings",
+            "link_type": "DocType",
+            "type": "Link"
+        }
+    ],
+    "module": "KoraFlow Core",
+    "name": "Xero",
+    "public": 1,
+    "shortcuts": [
+        {
+            "color": "Blue",
+            "label": "Xero Settings",
+            "link_to": "Xero Settings",
+            "type": "DocType"
+        }
+    ],
+    "title": "Xero"
+}

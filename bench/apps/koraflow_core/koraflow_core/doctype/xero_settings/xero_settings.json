@@ -1,0 +1,120 @@
+{
+    "actions": [],
+    "creation": "2024-05-22 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "enable_xero",
+        "sb_credentials",
+        "client_id",
+        "client_secret",
+        "redirect_uri",
+        "sb_connection",
+        "connect_to_xero",
+        "connection_status",
+        "sb_tokens",
+        "access_token",
+        "refresh_token",
+        "tenant_id",
+        "token_expiry"
+    ],
+    "fields": [
+        {
+            "fieldname": "enable_xero",
+            "fieldtype": "Check",
+            "label": "Enable Xero Integration"
+        },
+        {
+            "fieldname": "sb_credentials",
+            "fieldtype": "Section Break",
+            "label": "Credentials"
+        },
+        {
+            "fieldname": "client_id",
+            "fieldtype": "Data",
+            "label": "Client ID",
+            "reqd": 1
+        },
+        {
+            "fieldname": "client_secret",
+            "fieldtype": "Password",
+            "label": "Client Secret",
+            "reqd": 1
+        },
+        {
+            "fieldname": "redirect_uri",
+            "fieldtype": "Data",
+            "label": "Redirect URI",
+            "description": "Must match the URI configured in Xero App. Example: https://your-site.com/api/method/koraflow_core.koraflow_core.doctype.xero_settings.xero_settings.xero_callback"
+        },
+        {
+            "fieldname": "sb_connection",
+            "fieldtype": "Section Break",
+            "label": "Connection"
+        },
+        {
+            "fieldname": "connect_to_xero",
+            "fieldtype": "Button",
+            "label": "Connect to Xero"
+        },
+        {
+            "fieldname": "connection_status",
+            "fieldtype": "Data",
+            "label": "Status",
+            "read_only": 1
+        },
+        {
+            "fieldname": "sb_tokens",
+            "fieldtype": "Section Break",
+            "label": "Tokens (Read Only)",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "access_token",
+            "fieldtype": "Text",
+            "label": "Access Token",
+            "read_only": 1,
+            "hidden": 1
+        },
+        {
+            "fieldname": "refresh_token",
+            "fieldtype": "Text",
+            "label": "Refresh Token",
+            "read_only": 1
+        },
+        {
+            "fieldname": "tenant_id",
+            "fieldtype": "Data",
+            "label": "Tenant ID",
+            "read_only": 1
+        },
+        {
+            "fieldname": "token_expiry",
+            "fieldtype": "Datetime",
+            "label": "Token Expiry",
+            "read_only": 1
+        }
+    ],
+    "issingle": 1,
+    "links": [],
+    "modified": "2024-05-22 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "KoraFlow Core",
+    "name": "Xero Settings",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
+}

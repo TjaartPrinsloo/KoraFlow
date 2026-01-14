@@ -1,0 +1,115 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "warehouse_name",
+  "erpnext_warehouse",
+  "warehouse_type",
+  "is_licensed",
+  "pharmacy_license_number",
+  "cold_chain_enabled",
+  "column_break_1",
+  "description",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "warehouse_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Warehouse Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "erpnext_warehouse",
+   "fieldtype": "Link",
+   "label": "ERPNext Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Warehouse Type",
+   "options": "\nPhysical\nVirtual",
+   "reqd": 1
+  },
+  {
+   "fieldname": "is_licensed",
+   "fieldtype": "Check",
+   "label": "Is Licensed Pharmacy",
+   "depends_on": "eval:doc.warehouse_type == 'Physical'"
+  },
+  {
+   "fieldname": "pharmacy_license_number",
+   "fieldtype": "Data",
+   "label": "Pharmacy License Number",
+   "depends_on": "eval:doc.is_licensed == 1"
+  },
+  {
+   "fieldname": "cold_chain_enabled",
+   "fieldtype": "Check",
+   "label": "Cold Chain Enabled",
+   "depends_on": "eval:doc.warehouse_type == 'Physical'"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2025-01-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "Pharmacy Warehouse",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Healthcare Administrator",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Pharmacist"
+  },
+  {
+   "read": 1,
+   "role": "Compliance Officer"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

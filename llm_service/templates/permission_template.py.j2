@@ -1,0 +1,76 @@
+# In hooks.py
+permission_query_conditions = {
+    "{{ doctype }}": "{{ app_name }}.utils.get_{{ doctype.lower() }}_permission_query_conditions"
+}
+
+has_permission = {
+    "{{ doctype }}": "{{ app_name }}.utils.has_{{ doctype.lower() }}_permission"
+}
+
+# In utils.py
+import frappe
+from frappe import _
+
+
+def get_{{ doctype.lower() }}_permission_query_conditions(user):
+    """
+    Build permission query conditions for {{ doctype }}
+    
+    Args:
+        user: User name
+        
+    Returns:
+        SQL WHERE clause string
+    """
+    if not user:
+        user = frappe.session.user
+    
+    # Add your permission logic here
+    conditions = []
+    
+    {% if role_based %}
+    # Role-based filtering
+    if "{{ role }}" in frappe.get_roles(user):
+        # Allow access
+        return ""
+    {% endif %}
+    
+    {% if user_field %}
+    # User field filtering
+    conditions.append(f"`tab{{ doctype }}`.`{{ user_field }}` = '{user}'")
+    {% endif %}
+    
+    return " and ".join(conditions) if conditions else ""
+
+
+def has_{{ doctype.lower() }}_permission(doc, user=None, raise_exception=False):
+    """
+    Check if user has permission for {{ doctype }}
+    
+    Args:
+        doc: Document instance
+        user: User name (optional)
+        raise_exception: Raise exception if no permission
+        
+    Returns:
+        bool: True if user has permission
+    """
+    if not user:
+        user = frappe.session.user
+    
+    # Add your permission check logic here
+    {% if role_based %}
+    if "{{ role }}" in frappe.get_roles(user):
+        return True
+    {% endif %}
+    
+    {% if user_field %}
+    if doc.{{ user_field }} == user:
+        return True
+    {% endif %}
+    
+    if raise_exception:
+        frappe.throw(_("You don't have permission to access this document"))
+    
+    return False
+

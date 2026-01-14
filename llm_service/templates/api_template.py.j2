@@ -1,0 +1,53 @@
+"""
+API Endpoint: {{ endpoint_name }}
+{{ description }}
+"""
+
+import frappe
+from frappe import _
+from frappe.utils import cint, flt
+
+
+@frappe.whitelist()
+def {{ function_name }}({% if params %}{{ params|join(', ') }}{% endif %}):
+    """
+    {{ description }}
+    
+    Args:
+        {% for param in params %}
+        {{ param }}: {{ param_description }}
+        {% endfor %}
+        
+    Returns:
+        dict: Response data
+    """
+    {% if method == 'GET' %}
+    # GET endpoint logic
+    {% if doctype %}
+    data = frappe.get_all(
+        "{{ doctype }}",
+        fields=["*"],
+        {% if filters %}
+        filters={{ filters }},
+        {% endif %}
+        limit={{ limit }}
+    )
+    return {"data": data}
+    {% endif %}
+    {% elif method == 'POST' %}
+    # POST endpoint logic
+    {% if doctype %}
+    doc = frappe.get_doc({
+        "doctype": "{{ doctype }}",
+        {% for field in fields %}
+        "{{ field.fieldname }}": {{ field.fieldname }},
+        {% endfor %}
+    })
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"name": doc.name, "status": "created"}
+    {% endif %}
+    {% endif %}
+    
+    return {"status": "success"}
+

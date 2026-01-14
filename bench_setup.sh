@@ -53,6 +53,24 @@ fi
 
 cd "$BENCH_DIR"
 
+# Helper function to check if app is installed on site
+check_app_installed() {
+    local app_name=$1
+    python3 -c "
+import sys
+sys.path.insert(0, 'apps')
+import os
+os.chdir('sites')
+import frappe
+frappe.init(site='$SITE_NAME')
+frappe.connect()
+apps = frappe.get_installed_apps()
+result = '$app_name' in apps
+frappe.destroy()
+sys.exit(0 if result else 1)
+" 2>/dev/null
+}
+
 # Create site
 echo ""
 echo "Creating site..."
@@ -74,7 +92,12 @@ if [ ! -d "apps/erpnext" ]; then
     bench get-app erpnext --branch version-15
     bench --site "$SITE_NAME" install-app erpnext
 else
-    echo "ERPNext already installed"
+    if check_app_installed "erpnext"; then
+        echo "ERPNext already installed on site"
+    else
+        echo "ERPNext app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app erpnext
+    fi
 fi
 
 # Install ERPNext Healthcare (KoraFlow Healthcare)
@@ -84,7 +107,12 @@ if [ ! -d "apps/healthcare" ]; then
     bench get-app healthcare --branch version-15
     bench --site "$SITE_NAME" install-app healthcare
 else
-    echo "Healthcare already installed"
+    if check_app_installed "healthcare"; then
+        echo "Healthcare already installed on site"
+    else
+        echo "Healthcare app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app healthcare
+    fi
 fi
 
 # Install Frappe HRMS (KoraFlow Workforce)
@@ -94,7 +122,12 @@ if [ ! -d "apps/hrms" ]; then
     bench get-app hrms --branch version-15
     bench --site "$SITE_NAME" install-app hrms
 else
-    echo "HRMS already installed"
+    if check_app_installed "hrms"; then
+        echo "HRMS already installed on site"
+    else
+        echo "HRMS app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app hrms
+    fi
 fi
 
 # Install ERPNext CRM (KoraFlow CRM)
@@ -104,7 +137,12 @@ if [ ! -d "apps/crm" ]; then
     bench get-app crm --branch version-15
     bench --site "$SITE_NAME" install-app crm
 else
-    echo "CRM already installed"
+    if check_app_installed "crm"; then
+        echo "CRM already installed on site"
+    else
+        echo "CRM app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app crm
+    fi
 fi
 
 # Install Frappe Insights (KoraFlow Insights)
@@ -114,7 +152,12 @@ if [ ! -d "apps/insights" ]; then
     bench get-app insights --branch develop
     bench --site "$SITE_NAME" install-app insights
 else
-    echo "Insights already installed"
+    if check_app_installed "insights"; then
+        echo "Insights already installed on site"
+    else
+        echo "Insights app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app insights
+    fi
 fi
 
 # Install Frappe Drive (KoraFlow Drive)
@@ -124,7 +167,12 @@ if [ ! -d "apps/drive" ]; then
     bench get-app drive --branch version-15
     bench --site "$SITE_NAME" install-app drive
 else
-    echo "Drive already installed"
+    if check_app_installed "drive"; then
+        echo "Drive already installed on site"
+    else
+        echo "Drive app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app drive
+    fi
 fi
 
 # Install Frappe Gameplan (KoraFlow Gameplan)
@@ -134,7 +182,12 @@ if [ ! -d "apps/gameplan" ]; then
     bench get-app gameplan --branch version-15
     bench --site "$SITE_NAME" install-app gameplan
 else
-    echo "Gameplan already installed"
+    if check_app_installed "gameplan"; then
+        echo "Gameplan already installed on site"
+    else
+        echo "Gameplan app directory exists but not installed on site. Installing now..."
+        bench --site "$SITE_NAME" install-app gameplan
+    fi
 fi
 
 echo ""

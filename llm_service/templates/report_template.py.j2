@@ -1,0 +1,54 @@
+"""
+Report: {{ report_name }}
+{{ description }}
+"""
+
+import frappe
+from frappe import _
+
+
+def execute(filters=None):
+    """
+    Generate report data
+    
+    Args:
+        filters: Report filters dict
+        
+    Returns:
+        tuple: (columns, data)
+    """
+    columns = [
+        {% for col in columns %}
+        {
+            "label": "{{ col.label }}",
+            "fieldname": "{{ col.fieldname }}",
+            "fieldtype": "{{ col.fieldtype }}",
+            "width": {{ col.width }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+    
+    # Build query
+    conditions = []
+    {% if filters %}
+    if filters:
+        {% for filter in filters %}
+        if filters.get("{{ filter.fieldname }}"):
+            conditions.append(f"`tab{{ doctype }}`.`{{ filter.fieldname }}` = '{filters['{{ filter.fieldname }}']}'")
+        {% endfor %}
+    {% endif %}
+    
+    where_clause = " and ".join(conditions) if conditions else "1=1"
+    
+    data = frappe.db.sql(f"""
+        SELECT
+            {% for col in columns %}
+            `tab{{ doctype }}`.`{{ col.fieldname }}`{% if not loop.last %},{% endif %}
+            {% endfor %}
+        FROM `tab{{ doctype }}`
+        WHERE {where_clause}
+        ORDER BY `tab{{ doctype }}`.modified DESC
+    """, as_dict=True)
+    
+    return columns, data
+
