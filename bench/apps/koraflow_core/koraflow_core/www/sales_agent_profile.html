@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Profile & Banking | Slim2Well</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+        window.sales_agent_id = "{{ frappe.session.user }}";
+
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                        "accent-warning": "#FFB300",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #2D2D2D;
+            color: #C1E12F;
+            font-weight: 700;
+        }
+
+        .active-nav:hover {
+            color: #C1E12F;
+        }
+
+        .logo-circle {
+            background-color: #2D2D2D;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex transition-colors duration-300">
+
+    <!-- Sidebar Navigation -->
+    <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-black hidden md:flex">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-white font-bold text-xs logo-circle">
+                <span class="text-white">s<span class="text-primary">2</span>w</span>
+            </div>
+            <div>
+                <h1 class="font-display font-bold text-xl tracking-tight dark:text-white">slim<span
+                        class="text-primary">2</span>well</h1>
+                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Partner Portal</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                href="/sales_agent_dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="font-semibold text-sm">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/sales_agent_profile">
+                <span class="material-symbols-outlined">person</span>
+                <span class="font-semibold text-sm">Profile & Banking</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <a href="/?cmd=web_logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                Log Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+        <!-- Top Header -->
+        <header
+            class="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="md:hidden">
+                    <button class="text-slate-500 hover:text-charcoal"><span
+                            class="material-symbols-outlined">menu</span></button>
+                </div>
+                <h2 class="text-xl font-bold font-display tracking-tight">Access Management</h2>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold leading-none">{{ frappe.session.user }}</p>
+                    <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">Authorized Agent</p>
+                </div>
+                <div
+                    class="size-10 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-charcoal font-bold">
+                    {{ frappe.session.user[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-5xl mx-auto space-y-8 flex-grow w-full">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-black font-display tracking-tight text-charcoal dark:text-white mb-2">
+                        Profile & Banking
+                    </h1>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-xl">
+                        Manage your personal information and banking details for commission payouts.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div id="status-alert" class="hidden rounded-xl p-4 border flex items-start gap-3">
+                <span class="material-symbols-outlined text-xl" id="alert-icon">info</span>
+                <div>
+                    <h4 class="font-bold text-sm" id="alert-title">Status</h4>
+                    <p class="text-xs mt-1" id="alert-message">Message</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column: Personal Info (Read Only) -->
+                <div class="lg:col-span-1 space-y-6">
+                    <section
+                        class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="material-symbols-outlined text-slate-400">badge</span>
+                            <h2 class="text-lg font-bold text-charcoal dark:text-white font-display">Personal Info</h2>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Full
+                                    Name</label>
+                                <p id="agent-name" class="font-bold text-charcoal dark:text-white">Loading...</p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Email
+                                    Address</label>
+                                <p id="agent-email" class="font-medium text-slate-700 dark:text-slate-300 break-all">...
+                                </p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Mobile
+                                    Number</label>
+                                <p id="agent-mobile" class="font-medium text-slate-700 dark:text-slate-300">...</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <p class="text-xs text-slate-500 italic">To update personal details, please contact
+                                administrator support.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column: Banking Details (Editable) -->
+                <div class="lg:col-span-2">
+                    <section
+                        class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <div
+                            class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-black/20 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-charcoal">
+                                    <span class="material-symbols-outlined text-sm">account_balance</span>
+                                </div>
+                                <h2 class="text-lg font-bold text-charcoal dark:text-white font-display">Banking Details
+                                </h2>
+                            </div>
+                            <span
+                                class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded uppercase tracking-wider flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">lock</span> Secure
+                            </span>
+                        </div>
+
+                        <form id="banking-form" onsubmit="event.preventDefault(); saveBankingDetails();"
+                            class="p-6 space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Bank Name -->
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Bank
+                                        Name</label>
+                                    <select id="bank_name" required
+                                        class="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-primary focus:ring-primary font-medium text-charcoal">
+                                        <option value="">Select Bank</option>
+                                        <option value="Standard Bank">Standard Bank</option>
+                                        <option value="Absa">Absa</option>
+                                        <option value="FNB">FNB</option>
+                                        <option value="Nedbank">Nedbank</option>
+                                        <option value="Capitec">Capitec</option>
+                                        <option value="Investec">Investec</option>
+                                        <option value="TymeBank">TymeBank</option>
+                                        <option value="Discovery Bank">Discovery Bank</option>
+                                    </select>
+                                </div>
+
+                                <!-- Account Type -->
+                                <div class="space-y-2">
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-wider text-slate-500">Account
+                                        Type</label>
+                                    <select id="account_type" required
+                                        class="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-primary focus:ring-primary font-medium text-charcoal">
+                                        <option value="Savings">Savings Account</option>
+                                        <option value="Cheque/Current">Current / Cheque Account</option>
+                                    </select>
+                                </div>
+
+                                <!-- Account Holder -->
+                                <div class="space-y-2 md:col-span-2">
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-wider text-slate-500">Account
+                                        Holder Name</label>
+                                    <input type="text" id="account_holder_name" required
+                                        class="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-primary focus:ring-primary font-medium text-charcoal"
+                                        placeholder="e.g. J. Doe" />
+                                </div>
+
+                                <!-- Account Number -->
+                                <div class="space-y-2">
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-wider text-slate-500">Account
+                                        Number</label>
+                                    <input type="text" id="account_number" required
+                                        class="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-primary focus:ring-primary font-medium text-charcoal"
+                                        placeholder="Enter account number" />
+                                </div>
+
+                                <!-- Branch Code -->
+                                <div class="space-y-2">
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-wider text-slate-500">Branch
+                                        Code</label>
+                                    <input type="text" id="branch_code" required
+                                        class="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-primary focus:ring-primary font-medium text-charcoal"
+                                        placeholder="Enter branch code" />
+                                </div>
+
+                                <!-- Proof of Account -->
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Proof
+                                        of Account (PDF/Image)</label>
+                                    <div class="flex items-center gap-4">
+                                        <div class="relative w-full">
+                                            <input type="file" id="proof_of_account_file" accept=".pdf,.png,.jpg,.jpeg"
+                                                class="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-primary focus:ring-primary text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/20 file:text-charcoal hover:file:bg-primary/30" />
+                                        </div>
+                                        <div id="current-proof" class="hidden shrink-0">
+                                            <a href="#" target="_blank" id="proof-link"
+                                                class="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-charcoal transition-colors">
+                                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                                View Current
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400">Upload a bank confirmation letter or statement
+                                        header.</p>
+                                </div>
+                            </div>
+
+                            <div class="pt-6 border-t border-slate-100 flex items-center justify-between">
+                                <p class="text-xs text-slate-400">Please ensure details are correct to avoid payout
+                                    delays.</p>
+                                <button type="submit"
+                                    class="px-6 py-3 bg-primary text-charcoal rounded-xl text-sm font-bold hover:bg-primary/90 shadow-sm transition-all flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">save</span>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadProfileData();
+        });
+
+        async function loadProfileData() {
+            try {
+                const response = await fetch('/api/method/koraflow_core.api.sales_agent_dashboard.get_profile_data', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': window.csrf_token
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.message) {
+                    const info = data.message.personal_info;
+                    const bank = data.message.bank_details;
+
+                    if (info) {
+                        document.getElementById('agent-name').innerText = `${info.first_name} ${info.last_name}`;
+                        document.getElementById('agent-email').innerText = info.email || 'N/A';
+                        document.getElementById('agent-mobile').innerText = info.mobile_no || 'N/A';
+                    }
+
+                    if (bank) {
+                        setVal('bank_name', bank.bank_name);
+                        setVal('account_type', bank.account_type);
+                        setVal('account_holder_name', bank.account_holder_name);
+                        setVal('account_number', bank.account_number);
+                        setVal('branch_code', bank.branch_code);
+
+                        // Handle Proof of Account Display
+                        if (bank.proof_of_account) {
+                            const proofContainer = document.getElementById('current-proof');
+                            const proofLink = document.getElementById('proof-link');
+                            if (proofContainer && proofLink) {
+                                proofLink.href = bank.proof_of_account;
+                                proofContainer.classList.remove('hidden');
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showAlert('error', 'Failed to load profile data.');
+            }
+        }
+
+        function setVal(id, val) {
+            const el = document.getElementById(id);
+            if (el && val) el.value = val;
+        }
+
+        async function saveBankingDetails() {
+            const btn = document.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">refresh</span> Saving...';
+            btn.disabled = true;
+
+            const payload = {
+                bank_name: document.getElementById('bank_name').value,
+                account_type: document.getElementById('account_type').value,
+                account_holder_name: document.getElementById('account_holder_name').value,
+                account_number: document.getElementById('account_number').value,
+                branch_code: document.getElementById('branch_code').value,
+            };
+
+            // Frontend Validation for Proof of Account
+            const fileInput = document.getElementById('proof_of_account_file');
+            const hasExisting = !document.getElementById('current-proof').classList.contains('hidden');
+
+            if (!hasExisting && (!fileInput || fileInput.files.length === 0)) {
+                showAlert('error', 'Proof of Account document is required.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                // Handle File Upload first if present
+                // fileInput already declared above
+                let fileUrl = null;
+
+                if (fileInput && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    fileUrl = await uploadFile(file);
+                    if (!fileUrl) {
+                        throw new Error('File upload failed');
+                    }
+                    payload.proof_of_account = fileUrl;
+                }
+
+                const response = await fetch('/api/method/koraflow_core.api.sales_agent_dashboard.update_profile_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': window.csrf_token
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('success', 'Banking details updated successfully.');
+                } else {
+                    let errorMsg = 'Failed to update details.';
+                    if (result._server_messages) {
+                        try {
+                            const msgs = JSON.parse(result._server_messages);
+                            errorMsg = JSON.parse(msgs[0]).message;
+                        } catch (e) { }
+                    } else if (result.exc) {
+                        // simple regex to extract message if possible, or just default
+                        errorMsg = 'An error occurred. Please check your inputs.';
+                    }
+                    showAlert('error', errorMsg);
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert('error', 'Connection error.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file, file.name);
+            formData.append('is_private', 1);
+            formData.append('doctype', 'Sales Agent Bank Details'); // Temporarily generic or attached after
+            formData.append('docname', window.sales_agent_id); // Or attach to User? Ideally attach to the doc itself but we might create it now.
+            // Simplified: Just upload and get URL.
+
+            try {
+                const response = await fetch('/api/method/upload_file', {
+                    method: 'POST',
+                    headers: {
+                        'X-Frappe-CSRF-Token': window.csrf_token
+                    },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.message && result.message.file_url) {
+                    return result.message.file_url;
+                }
+                return null;
+            } catch (e) {
+                console.error('Upload Error:', e);
+                return null;
+            }
+        }
+
+        function showAlert(type, message) {
+            const alert = document.getElementById('status-alert');
+            const title = document.getElementById('alert-title');
+            const msg = document.getElementById('alert-message');
+            const icon = document.getElementById('alert-icon');
+
+            alert.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border-red-200', 'bg-green-50', 'text-green-800', 'border-green-200');
+
+            if (type === 'error') {
+                alert.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+                title.innerText = 'Error';
+                icon.innerText = 'error';
+                icon.classList.add('text-red-600');
+            } else {
+                alert.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+                title.innerText = 'Success';
+                icon.innerText = 'check_circle';
+                icon.classList.add('text-green-600');
+            }
+
+            msg.innerText = message;
+            alert.classList.remove('hidden');
+
+            setTimeout(() => {
+                alert.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>

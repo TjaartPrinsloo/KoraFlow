@@ -14,12 +14,17 @@ except Exception:
 	pass
 
 
+
 def check_intake_completion():
 	"""
 	Check if user has completed intake form.
 	Redirect to intake form if not completed.
 	This is called via website hooks.
 	"""
+	# Debug logging
+	if frappe.session.user == "chris@koraflow.com":
+		frappe.log_error("Intake Check Start", f"User: {frappe.session.user}, Path: {frappe.request.path}")
+
 	# Skip for guest users, system users, and admin pages
 	if frappe.session.user == "Guest":
 		return
@@ -32,6 +37,10 @@ def check_intake_completion():
 	if "Sales Partner Portal" in frappe.get_roles():
 		return
 	
+	# Only enforce for Patient role
+	if "Patient" not in frappe.get_roles():
+		return
+	
 	# Skip for admin pages (/app, /desk, etc.)
 	if frappe.request.path.startswith("/app") or frappe.request.path.startswith("/desk"):
 		return
@@ -39,15 +48,23 @@ def check_intake_completion():
 	# Skip for login, signup, password reset, and verification pages
 	allowed_paths = [
 		"/login",
+		"/s2w_login",
 		"/signup",
 		"/update-password",
 		"/verify-email",
 		"/glp1-intake",
+		"/intake",  # Route alias for glp1-intake
+		"/glp1-intake-wizard",
 		"/my-referrals",  # Sales Partner portal pages
 		"/my-commissions",  # Sales Partner portal pages
 		"/api/",
 		"/assets/",
 		"/files/",
+		"/privacy",  # Legal pages
+		"/terms",
+		"/legal",
+		"/sahpra",
+		"/cookies",
 	]
 	
 	if any(frappe.request.path.startswith(path) for path in allowed_paths):

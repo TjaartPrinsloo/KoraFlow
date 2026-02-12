@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("SAHPRA Compliance") }} | {{ _("Slim2Well") }}</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #C1E12F;
+            color: #2D2D2D;
+            font-weight: 700;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light text-slate-800 min-h-screen">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="material-symbols-outlined text-primary text-2xl">gavel</span>
+                    <h1 class="font-display font-bold text-xl tracking-tight">{{ _("Legal Center") }}</h1>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">{{ _("LEGAL DOCUMENTS") }}</p>
+                <p class="text-xs text-slate-400">Version 1.0 • Updated Jan 2026</p>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="/terms"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="font-semibold text-sm">{{ _("Terms & Conditions") }}</span>
+                </a>
+                <a href="/privacy"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">shield</span>
+                    <span class="font-semibold text-sm">{{ _("Privacy Policy (POPIA)") }}</span>
+                </a>
+                <a href="/paia"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <span class="font-semibold text-sm">{{ _("PAIA Manual") }}</span>
+                </a>
+                <a href="/sahpra" class="flex items-center gap-3 px-4 py-3 rounded-xl active-nav">
+                    <span class="material-symbols-outlined">local_pharmacy</span>
+                    <span class="font-semibold text-sm">{{ _("SAHPRA Compliance") }}</span>
+                </a>
+                <a href="/cookies"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">cookie</span>
+                    <span class="font-semibold text-sm">{{ _("Cookie Policy") }}</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">{{ _("Questions about our policies? Contact us at") }}</p>
+                <a href="mailto:legal@slim2well.com"
+                    class="text-sm font-bold text-primary hover:underline">legal@slim2well.com</a>
+
+                <a href="/portal_dashboard"
+                    class="mt-4 w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    {{ _("Exit Legal Center") }}
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <!-- Breadcrumb -->
+                <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+                    <a href="/legal" class="hover:text-primary">{{ _("LEGAL CENTER") }}</a>
+                    <span>›</span>
+                    <span class="text-charcoal font-bold">{{ _("SAHPRA COMPLIANCE") }}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                            <span class="material-symbols-outlined text-green-600 text-2xl">local_pharmacy</span>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-black font-display text-charcoal">{{ _("SAHPRA Compliance") }}</h1>
+                            <p class="text-sm text-green-600 font-bold">{{ _("South African Health Products Regulatory
+                                Authority") }}</p>
+                        </div>
+                    </div>
+                    <p class="text-slate-500 mb-8">{{ _("This page outlines how Slim2Well complies with SAHPRA
+                        regulations for the dispensing of prescription medications, including GLP-1 receptor agonists.")
+                        }}</p>
+
+                    <!-- Important Notice -->
+                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-8">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-amber-600">warning</span>
+                            <div>
+                                <p class="text-sm font-bold text-amber-900 mb-1">{{ _("Important Notice") }}</p>
+                                <p class="text-sm text-amber-800">{{ _("GLP-1 receptor agonists (such as Semaglutide and
+                                    Tirzepatide) are Schedule 4 medications in South Africa. They require a valid
+                                    prescription from a registered healthcare practitioner and must only be dispensed by
+                                    licensed pharmacies.") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 1: What is SAHPRA -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("1. What is SAHPRA?") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("The South African Health Products Regulatory Authority (SAHPRA)
+                        is the statutory body responsible for regulating health products in South Africa. This
+                        includes:") }}</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6">
+                        <li>{{ _("Medicines and scheduled substances") }}</li>
+                        <li>{{ _("Medical devices and diagnostics") }}</li>
+                        <li>{{ _("Clinical trials") }}</li>
+                        <li>{{ _("Complementary medicines") }}</li>
+                    </ul>
+
+                    <!-- Section 2: GLP-1 Medications -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("2. GLP-1 Receptor Agonists") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("GLP-1 receptor agonists are a class of medications used for
+                        weight management and type 2 diabetes treatment. The following products are available through
+                        Slim2Well:") }}</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="p-4 border border-slate-200 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Semaglutide") }}</h3>
+                            <p class="text-sm text-slate-600 mb-2">{{ _("Injectable GLP-1 agonist for weight
+                                management") }}</p>
+                            <span class="inline-block px-2 py-1 bg-green-50 text-green-700 text-xs font-bold rounded">{{
+                                _("SAHPRA Registered") }}</span>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Tirzepatide") }}</h3>
+                            <p class="text-sm text-slate-600 mb-2">{{ _("Dual GIP/GLP-1 receptor agonist") }}</p>
+                            <span class="inline-block px-2 py-1 bg-green-50 text-green-700 text-xs font-bold rounded">{{
+                                _("SAHPRA Registered") }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Schedule 4 Classification -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("3. Schedule 4 Classification") }}</h2>
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mb-6">
+                        <p class="text-sm text-blue-800">{{ _("Schedule 4 medications may only be prescribed by a
+                            medical practitioner, dentist, nurse, or other authorized prescriber registered with the
+                            Health Professions Council of South Africa (HPCSA) or South African Nursing Council
+                            (SANC).") }}</p>
+                    </div>
+                    <p class="text-slate-600 mb-4">{{ _("As Schedule 4 substances, GLP-1 medications:") }}</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6">
+                        <li>{{ _("Require a valid prescription for each dispensing") }}</li>
+                        <li>{{ _("Cannot be sold over-the-counter") }}</li>
+                        <li>{{ _("Must be dispensed by a registered pharmacist") }}</li>
+                        <li>{{ _("Are subject to record-keeping requirements") }}</li>
+                    </ul>
+
+                    <!-- Section 4: Our Compliance -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("4. How Slim2Well Complies") }}</h2>
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
+                            <div
+                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-green-600">verified</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-charcoal mb-1">{{ _("Licensed Healthcare Practitioners") }}
+                                </h3>
+                                <p class="text-sm text-slate-600">{{ _("All prescriptions are issued by doctors
+                                    registered with the HPCSA after a thorough telehealth consultation.") }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
+                            <div
+                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-green-600">local_pharmacy</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-charcoal mb-1">{{ _("Registered Pharmacy Partners") }}</h3>
+                                <p class="text-sm text-slate-600">{{ _("Medications are dispensed by pharmacies
+                                    registered with the South African Pharmacy Council (SAPC).") }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
+                            <div
+                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-green-600">history_edu</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-charcoal mb-1">{{ _("Complete Record Keeping") }}</h3>
+                                <p class="text-sm text-slate-600">{{ _("We maintain comprehensive records of all
+                                    consultations, prescriptions, and dispensing in accordance with regulatory
+                                    requirements.") }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
+                            <div
+                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-green-600">local_shipping</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-charcoal mb-1">{{ _("Cold Chain Delivery") }}</h3>
+                                <p class="text-sm text-slate-600">{{ _("GLP-1 medications are transported in
+                                    temperature-controlled packaging to maintain efficacy and safety.") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Contraindications -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("5. Important Safety Information") }}
+                    </h2>
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg mb-6">
+                        <p class="text-sm font-bold text-red-900 mb-2">{{ _("Contraindications") }}</p>
+                        <p class="text-sm text-red-800 mb-3">{{ _("GLP-1 medications should NOT be used if you have:")
+                            }}</p>
+                        <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
+                            <li>{{ _("Personal or family history of medullary thyroid carcinoma (MTC)") }}</li>
+                            <li>{{ _("Multiple Endocrine Neoplasia syndrome type 2 (MEN 2)") }}</li>
+                            <li>{{ _("Known hypersensitivity to the active substance") }}</li>
+                            <li>{{ _("Pregnancy or breastfeeding") }}</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-slate-600 mb-4">{{ _("Common side effects may include:") }}</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-1 mb-6">
+                        <li>{{ _("Nausea and vomiting") }}</li>
+                        <li>{{ _("Diarrhea or constipation") }}</li>
+                        <li>{{ _("Injection site reactions") }}</li>
+                        <li>{{ _("Fatigue and dizziness") }}</li>
+                    </ul>
+
+                    <!-- Section 6: Reporting -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("6. Adverse Event Reporting") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("If you experience any adverse effects from your medication, you
+                        should:") }}</p>
+                    <ol class="list-decimal list-inside text-slate-600 space-y-2 mb-6">
+                        <li>{{ _("Contact your prescribing doctor immediately") }}</li>
+                        <li>{{ _("Seek emergency medical attention if symptoms are severe") }}</li>
+                        <li>{{ _("Report the adverse event to SAHPRA via their Med Safety App or website") }}</li>
+                    </ol>
+
+                    <div class="bg-slate-50 rounded-xl p-6 mb-6">
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("Report to SAHPRA") }}</h3>
+                        <p class="text-sm text-slate-600 mb-2">{{ _("Adverse events can be reported directly to
+                            SAHPRA:") }}</p>
+                        <p class="text-sm"><strong>{{ _("Website:") }}</strong> <a href="https://www.sahpra.org.za"
+                                class="text-primary hover:underline">www.sahpra.org.za</a></p>
+                        <p class="text-sm"><strong>{{ _("App:") }}</strong> Med Safety App (iOS/Android)</p>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="mt-8 p-6 bg-slate-50 rounded-xl">
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("Questions About Your Medication?") }}</h3>
+                        <p class="text-sm text-slate-600 mb-2">{{ _("For medical queries, contact your prescribing
+                            doctor or our medical support team:") }}</p>
+                        <p class="text-sm font-bold text-primary">medical@slim2well.com</p>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-8 text-center">{{ _("Last updated: January 2026") }}</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

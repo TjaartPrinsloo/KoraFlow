@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("Legal Center") }} | {{ _("Slim2Well") }}</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #C1E12F;
+            color: #2D2D2D;
+            font-weight: 700;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light text-slate-800 min-h-screen">
+    <!-- Legal Center Modal/Overlay Style -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="material-symbols-outlined text-primary text-2xl">gavel</span>
+                    <h1 class="font-display font-bold text-xl tracking-tight">{{ _("Legal Center") }}</h1>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">{{ _("LEGAL DOCUMENTS") }}</p>
+                <p class="text-xs text-slate-400">Version 1.0 • Updated Jan 2026</p>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="/terms"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors {% if frappe.request.path == '/terms' %}active-nav{% endif %}">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="font-semibold text-sm">{{ _("Terms & Conditions") }}</span>
+                </a>
+                <a href="/privacy"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors {% if frappe.request.path == '/privacy' %}active-nav{% endif %}">
+                    <span class="material-symbols-outlined">shield</span>
+                    <span class="font-semibold text-sm">{{ _("Privacy Policy (POPIA)") }}</span>
+                </a>
+                <a href="/paia"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors {% if frappe.request.path == '/paia' %}active-nav{% endif %}">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <span class="font-semibold text-sm">{{ _("PAIA Manual") }}</span>
+                </a>
+                <a href="/sahpra"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors {% if frappe.request.path == '/sahpra' %}active-nav{% endif %}">
+                    <span class="material-symbols-outlined">local_pharmacy</span>
+                    <span class="font-semibold text-sm">{{ _("SAHPRA Compliance") }}</span>
+                </a>
+                <a href="/cookies"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors {% if frappe.request.path == '/cookies' %}active-nav{% endif %}">
+                    <span class="material-symbols-outlined">cookie</span>
+                    <span class="font-semibold text-sm">{{ _("Cookie Policy") }}</span>
+                </a>
+            </nav>
+
+            <!-- Contact Info -->
+            <div class="p-4 border-t border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">{{ _("Questions about our policies? Contact us at") }}</p>
+                <a href="mailto:legal@slim2well.com"
+                    class="text-sm font-bold text-primary hover:underline">legal@slim2well.com</a>
+
+                <a href="/portal_dashboard"
+                    class="mt-4 w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    {{ _("Exit Legal Center") }}
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <!-- Search Bar -->
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="flex-1 relative">
+                        <span
+                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input type="text" placeholder="{{ _('Search within document...') }}"
+                            class="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm" />
+                    </div>
+                    <button class="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                        <span class="material-symbols-outlined text-slate-600">print</span>
+                    </button>
+                    <button
+                        class="flex items-center gap-2 px-4 py-3 bg-primary text-charcoal rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors">
+                        <span class="material-symbols-outlined text-lg">download</span>
+                        {{ _("Download PDF") }}
+                    </button>
+                </div>
+
+                <!-- Welcome Content -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                    <div class="text-center py-12">
+                        <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span class="material-symbols-outlined text-4xl text-primary">gavel</span>
+                        </div>
+                        <h1 class="text-3xl font-black font-display text-charcoal mb-4">{{ _("Welcome to the Legal
+                            Center") }}</h1>
+                        <p class="text-slate-500 max-w-xl mx-auto mb-8">
+                            {{ _("Access all our legal documents, privacy policies, and regulatory compliance
+                            information. Select a document from the sidebar to get started.") }}
+                        </p>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                            <a href="/terms"
+                                class="p-4 bg-slate-50 hover:bg-primary/10 rounded-xl transition-colors group">
+                                <span
+                                    class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-primary mb-2">description</span>
+                                <p class="text-xs font-bold text-slate-600 group-hover:text-charcoal">{{ _("Terms") }}
+                                </p>
+                            </a>
+                            <a href="/privacy"
+                                class="p-4 bg-slate-50 hover:bg-primary/10 rounded-xl transition-colors group">
+                                <span
+                                    class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-primary mb-2">shield</span>
+                                <p class="text-xs font-bold text-slate-600 group-hover:text-charcoal">{{ _("Privacy") }}
+                                </p>
+                            </a>
+                            <a href="/paia"
+                                class="p-4 bg-slate-50 hover:bg-primary/10 rounded-xl transition-colors group">
+                                <span
+                                    class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-primary mb-2">menu_book</span>
+                                <p class="text-xs font-bold text-slate-600 group-hover:text-charcoal">{{ _("PAIA") }}
+                                </p>
+                            </a>
+                            <a href="/sahpra"
+                                class="p-4 bg-slate-50 hover:bg-primary/10 rounded-xl transition-colors group">
+                                <span
+                                    class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-primary mb-2">local_pharmacy</span>
+                                <p class="text-xs font-bold text-slate-600 group-hover:text-charcoal">{{ _("SAHPRA") }}
+                                </p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-blue-600">verified_user</span>
+                        </div>
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("POPIA Compliant") }}</h3>
+                        <p class="text-sm text-slate-500">{{ _("Your data is protected under the Protection of Personal
+                            Information Act.") }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-green-600">local_pharmacy</span>
+                        </div>
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("SAHPRA Approved") }}</h3>
+                        <p class="text-sm text-slate-500">{{ _("All medications dispensed are registered with SAHPRA.")
+                            }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-purple-600">lock</span>
+                        </div>
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("Secure Platform") }}</h3>
+                        <p class="text-sm text-slate-500">{{ _("End-to-end encryption protects all your health
+                            information.") }}</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

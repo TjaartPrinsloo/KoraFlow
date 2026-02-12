@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("Billing & Invoices") }} | {{ _("Slim2Well") }}</title>
+
+    <!-- Frappe Framework Scripts (required for API calls) -->
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script>
+        // Initialize frappe namespace
+        window.frappe = window.frappe || {};
+        frappe.csrf_token = "{{ frappe.session.csrf_token }}";
+        frappe.session = {
+            user: "{{ frappe.session.user }}",
+            csrf_token: "{{ frappe.session.csrf_token }}"
+        };
+
+        // Custom Modal Logic
+        let modalState = {
+            onConfirm: null,
+            onCancel: null
+        };
+
+        function showCustomModal(options) {
+            const modal = document.getElementById('custom-modal');
+            const titleEl = document.getElementById('custom-modal-title');
+            const msgEl = document.getElementById('custom-modal-message');
+            const iconEl = document.getElementById('modal-icon');
+            const iconContainer = document.getElementById('modal-icon-container');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+
+            if (!modal) {
+                // Fallback if modal HTML missing
+                if (options.onConfirm) {
+                    if (confirm(options.message)) options.onConfirm();
+                } else {
+                    alert(options.message);
+                }
+                return;
+            }
+
+            titleEl.textContent = options.title || 'Notification';
+            msgEl.textContent = options.message || '';
+
+            // Icon & Colors
+            iconEl.textContent = options.icon || 'info';
+            // Reset classes
+            // Reset classes
+            iconContainer.className = 'flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10';
+
+            // Base Button Classes (Layout)
+            confirmBtn.className = 'inline-flex w-full justify-center rounded-xl px-3 py-2 text-sm font-bold shadow-sm sm:w-auto transition-all';
+
+            if (options.type === 'error') {
+                iconContainer.classList.add('bg-red-100');
+                iconEl.className = 'material-symbols-outlined text-red-600';
+                confirmBtn.classList.add('bg-red-600', 'text-white', 'hover:bg-red-500');
+            } else if (options.type === 'success') {
+                iconContainer.classList.add('bg-green-100');
+                iconEl.className = 'material-symbols-outlined text-green-600';
+                confirmBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-500');
+            } else {
+                confirmBtn.classList.add('bg-primary', 'text-charcoal', 'hover:bg-primary/90');
+            }
+
+            // Text content
+            confirmBtn.textContent = options.confirmText || '{{ _("OK") }}';
+            if (options.hideCancel) {
+                cancelBtn.classList.add('hidden');
+            } else {
+                cancelBtn.classList.remove('hidden');
+                cancelBtn.textContent = options.cancelText || '{{ _("Cancel") }}';
+            }
+
+            // Callbacks
+            modalState.onConfirm = options.onConfirm;
+            modalState.onCancel = options.onCancel;
+
+            confirmBtn.onclick = function () {
+                if (modalState.onConfirm) modalState.onConfirm();
+                closeCustomModal();
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeCustomModal() {
+            const modal = document.getElementById('custom-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Polyfills for standalone page using Custom Modal
+        frappe.confirm = function (msg, yes_callback, no_callback) {
+            showCustomModal({
+                title: '{{ _("Please Confirm") }}',
+                message: msg,
+                icon: 'help',
+                confirmText: '{{ _("Continue") }}',
+                onConfirm: yes_callback,
+                onCancel: no_callback
+            });
+        };
+
+        frappe.msgprint = function (msg) {
+            let text = msg;
+            let type = 'info';
+            let title = '{{ _("Message") }}';
+            let icon = 'info';
+
+            if (typeof msg === 'object') {
+                text = msg.message || JSON.stringify(msg);
+                title = msg.title || title;
+                if (msg.indicator === 'green') { type = 'success'; icon = 'check_circle'; }
+                if (msg.indicator === 'red') { type = 'error'; icon = 'error'; }
+                if (msg.indicator === 'orange') { type = 'warning'; icon = 'warning'; }
+            }
+
+            showCustomModal({
+                title: title,
+                message: text,
+                type: type,
+                icon: icon,
+                hideCancel: true,
+                confirmText: '{{ _("Close") }}'
+            });
+        };
+
+        frappe.throw = function (msg) {
+            console.error(msg);
+            frappe.msgprint({
+                title: '{{ _("Error") }}',
+                message: msg,
+                indicator: 'red'
+            });
+            throw new Error(msg);
+        }
+
+        frappe.call = function (opts) {
+            return $.ajax({
+                type: opts.type || "POST",
+                url: "/api/method/" + opts.method,
+                data: opts.args || {},
+                headers: {
+                    "X-Frappe-CSRF-Token": frappe.csrf_token
+                },
+                beforeSend: function () {
+                    if (opts.freeze) {
+                        // Optional: Show loader
+                        document.body.style.cursor = 'wait';
+                    }
+                },
+                success: function (data) {
+                    if (opts.callback) opts.callback(data);
+                },
+                error: function (xhr) {
+                    document.body.style.cursor = 'default';
+                    try {
+                        let err = JSON.parse(xhr.responseText);
+                        if (opts.error) opts.error(err);
+                        else frappe.msgprint(err._server_messages ? JSON.parse(JSON.parse(err._server_messages)[0]).message : "An error occurred");
+                    } catch (e) {
+                        console.error(xhr);
+                        alert("An error occurred during the request.");
+                    }
+                },
+                complete: function () {
+                    document.body.style.cursor = 'default';
+                }
+            });
+        };
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                        "accent-warning": "#FFB300",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #2D2D2D;
+            color: #C1E12F;
+            font-weight: 700;
+        }
+
+        .active-nav:hover {
+            color: #C1E12F;
+        }
+
+        .logo-circle {
+            background-color: #2D2D2D;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .table-header {
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex transition-colors duration-300">
+    <!-- Sidebar Navigation -->
+    <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-black">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-white font-bold text-xs logo-circle">
+                <span class="text-white">s<span class="text-primary">2</span>w</span>
+            </div>
+            <div>
+                <h1 class="font-display font-bold text-xl tracking-tight dark:text-white">slim<span
+                        class="text-primary">2</span>well</h1>
+                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Patient Portal</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/portal_dashboard">
+                <span class="material-symbols-outlined">grid_view</span>
+                <span class="font-semibold text-sm">{{ _("Dashboard") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/my_treatment">
+                <span class="material-symbols-outlined">prescriptions</span>
+                <span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/vitals">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="font-semibold text-sm">{{ _("Vitals") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/billing">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span class="font-semibold text-sm">{{ _("Billing") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/resources">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span class="font-semibold text-sm">{{ _("Resources") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/patient_profile">
+                <span class="material-symbols-outlined">settings_suggest</span>
+                <span class="font-semibold text-sm">{{ _("Profile") }}</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <!-- Logout Button -->
+            <a href="/?cmd=web_logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                {{ _("Log Out") }}
+            </a>
+        </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+        <!-- Top Navigation Bar -->
+        <header
+            class="h-16 md:h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="hidden md:block">
+                    <h2 class="text-xl font-bold font-display tracking-tight">{{ _("Payments & Invoices") }}</h2>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <!-- Theme/Notifications/Settings Removed -->
+                <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold leading-none">{{ patient.first_name if patient else "Guest" }} {{
+                            patient.last_name or "" if patient else "" }}
+                        </p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
+                            Member") }}</p>
+                    </div>
+                    <div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 shadow-sm bg-cover bg-center"
+                        data-alt="Patient profile avatar circular image"
+                        style='background-image: url("{{ patient.image or "https://lh3.googleusercontent.com/aida-public/AB6AXuAL3hA5SD4KcL_OB0mXuu9sGKrcMcP5j_8ZlLJRX6j6Gqh_tySVYhVWjA4Xj5EKALG8M5qC3tqtyFxAvoqiUEXVatC6Fe6La800cTFqqxVTZo9D8jXsz00kcvJzEf6SWDx3mwglb60dmMGLL81KW1SLfVGpELoDvLE65mPUl3gxgLBXZICCxCN_agNqVqqY9-2H99y9zHbIzkb1WS4owE1bgx4VXk0VLkxqrA0Xmz18rBkCNDpi7IDrXrkmajNW_GMbyxpY9BLY8jwy" if patient else "" }}");'>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-8 max-w-6xl mx-auto space-y-6 md:space-y-8 flex-grow">
+            <!-- Page Header & Stat -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white mb-2">{{
+                        _("Billing History") }}</h1>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-xl">{{ _("Manage your medical payments and
+                        download S4 prescription invoices.") }}</p>
+                </div>
+                <!-- Stat Card -->
+                <div
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl min-w-[280px] shadow-sm flex flex-col justify-center">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{{ _("Total Invoiced
+                        (YTD)") }}</p>
+                    <div class="flex items-center gap-3">
+                        <span class="text-4xl font-black text-primary">{{
+                            frappe.format_value(total_invoiced or 0, currency=invoices[0].currency if invoices else
+                            "ZAR") }}</span>
+                        <!-- optional badge logic -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Payments (Quotations) -->
+            {% if quotations %}
+            <div>
+                <h2 class="text-xl font-bold font-display tracking-tight text-charcoal dark:text-white mb-4">{{
+                    _("Pending Payments") }}</h2>
+                <div
+                    class="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm mb-8">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-black/40 border-b border-slate-100 dark:border-slate-800">
+                                <th
+                                    class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 table-header">
+                                    {{ _("Date") }}</th>
+                                <th
+                                    class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 table-header">
+                                    {{ _("Reference") }}</th>
+                                <th
+                                    class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-right table-header">
+                                    {{ _("Amount") }}</th>
+                                <th
+                                    class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-center table-header">
+                                    {{ _("Status") }}</th>
+                                <th
+                                    class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-center table-header">
+                                    {{ _("Actions") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            {% for qt in quotations %}
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group">
+                                <td class="px-8 py-6 text-sm font-bold text-slate-700 dark:text-slate-300">{{
+                                    frappe.format_date(qt.transaction_date) }}</td>
+                                <td class="px-8 py-6 text-sm font-bold text-primary">
+                                    {{ qt.name }}
+                                    <span class="block text-xs text-slate-400 font-normal mt-1">{{ qt.title or "New
+                                        Order" }}</span>
+                                </td>
+                                <td class="px-8 py-6 text-sm font-black text-right text-charcoal dark:text-white">{{
+                                    frappe.format_value(qt.grand_total, currency=qt.currency or 'ZAR') }}</td>
+                                <td class="px-8 py-6 text-center">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold border justify-center min-w-[80px] bg-accent-warning/10 text-accent-warning border-accent-warning/20">
+                                        {{ qt.status }}
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button onclick="viewQuotation('{{ qt.name }}')"
+                                            class="size-10 inline-flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all"
+                                            title="{{ _('View Quote') }}">
+                                            <span class="material-symbols-outlined">visibility</span>
+                                        </button>
+                                        <a href="/api/method/koraflow_core.api.billing.download_quotation_pdf?quotation_name={{ qt.name }}"
+                                            target="_blank"
+                                            class="size-10 inline-flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all"
+                                            title="{{ _('Download PDF') }}">
+                                            <span class="material-symbols-outlined">download</span>
+                                        </a>
+                                        <!-- Future: Add Pay Now Button -->
+                                        {% if qt.status == "Open" %}
+                                        <button onclick="acceptQuotation('{{ qt.name }}')"
+                                            class="inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-charcoal font-bold text-xs hover:bg-white hover:text-black border border-primary transition-all">
+                                            {{ _("Accept") }}
+                                        </button>
+                                        <button onclick="rejectQuotation('{{ qt.name }}')"
+                                            class="inline-flex items-center justify-center h-10 px-4 rounded-lg bg-red-50 text-red-600 font-bold text-xs hover:bg-red-100 border border-red-200 transition-all">
+                                            {{ _("Decline") }}
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card View for Pending Payments -->
+                <div class="md:hidden space-y-4 mb-8">
+                    {% for qt in quotations %}
+                    <div
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{
+                                    frappe.format_date(qt.transaction_date) }}</span>
+                                <h3 class="font-bold text-lg text-primary mt-1">{{ qt.name }}</h3>
+                                <p class="text-xs text-slate-400">{{ qt.title or "New Order" }}</p>
+                            </div>
+                            <span
+                                class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold border justify-center bg-accent-warning/10 text-accent-warning border-accent-warning/20">
+                                {{ qt.status }}
+                            </span>
+                        </div>
+
+                        <div
+                            class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <span class="text-sm font-bold text-slate-500">{{ _("Amount") }}</span>
+                            <span class="text-xl font-black text-charcoal dark:text-white">{{
+                                frappe.format_value(qt.grand_total, currency=qt.currency or 'ZAR') }}</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="viewQuotation('{{ qt.name }}')"
+                                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                                <span class="material-symbols-outlined text-lg">visibility</span>
+                                {{ _("View") }}
+                            </button>
+                            <a href="/api/method/koraflow_core.api.billing.download_quotation_pdf?quotation_name={{ qt.name }}"
+                                target="_blank"
+                                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                                <span class="material-symbols-outlined text-lg">download</span>
+                                {{ _("PDF") }}
+                            </a>
+                            {% if qt.status == "Open" %}
+                            <button onclick="acceptQuotation('{{ qt.name }}')"
+                                class="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-charcoal font-bold text-sm hover:bg-white hover:text-black border border-primary transition-all shadow-sm">
+                                {{ _("Accept Quotation") }}
+                            </button>
+                            <button onclick="rejectQuotation('{{ qt.name }}')"
+                                class="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 border border-red-200 transition-all">
+                                {{ _("Decline") }}
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- PDF Modal -->
+            <div id="pdf-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+                aria-modal="true">
+                <div class="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closePdfModal()">
+                </div>
+                <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                        <div
+                            class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl h-[85vh] flex flex-col">
+                            <!-- Modal Header -->
+                            <div
+                                class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+                                <h3 class="text-lg font-bold text-charcoal dark:text-white flex items-center gap-2"
+                                    id="modal-title">
+                                    <span class="material-symbols-outlined text-primary">description</span>
+                                    {{ _("Document Viewer") }}
+                                </h3>
+                                <button type="button" onclick="closePdfModal()"
+                                    class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 transition-colors">
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+
+                            <!-- Modal Content (Iframe) -->
+                            <div class="flex-1 bg-slate-50 dark:bg-black/50 p-0 relative">
+                                <div id="pdf-loader" class="absolute inset-0 flex items-center justify-center">
+                                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                                </div>
+                                <iframe id="pdf-frame" class="w-full h-full border-0"
+                                    onload="document.getElementById('pdf-loader').style.display='none'"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Confirmation/Alert Modal -->
+            <div id="custom-modal" class="fixed inset-0 z-[60] hidden" aria-labelledby="custom-modal-title"
+                role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"></div>
+                <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                        <div
+                            class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-800">
+                            <div class="p-6">
+                                <div class="flex items-start gap-4">
+                                    <div id="modal-icon-container"
+                                        class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
+                                        <span id="modal-icon" class="material-symbols-outlined text-primary">info</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-bold text-charcoal dark:text-white"
+                                            id="custom-modal-title"></h3>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-slate-500 dark:text-slate-400"
+                                                id="custom-modal-message"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-black/30 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+                                <button type="button" id="modal-confirm-btn"
+                                    class="inline-flex w-full justify-center rounded-xl bg-primary px-3 py-2 text-sm font-bold text-charcoal shadow-sm hover:bg-primary/90 sm:w-auto transition-all">
+                                    {{ _("Confirm") }}
+                                </button>
+                                <button type="button" id="modal-cancel-btn" onclick="closeCustomModal()"
+                                    class="inline-flex w-full justify-center rounded-xl bg-white dark:bg-slate-800 px-3 py-2 text-sm font-bold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 sm:w-auto transition-all">
+                                    {{ _("Cancel") }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Instructions Modal -->
+            <div id="payment-modal" class="fixed inset-0 z-[70] hidden" aria-labelledby="payment-modal-title"
+                role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"></div>
+                <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                        <div
+                            class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-800">
+                            <!-- Header -->
+                            <div
+                                class="bg-primary/10 px-6 py-6 flex flex-col items-center justify-center text-center border-b border-primary/20">
+                                <div
+                                    class="h-16 w-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
+                                    <span class="material-symbols-outlined text-3xl text-primary">account_balance</span>
+                                </div>
+                                <h3 class="text-xl font-black font-display text-charcoal dark:text-white"
+                                    id="payment-modal-title">{{ _("Payment Details") }}</h3>
+                                <p class="text-sm text-slate-500 font-medium mt-1">{{ _("Please use the details below to
+                                    complete your payment.") }}</p>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="p-6 space-y-6">
+                                <!-- Reference -->
+                                <div
+                                    class="bg-slate-50 dark:bg-black/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                    <p class="text-xs uppercase font-bold tracking-widest text-slate-500 mb-1">{{
+                                        _("Your Reference") }}</p>
+                                    <p class="text-2xl font-black text-charcoal dark:text-white tracking-tight"
+                                        id="payment-reference">---</p>
+                                    <p class="text-[10px] text-red-500 font-bold mt-2">{{ _("IMPORTANT: You must use
+                                        this reference for allocation.") }}</p>
+                                </div>
+
+                                <!-- Bank Details -->
+                                <div class="space-y-3">
+                                    <div
+                                        class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                                        <span class="text-sm text-slate-500">{{ _("Bank") }}</span>
+                                        <span class="text-sm font-bold text-charcoal dark:text-white">{{ _("Standard
+                                            Bank") }}</span>
+                                    </div>
+                                    <div
+                                        class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                                        <span class="text-sm text-slate-500">{{ _("Account Name") }}</span>
+                                        <span class="text-sm font-bold text-charcoal dark:text-white">{{ _("Slim2Well
+                                            Pty Ltd") }}</span>
+                                    </div>
+                                    <div
+                                        class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                                        <span class="text-sm text-slate-500">{{ _("Account Number") }}</span>
+                                        <span class="text-sm font-bold text-charcoal dark:text-white text-right">
+                                            1017 5689 002
+                                            <button onclick="navigator.clipboard.writeText('10175689002')"
+                                                class="ml-2 text-primary hover:text-primary/70" title="Copy">
+                                                <span
+                                                    class="material-symbols-outlined text-sm align-middle">content_copy</span>
+                                            </button>
+                                        </span>
+                                    </div>
+                                    <div
+                                        class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                                        <span class="text-sm text-slate-500">{{ _("Branch Code") }}</span>
+                                        <span class="text-sm font-bold text-charcoal dark:text-white">{{ _("051001")
+                                            }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="bg-slate-50 dark:bg-black/30 px-6 py-4 flex gap-3">
+                                <button type="button" onclick="closePaymentModal()"
+                                    class="flex-1 justify-center rounded-xl bg-primary px-3 py-3 text-sm font-bold text-charcoal shadow-sm hover:bg-primary/90 transition-all flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">check</span>
+                                    {{ _("I Have Made Payment") }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function showPaymentModal(reference) {
+                    const modal = document.getElementById('payment-modal');
+                    const refEl = document.getElementById('payment-reference');
+                    refEl.textContent = reference;
+                    modal.classList.remove('hidden');
+                }
+
+                function closePaymentModal() {
+                    const modal = document.getElementById('payment-modal');
+                    modal.classList.add('hidden');
+                    // Refresh page to show new status
+                    window.location.reload();
+                }
+
+                function viewQuotation(quotationName) {
+                    const url = `/api/method/koraflow_core.api.billing.download_quotation_pdf?quotation_name=${quotationName}`;
+                    openPdfModal(url);
+                }
+
+                function openPdfModal(url) {
+                    const modal = document.getElementById('pdf-modal');
+                    const frame = document.getElementById('pdf-frame');
+                    const loader = document.getElementById('pdf-loader');
+
+                    frame.src = url;
+                    loader.style.display = 'flex';
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                }
+
+                function closePdfModal() {
+                    const modal = document.getElementById('pdf-modal');
+                    const frame = document.getElementById('pdf-frame');
+
+                    modal.classList.add('hidden');
+                    frame.src = ''; // Clear source to stop loading
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+
+                function acceptQuotation(quotationName) {
+                    frappe.confirm(
+                        '{{ _("Are you sure you want to accept this quotation? This will generate an invoice.") }}',
+                        () => {
+                            frappe.call({
+                                method: 'koraflow_core.api.billing.accept_quotation',
+                                args: {
+                                    quotation_name: quotationName
+                                },
+                                freeze: true,
+                                freeze_message: '{{ _("Processing your acceptance...") }}',
+                                callback: function (r) {
+                                    if (r.message && r.message.success) {
+                                        // Show Payment Modal with new Invoice ID
+                                        if (r.message.sales_invoice) {
+                                            showPaymentModal(r.message.sales_invoice);
+                                        } else {
+                                            // Fallback if no invoice ID returned (shouldn't happen)
+                                            frappe.msgprint({
+                                                title: '{{ _("Success") }}',
+                                                indicator: 'green',
+                                                message: r.message.message
+                                            });
+                                            setTimeout(() => {
+                                                window.location.reload();
+                                            }, 1500);
+                                        }
+                                    } else {
+                                        frappe.msgprint({
+                                            title: '{{ _("Error") }}',
+                                            indicator: 'red',
+                                            message: r.message ? r.message.error : 'Unknown error'
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    );
+                }
+
+                function rejectQuotation(quotationName) {
+                    frappe.confirm(
+                        '{{ _("Are you sure you want to decline this quotation?") }}',
+                        () => {
+                            frappe.call({
+                                method: 'koraflow_core.api.billing.reject_quotation',
+                                args: {
+                                    quotation_name: quotationName
+                                },
+                                freeze: true,
+                                freeze_message: '{{ _("Processing...") }}',
+                                callback: function (r) {
+                                    if (r.message && r.message.success) {
+                                        frappe.msgprint({
+                                            title: '{{ _("Success") }}',
+                                            indicator: 'orange',
+                                            message: r.message.message
+                                        });
+                                        setTimeout(() => {
+                                            window.location.reload();
+                                        }, 1500);
+                                    } else {
+                                        frappe.msgprint({
+                                            title: '{{ _("Error") }}',
+                                            indicator: 'red',
+                                            message: r.message ? r.message.error : 'Unknown error'
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    );
+                }
+            </script>
+
+            <!-- Filters -->
+            <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex-1 w-full md:min-w-[300px]">
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input
+                            class="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-black/50 border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-black transition-all text-sm placeholder:text-slate-400"
+                            placeholder="{{ _('Search by Invoice ID or Medication') }}" type="text" />
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pr-0 md:pr-2 w-full md:w-auto">
+                    <button
+                        class="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-bold text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+                        {{ _("Last 90 Days") }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Invoice Table Desktop -->
+            <div
+                class="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-black/40 border-b border-slate-100 dark:border-slate-800">
+                            <th
+                                class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 table-header">
+                                {{
+                                _("Date") }}</th>
+                            <th
+                                class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 table-header">
+                                {{
+                                _("Invoice ID") }}</th>
+                            <th
+                                class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 table-header">
+                                {{
+                                _("Description") }}</th>
+                            <th
+                                class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-right table-header">
+                                {{ _("Amount") }}</th>
+                            <th
+                                class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-center table-header">
+                                {{ _("Status") }}</th>
+                            <th
+                                class="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-center table-header">
+                                {{ _("Actions") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        {% if invoices %}
+                        {% for inv in invoices %}
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group">
+                            <td class="px-8 py-6 text-sm font-bold text-slate-700 dark:text-slate-300">{{
+                                frappe.format_date(inv.posting_date) }}
+                            </td>
+                            <td class="px-8 py-6 text-sm font-bold text-primary">{{ inv.name }}
+                            </td>
+                            <td class="px-8 py-6">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-charcoal dark:text-white">{{ _("Invoice
+                                        Payment") }}</span>
+                                    <span class="text-xs text-slate-400 mt-0.5">{{ _("Due:") }} {{
+                                        frappe.format_date(inv.due_date) }}</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 text-sm font-black text-right text-charcoal dark:text-white">{{
+                                frappe.format_value(inv.grand_total, currency=inv.currency) }}</td>
+                            <td class="px-8 py-6 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold border justify-center min-w-[80px]
+                                    {% if inv.status == 'Paid' %} bg-green-50 text-green-700 border-green-200
+                                    {% elif inv.status == 'Overdue' %} bg-red-50 text-red-700 border-red-200
+                                    {% else %} bg-slate-100 text-slate-600 border-slate-200 {% endif %}">
+                                    {{ inv.status }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-center">
+                                <a href="/api/method/koraflow_core.api.billing.download_invoice_pdf?invoice_name={{ inv.name }}"
+                                    target="_blank"
+                                    class="size-10 inline-flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all"
+                                    title="{{ _('Print/Download Invoice') }}">
+                                    <span class="material-symbols-outlined">print</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">receipt_long</span>
+                                <p class="text-slate-500">{{ _("No invoices found.") }}</p>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Invoice Mobile Card View -->
+            <div class="md:hidden space-y-4">
+                {% if invoices %}
+                {% for inv in invoices %}
+                <div
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{
+                                frappe.format_date(inv.posting_date) }}</span>
+                            <h3 class="font-bold text-lg text-primary mt-1">{{ inv.name }}</h3>
+                            <p class="text-xs text-slate-400 mt-1">{{ _("Due:") }} {{ frappe.format_date(inv.due_date)
+                                }}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold border justify-center
+                            {% if inv.status == 'Paid' %} bg-green-50 text-green-700 border-green-200
+                            {% elif inv.status == 'Overdue' %} bg-red-50 text-red-700 border-red-200
+                            {% else %} bg-slate-100 text-slate-600 border-slate-200 {% endif %}">
+                            {{ inv.status }}
+                        </span>
+                    </div>
+
+                    <div
+                        class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                        <span class="text-sm font-bold text-slate-500">{{ _("Amount") }}</span>
+                        <span class="text-xl font-black text-charcoal dark:text-white">{{
+                            frappe.format_value(inv.grand_total, currency=inv.currency) }}</span>
+                    </div>
+
+                    <div>
+                        <a href="/api/method/koraflow_core.api.billing.download_invoice_pdf?invoice_name={{ inv.name }}"
+                            target="_blank"
+                            class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                            <span class="material-symbols-outlined text-lg">print</span>
+                            {{ _("Print Invoice") }}
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div
+                    class="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200">
+                    <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">receipt_long</span>
+                    <p class="text-slate-500">{{ _("No invoices found.") }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer
+            class="px-4 md:px-10 py-6 md:py-8 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-8 mt-auto bg-white dark:bg-black">
+            <div class="flex items-center gap-2 opacity-50">
+                <span class="material-symbols-outlined text-sm">copyright</span>
+                <span class="text-xs font-bold uppercase tracking-widest">{{ _("2026 Slim2Well South Africa")
+                    }}</span>
+            </div>
+            <div class="flex gap-4 md:gap-8 opacity-60">
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/privacy">{{
+                    _("Privacy") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/legal">{{
+                    _("Legal") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/terms">{{
+                    _("Terms") }}</a>
+            </div>
+        </footer>
+    </main>
+</body>
+
+</html>

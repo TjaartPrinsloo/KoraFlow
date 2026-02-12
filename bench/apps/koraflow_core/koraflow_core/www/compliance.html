@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regulatory Compliance - KoraFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <nav class="bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/app" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-xl font-bold text-gray-900">Regulatory Compliance</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="compliance-badge" class="px-3 py-1 text-sm font-medium rounded-full">Loading...</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar + Main Container -->
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
+                <div class="mb-6">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Account Settings</h3>
+                    <nav class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span>Profile Settings</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
+                            </svg>
+                            <span>Security</span>
+                        </a>
+                        <a href="/bank-details"
+                            class="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                                </path>
+                            </svg>
+                            <span>Bank Details</span>
+                        </a>
+                        <a href="/compliance"
+                            class="flex items-center gap-3 px-3 py-2 text-blue-600 bg-blue-50 rounded-lg font-medium">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
+                            </svg>
+                            <span>Compliance</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- POPIA Notice -->
+                <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                    <div class="flex items-start gap-2 mb-2">
+                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <h4 class="text-sm font-bold text-blue-900 mb-1">POPIA & SAHPRA NOTICE</h4>
+                            <p class="text-xs text-blue-800 leading-relaxed">All financial data is encrypted at rest
+                                using AES-256. We collect this information solely for commission payouts in compliance
+                                with SAHPRA regulatory guidelines and the Protection of Personal Information Act
+                                (POPIA).</p>
+                        </div>
+                    </div>
+                    <ul class="mt-3 space-y-1 text-xs text-blue-800">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            End-to-end encryption for payout data
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            No data shared with third-party vendors
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Audit logs maintained for every update
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-8">
+                <div class="max-w-4xl">
+                    <p class="text-gray-600 mb-8">Manage your legal standing and mandatory regulatory agreements.</p>
+
+                    <!-- Requirement Notice -->
+                    <div id="requirement-notice" class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg"
+                        style="display: none;">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="flex-1">
+                                <h3 class="text-sm font-bold text-yellow-900 mb-1">REQUIREMENT</h3>
+                                <p class="text-sm text-yellow-800">Mandatory compliance is required for receiving
+                                    commission payouts. Please ensure all legal agreements are signed and up to date.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legal Agreements Section -->
+                    <section class="mb-8">
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
+                            </svg>
+                            <h2 class="text-lg font-bold text-gray-900">Legal Agreements & Certifications</h2>
+                        </div>
+
+                        <div class="space-y-4" id="agreements-container">
+                            <!-- Agreements will be loaded here by JavaScript -->
+                        </div>
+                    </section>
+
+                    <!-- Compliance Features -->
+                    <section>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-sm font-bold text-gray-900 mb-2">Data Encryption</h3>
+                                <p class="text-sm text-gray-600">All signed agreements are cryptographically hashed and
+                                    stored in our secure vault.</p>
+                            </div>
+
+                            <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-sm font-bold text-gray-900 mb-2">Audit Trail</h3>
+                                <p class="text-sm text-gray-600">Comprehensive logs are maintained for all compliance
+                                    activities to ensure transparency.</p>
+                            </div>
+
+                            <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-sm font-bold text-gray-900 mb-2">Regulatory Updates</h3>
+                                <p class="text-sm text-gray-600">Automatic notifications are sent when new SAHPRA or
+                                    POPIA mandates require action.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/assets/koraflow_core/js/compliance_page.js"></script>
+</body>
+
+</html>

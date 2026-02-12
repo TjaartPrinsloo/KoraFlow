@@ -11,6 +11,9 @@
         "last_name",
         "legal_name",
         "id_number",
+        "sa_id_number",
+        "passport_number",
+        "passport_country",
         "dob",
         "age",
         "biological_sex",
@@ -32,66 +35,72 @@
         "resting_heart_rate",
         "section_safety",
         "intake_last_dose_date",
-        "planned_surgery",
+        "intake_planned_surgery",
         "section_2_high_risk",
-        "medullary_thyroid_carcinoma",
-        "men2_syndrome",
-        "pancreatitis_history",
-        "gallstones_history",
-        "gallbladder_removal",
+        "intake_mtc",
+        "intake_men2",
+        "intake_pancreatitis",
+        "intake_gallstones",
+        "intake_gallbladder_removal",
         "column_break_gastro",
-        "gastroparesis",
-        "frequent_nausea",
-        "early_fullness",
+        "intake_gastroparesis",
+        "intake_frequent_nausea",
+        "intake_early_fullness",
+        "intake_upcoming_surgery",
+        "intake_surgery_details",
         "section_3_organ_systems",
-        "kidney_disease_history",
-        "egfr",
-        "creatinine",
+        "intake_diabetes_type",
+        "intake_kidney_disease",
+        "intake_egfr",
+        "intake_creatinine",
         "column_break_renal",
-        "diabetic_retinopathy",
-        "last_dilated_eye_exam",
-        "heart_attack_history",
-        "stroke_history",
-        "heart_failure_history",
+        "intake_diabetic_retinopathy",
+        "intake_last_eye_exam",
+        "intake_heart_attack",
+        "intake_stroke",
+        "intake_heart_failure",
         "section_4_medication",
-        "taking_insulin",
-        "taking_sulfonylureas",
-        "insulin_sulfonylurea_dose",
+        "intake_taking_insulin",
+        "intake_taking_sulfonylureas",
+        "intake_insulin_dose",
         "column_break_meds",
-        "narrow_therapeutic_window_drugs",
+        "intake_narrow_window_drugs",
+        "intake_known_allergies",
+        "intake_alcohol_frequency",
         "section_5_glp1_history",
-        "medications_used_ozempic",
-        "medications_used_wegovy",
-        "medications_used_mounjaro",
-        "medications_used_zepbound",
-        "highest_dose_reached",
-        "last_dose_date",
+        "intake_med_ozempic",
+        "intake_med_wegovy",
+        "intake_med_mounjaro",
+        "intake_med_zepbound",
+        "intake_highest_dose",
+        "intake_last_dose_date",
         "column_break_side_effects",
-        "side_effects_nausea",
-        "side_effects_vomiting",
-        "side_effects_diarrhea",
-        "side_effects_constipation",
-        "side_effects_reflux",
-        "side_effects_severity",
+        "intake_se_nausea",
+        "intake_se_vomiting",
+        "intake_se_diarrhea",
+        "intake_se_constipation",
+        "intake_se_reflux",
+        "intake_se_severity",
         "section_6_psychological",
-        "scoff_question_1",
-        "scoff_question_2",
-        "scoff_question_3",
-        "scoff_question_4",
-        "scoff_question_5",
+        "intake_scoff_1",
+        "intake_scoff_2",
+        "intake_scoff_3",
+        "intake_scoff_4",
+        "intake_scoff_5",
         "column_break_motivation",
-        "motivation_health",
-        "motivation_appearance",
-        "motivation_mobility",
-        "goal_weight",
+        "intake_motivation_health",
+        "intake_motivation_appearance",
+        "intake_motivation_mobility",
+        "intake_goal_weight",
         "section_7_reproductive",
-        "pregnant",
-        "breastfeeding",
-        "planning_to_conceive",
+        "intake_pregnant",
+        "intake_breastfeeding",
+        "intake_planning_conceive",
         "section_metadata",
         "clinician_signature",
         "completion_date",
-        "form_status"
+        "form_status",
+        "custom_referrer_name"
     ],
     "fields": [
         {
@@ -119,8 +128,28 @@
         {
             "fieldname": "id_number",
             "fieldtype": "Data",
-            "label": "ID / Passport Number",
-            "description": "Used to derive age and legal eligibility [cite: 13, 14]"
+            "label": "ID / Passport Number (Legacy)",
+            "description": "DEPRECATED: Use SA ID Number or Passport fields instead.",
+            "hidden": 1
+        },
+        {
+            "fieldname": "sa_id_number",
+            "fieldtype": "Data",
+            "label": "South African ID Number",
+            "description": "Your 13-digit South African Identity Number"
+        },
+        {
+            "fieldname": "passport_number",
+            "fieldtype": "Data",
+            "label": "Passport Number",
+            "description": "If you don't have a South African ID"
+        },
+        {
+            "fieldname": "passport_country",
+            "fieldtype": "Link",
+            "label": "Passport Country",
+            "options": "Country",
+            "description": "Country that issued your passport"
         },
         {
             "fieldname": "dob",
@@ -258,27 +287,27 @@
             "label": "Section 2: High-Risk Clinical Screening and Oncology Vigilance"
         },
         {
-            "fieldname": "medullary_thyroid_carcinoma",
+            "fieldname": "intake_mtc",
             "fieldtype": "Check",
             "label": "History of Medullary Thyroid Carcinoma (MTC)"
         },
         {
-            "fieldname": "men2_syndrome",
+            "fieldname": "intake_men2",
             "fieldtype": "Check",
             "label": "History of Multiple Endocrine Neoplasia Type 2 (MEN 2)"
         },
         {
-            "fieldname": "pancreatitis_history",
+            "fieldname": "intake_pancreatitis",
             "fieldtype": "Check",
             "label": "History of Pancreatitis"
         },
         {
-            "fieldname": "gallstones_history",
+            "fieldname": "intake_gallstones",
             "fieldtype": "Check",
             "label": "History of Gallstones"
         },
         {
-            "fieldname": "gallbladder_removal",
+            "fieldname": "intake_gallbladder_removal",
             "fieldtype": "Check",
             "label": "Gallbladder Removal"
         },
@@ -287,19 +316,31 @@
             "fieldtype": "Column Break"
         },
         {
-            "fieldname": "gastroparesis",
+            "fieldname": "intake_gastroparesis",
             "fieldtype": "Check",
             "label": "Diagnosed with Gastroparesis"
         },
         {
-            "fieldname": "frequent_nausea",
+            "fieldname": "intake_frequent_nausea",
             "fieldtype": "Check",
             "label": "Frequent Nausea"
         },
         {
-            "fieldname": "early_fullness",
+            "fieldname": "intake_early_fullness",
             "fieldtype": "Check",
             "label": "Early Fullness"
+        },
+        {
+            "default": 0,
+            "fieldname": "intake_upcoming_surgery",
+            "fieldtype": "Check",
+            "label": "Upcoming Surgery (Next 8 Weeks)"
+        },
+        {
+            "depends_on": "eval:doc.intake_upcoming_surgery == 1",
+            "fieldname": "intake_surgery_details",
+            "fieldtype": "Small Text",
+            "label": "Surgery Details"
         },
         {
             "fieldname": "section_3_organ_systems",
@@ -307,17 +348,23 @@
             "label": "Section 3: Organ Systems Review and Laboratory Integration"
         },
         {
-            "fieldname": "kidney_disease_history",
+            "fieldname": "intake_diabetes_type",
+            "fieldtype": "Select",
+            "label": "Diabetes Status",
+            "options": "\nNo Diabetes\nType 1 Diabetes\nType 2 Diabetes\nPre-diabetes\nGestational Diabetes (History)"
+        },
+        {
+            "fieldname": "intake_kidney_disease",
             "fieldtype": "Check",
             "label": "History of Kidney Disease"
         },
         {
-            "fieldname": "egfr",
+            "fieldname": "intake_egfr",
             "fieldtype": "Float",
             "label": "eGFR (mL/min/1.73m²)"
         },
         {
-            "fieldname": "creatinine",
+            "fieldname": "intake_creatinine",
             "fieldtype": "Float",
             "label": "Creatinine"
         },
@@ -326,27 +373,27 @@
             "fieldtype": "Column Break"
         },
         {
-            "fieldname": "diabetic_retinopathy",
+            "fieldname": "intake_diabetic_retinopathy",
             "fieldtype": "Check",
             "label": "Diabetic Retinopathy (if Diabetic)"
         },
         {
-            "fieldname": "last_dilated_eye_exam",
+            "fieldname": "intake_last_eye_exam",
             "fieldtype": "Date",
             "label": "Date of Last Dilated Eye Exam"
         },
         {
-            "fieldname": "heart_attack_history",
+            "fieldname": "intake_heart_attack",
             "fieldtype": "Check",
             "label": "History of Heart Attack"
         },
         {
-            "fieldname": "stroke_history",
+            "fieldname": "intake_stroke",
             "fieldtype": "Check",
             "label": "History of Stroke"
         },
         {
-            "fieldname": "heart_failure_history",
+            "fieldname": "intake_heart_failure",
             "fieldtype": "Check",
             "label": "History of Heart Failure"
         },
@@ -356,17 +403,17 @@
             "label": "Section 4: Current Medication and Substance Review"
         },
         {
-            "fieldname": "taking_insulin",
+            "fieldname": "intake_taking_insulin",
             "fieldtype": "Check",
             "label": "Taking Insulin"
         },
         {
-            "fieldname": "taking_sulfonylureas",
+            "fieldname": "intake_taking_sulfonylureas",
             "fieldtype": "Check",
             "label": "Taking Sulfonylureas (e.g., Glipizide, Glyburide)"
         },
         {
-            "fieldname": "insulin_sulfonylurea_dose",
+            "fieldname": "intake_insulin_dose",
             "fieldtype": "Small Text",
             "label": "Current Dose (if Yes)"
         },
@@ -375,9 +422,20 @@
             "fieldtype": "Column Break"
         },
         {
-            "fieldname": "narrow_therapeutic_window_drugs",
+            "fieldname": "intake_narrow_window_drugs",
             "fieldtype": "Small Text",
-            "label": "Narrow Therapeutic Window Drugs (e.g., Warfarin, Digoxin, Lithium, Levothyroxine)"
+            "label": "Narrow Therapeutic Drugs (e.g., Warfarin, Digoxin, Lithium)"
+        },
+        {
+            "fieldname": "intake_known_allergies",
+            "fieldtype": "Small Text",
+            "label": "Known Allergies (Medication/Food)"
+        },
+        {
+            "fieldname": "intake_alcohol_frequency",
+            "fieldtype": "Select",
+            "label": "Alcohol Consumption Frequency",
+            "options": "\nNone\nOccasional (1-2/month)\nModerate (1-2/week)\nFrequent (3+/week)"
         },
         {
             "fieldname": "section_5_glp1_history",
@@ -385,32 +443,32 @@
             "label": "Section 5: Longitudinal GLP-1 History and Titration Dynamics"
         },
         {
-            "fieldname": "medications_used_ozempic",
+            "fieldname": "intake_med_ozempic",
             "fieldtype": "Check",
             "label": "Ozempic"
         },
         {
-            "fieldname": "medications_used_wegovy",
+            "fieldname": "intake_med_wegovy",
             "fieldtype": "Check",
             "label": "Wegovy"
         },
         {
-            "fieldname": "medications_used_mounjaro",
+            "fieldname": "intake_med_mounjaro",
             "fieldtype": "Check",
             "label": "Mounjaro"
         },
         {
-            "fieldname": "medications_used_zepbound",
+            "fieldname": "intake_med_zepbound",
             "fieldtype": "Check",
             "label": "Zepbound"
         },
         {
-            "fieldname": "highest_dose_reached",
+            "fieldname": "intake_highest_dose",
             "fieldtype": "Data",
             "label": "Highest Dose Reached"
         },
         {
-            "fieldname": "last_dose_date",
+            "fieldname": "intake_last_dose_date",
             "fieldtype": "Date",
             "label": "Date of Last Dose"
         },
@@ -419,32 +477,32 @@
             "fieldtype": "Column Break"
         },
         {
-            "fieldname": "side_effects_nausea",
+            "fieldname": "intake_se_nausea",
             "fieldtype": "Check",
             "label": "Nausea"
         },
         {
-            "fieldname": "side_effects_vomiting",
+            "fieldname": "intake_se_vomiting",
             "fieldtype": "Check",
             "label": "Vomiting"
         },
         {
-            "fieldname": "side_effects_diarrhea",
+            "fieldname": "intake_se_diarrhea",
             "fieldtype": "Check",
             "label": "Diarrhea"
         },
         {
-            "fieldname": "side_effects_constipation",
+            "fieldname": "intake_se_constipation",
             "fieldtype": "Check",
             "label": "Constipation"
         },
         {
-            "fieldname": "side_effects_reflux",
+            "fieldname": "intake_se_reflux",
             "fieldtype": "Check",
             "label": "Reflux"
         },
         {
-            "fieldname": "side_effects_severity",
+            "fieldname": "intake_se_severity",
             "fieldtype": "Int",
             "label": "Severity (1-10)"
         },
@@ -454,27 +512,27 @@
             "label": "Section 6: Psychological Readiness (SCOFF Questionnaire)"
         },
         {
-            "fieldname": "scoff_question_1",
+            "fieldname": "intake_scoff_1",
             "fieldtype": "Check",
             "label": "Do you make yourself Sick because you feel uncomfortably full?"
         },
         {
-            "fieldname": "scoff_question_2",
+            "fieldname": "intake_scoff_2",
             "fieldtype": "Check",
             "label": "Do you worry you have lost Control over how much you eat?"
         },
         {
-            "fieldname": "scoff_question_3",
+            "fieldname": "intake_scoff_3",
             "fieldtype": "Check",
             "label": "Have you recently lost more than One stone (14 lbs) in 3 months?"
         },
         {
-            "fieldname": "scoff_question_4",
+            "fieldname": "intake_scoff_4",
             "fieldtype": "Check",
             "label": "Do you believe yourself to be Fat when others say you are thin?"
         },
         {
-            "fieldname": "scoff_question_5",
+            "fieldname": "intake_scoff_5",
             "fieldtype": "Check",
             "label": "Would you say that Food dominates your life?"
         },
@@ -483,22 +541,22 @@
             "fieldtype": "Column Break"
         },
         {
-            "fieldname": "motivation_health",
+            "fieldname": "intake_motivation_health",
             "fieldtype": "Check",
             "label": "Motivation: Health"
         },
         {
-            "fieldname": "motivation_appearance",
+            "fieldname": "intake_motivation_appearance",
             "fieldtype": "Check",
             "label": "Motivation: Appearance"
         },
         {
-            "fieldname": "motivation_mobility",
+            "fieldname": "intake_motivation_mobility",
             "fieldtype": "Check",
             "label": "Motivation: Mobility"
         },
         {
-            "fieldname": "goal_weight",
+            "fieldname": "intake_goal_weight",
             "fieldtype": "Float",
             "label": "Goal Weight"
         },
@@ -508,17 +566,17 @@
             "label": "Section 7: Reproductive Health and Teratogenicity Safety"
         },
         {
-            "fieldname": "pregnant",
+            "fieldname": "intake_pregnant",
             "fieldtype": "Check",
             "label": "Are you pregnant?"
         },
         {
-            "fieldname": "breastfeeding",
+            "fieldname": "intake_breastfeeding",
             "fieldtype": "Check",
             "label": "Are you breastfeeding?"
         },
         {
-            "fieldname": "planning_to_conceive",
+            "fieldname": "intake_planning_conceive",
             "fieldtype": "Check",
             "label": "Planning to conceive?"
         },
@@ -543,6 +601,11 @@
             "fieldtype": "Select",
             "label": "Form Status",
             "options": "\nDraft\nUnder Review\nReviewed\nCompleted"
+        },
+        {
+            "fieldname": "custom_referrer_name",
+            "fieldtype": "Data",
+            "label": "Referrer Name"
         }
     ],
     "index_web_pages_for_search": 0,

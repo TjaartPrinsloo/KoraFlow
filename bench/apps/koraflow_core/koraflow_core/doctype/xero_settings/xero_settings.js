@@ -10,7 +10,7 @@ frappe.ui.form.on("Xero Settings", {
 
     connect_to_xero: function (frm) {
         frappe.call({
-            method: "koraflow_core.koraflow_core.doctype.xero_settings.xero_settings.authorize",
+            method: "koraflow_core.doctype.xero_settings.xero_settings.authorize",
             callback: function (r) {
                 if (r.message) {
                     // Open URL in new window

@@ -1,28 +1,60 @@
 <form class="form-signin form-signup hide" role="form">
-    <div class="page-card-body">
+    <div class="page-card-body space-y-4">
+        <!-- Brand Header for Signup -->
+        <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold font-display text-charcoal">{{ _("Join Slim2Well") }}</h3>
+            <p class="text-slate-500 text-sm">{{ _("Start your weight loss journey today") }}</p>
+        </div>
+
         <div class="form-group">
             <label class="form-label sr-only" for="signup_fullname">{{ _("Full Name") }}</label>
-            <input type="text" id="signup_fullname" class="form-control" placeholder="{{ _('Jane Doe') }}"
-                required autofocus autocomplete="name">
+            <input type="text" id="signup_fullname"
+                class="form-control w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-primary focus:border-primary p-3 shadow-none"
+                placeholder="{{ _('Full Name') }}" required autofocus autocomplete="name">
         </div>
         <div class="form-group">
             <label class="form-label sr-only" for="signup_email">{{ _("Email") }}</label>
-            <input type="email" id="signup_email" class="form-control"
-                placeholder="{{ _('jane@example.com') }}" required autocomplete="username">
+            <input type="email" id="signup_email"
+                class="form-control w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-primary focus:border-primary p-3 shadow-none"
+                placeholder="{{ _('Email Address') }}" required autocomplete="username">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
             <label class="form-label sr-only" for="signup_password">{{ _("Password") }}</label>
-            <input type="password" id="signup_password" class="form-control"
-                placeholder="{{ _('Password') }}" required autocomplete="new-password" minlength="6">
+            <input type="password" id="signup_password" class="form-control" placeholder="{{ _('Password') }}"
+                autocomplete="new-password" minlength="6">
         </div>
     </div>
-    <div class="page-card-actions">
-        <button class="btn btn-sm btn-primary btn-block btn-signup"
-            type="submit">{{ _("Sign up") }}</button>
+    <div class="page-card-actions mt-6">
+        <button
+            class="btn btn-sm btn-primary btn-block btn-signup w-full bg-primary hover:bg-primary/90 text-charcoal font-bold py-3 rounded-xl transition-all shadow-md"
+            type="submit">
+            {{ _("Create Account") }}
+        </button>
 
-        <p class="text-center sign-up-message">
-            <a href="#login" class="blue">{{ _("Have an account? Login") }}</a>
+        <p class="text-center sign-up-message mt-4 text-sm text-slate-500">
+            {{ _("Already have an account?") }}
+            <a href="#login" class="text-primary font-bold hover:underline">{{ _("Login") }}</a>
         </p>
     </div>
 </form>
 
+<script>
+    frappe.ready(function () {
+        // Override login.call to intercept signup command
+        if (window.login && login.call) {
+            var original_login_call = login.call;
+            login.call = function (args, callback, url) {
+                if (args && args.cmd === "frappe.core.doctype.user.user.sign_up") {
+                    console.log("Intercepting signup call");
+                    args.cmd = "koraflow_core.api.patient_signup.custom_sign_up";
+                    // Ensure redirect_to is set correctly if missing
+                    if (!args.redirect_to) {
+                        args.redirect_to = "/glp1_intake_wizard";
+                    }
+                }
+                return original_login_call.apply(this, arguments);
+            };
+            console.log("login.call intercepted and customized for Slim2Well");
+        }
+    });
+</script>

@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from koraflow_core.koraflow_core.module_registry import ModuleRegistry
+from koraflow_core.module_registry import ModuleRegistry
 
 
 class KoraFlowModule(Document):

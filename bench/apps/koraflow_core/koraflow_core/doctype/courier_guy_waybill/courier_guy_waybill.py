@@ -4,7 +4,7 @@ Courier Guy Waybill Controller
 import frappe
 import json
 from frappe.model.document import Document
-from koraflow_core.koraflow_core.utils.courier_guy_api import CourierGuyAPI
+from koraflow_core.utils.courier_guy_api import CourierGuyAPI
 
 
 class CourierGuyWaybill(Document):

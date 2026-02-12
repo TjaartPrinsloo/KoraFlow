@@ -30,7 +30,6 @@
 					this.currentPage = 1;
 					this.itemsPerPage = 50;
 					this.allShipments = [];
-					this.waybill_dialog = null;
 					this.init();
 				}
 
@@ -338,46 +337,17 @@
 							<i class="fa fa-exclamation-triangle"></i> <span class="warning-message"></span>
 						</div>
 						<div class="dashboard-filters">
-							<div class="filter-row">
-								<div class="filter-group">
-									<label>From:</label>
-									<input type="date" class="form-control date-filter" id="dashboard-from-date" value="${fromDateStr}">
-								</div>
-								<div class="filter-group">
-									<label>To:</label>
-									<input type="date" class="form-control date-filter" id="dashboard-to-date" value="${toDateStr}">
-								</div>
+							<div class="filter-group">
+								<label>From:</label>
+								<input type="date" class="form-control date-filter" id="dashboard-from-date" value="${fromDateStr}">
 							</div>
-							<div class="filter-row">
-								<div class="filter-group">
-									<label>Status:</label>
-									<select class="form-control" id="filter-status" style="width: 140px;">
-										<option value="">All Statuses</option>
-										<option value="Delivered">Delivered</option>
-										<option value="In Transit">In Transit</option>
-										<option value="Collection Request">Collection Request</option>
-										<option value="Collected">Collected</option>
-										<option value="Out for Delivery">Out for Delivery</option>
-										<option value="Failed">Failed</option>
-									</select>
-								</div>
-								<div class="filter-group">
-									<label>Contact:</label>
-									<input type="text" class="form-control" id="filter-contact" placeholder="Search name..." style="width: 140px;">
-								</div>
-								<div class="filter-group">
-									<label>Cell:</label>
-									<input type="text" class="form-control" id="filter-cell" placeholder="Search number..." style="width: 140px;">
-								</div>
-								<div class="filter-actions">
-									<button class="btn btn-sm btn-primary apply-filters" onclick="if(window.koraflow_core && koraflow_core.courier_guy && koraflow_core.courier_guy.dashboard) { koraflow_core.courier_guy.dashboard.applyFilters(); }">
-										Apply
-									</button>
-									<button class="btn btn-sm btn-default clear-filters" onclick="if(window.koraflow_core && koraflow_core.courier_guy && koraflow_core.courier_guy.dashboard) { koraflow_core.courier_guy.dashboard.clearFilters(); }">
-										Clear
-									</button>
-								</div>
+							<div class="filter-group">
+								<label>To:</label>
+								<input type="date" class="form-control date-filter" id="dashboard-to-date" value="${toDateStr}">
 							</div>
+							<button class="btn btn-sm btn-primary apply-filters" onclick="if(window.koraflow_core && koraflow_core.courier_guy && koraflow_core.courier_guy.dashboard) { koraflow_core.courier_guy.dashboard.applyFilters(); }">
+								Apply
+							</button>
 						</div>
 						<div class="dashboard-loading">
 							<i class="fa fa-spinner fa-spin"></i> Loading dashboard data...
@@ -628,9 +598,8 @@
 					if (kpiCollection) kpiCollection.textContent = `${(kpis.avg_collection_time || 0).toFixed(2)} days`;
 					if (kpiDelivery) kpiDelivery.textContent = `${(kpis.avg_delivery_time || 0).toFixed(2)} days`;
 
-					// Store all shipments and initialize filtered list
+					// Store all shipments and reset to page 1
 					this.allShipments = data.shipments || [];
-					this.filteredShipments = [...this.allShipments];
 					this.currentPage = 1;
 
 					// Render shipments table with pagination
@@ -638,7 +607,7 @@
 					this.renderPaginatedShipments();
 
 					// Update shipments count badge
-					const totalCount = this.filteredShipments.length;
+					const totalCount = data.total_shipments_count || this.allShipments.length || 0;
 					const countBadge = dashboard.querySelector('#shipments-count-badge');
 					if (countBadge) {
 						countBadge.textContent = `${totalCount}`;
@@ -647,11 +616,9 @@
 				}
 
 				renderPaginatedShipments() {
-					// Use filtered shipments if available, otherwise all
-					const source = this.filteredShipments || this.allShipments || [];
 					const startIdx = (this.currentPage - 1) * this.itemsPerPage;
 					const endIdx = startIdx + this.itemsPerPage;
-					const paginatedShipments = source.slice(startIdx, endIdx);
+					const paginatedShipments = this.allShipments.slice(startIdx, endIdx);
 
 					this.render_shipments_table(paginatedShipments);
 					this.updatePaginationControls();
@@ -668,8 +635,7 @@
 
 					if (!paginationControls) return;
 
-					const source = this.filteredShipments || this.allShipments || [];
-					const totalPages = Math.ceil(source.length / this.itemsPerPage);
+					const totalPages = Math.ceil(this.allShipments.length / this.itemsPerPage);
 
 					// Show pagination only if there are multiple pages
 					if (totalPages > 1) {
@@ -696,8 +662,7 @@
 				}
 
 				nextPage() {
-					const source = this.filteredShipments || this.allShipments || [];
-					const totalPages = Math.ceil(source.length / this.itemsPerPage);
+					const totalPages = Math.ceil(this.allShipments.length / this.itemsPerPage);
 					if (this.currentPage < totalPages) {
 						this.currentPage++;
 						this.renderPaginatedShipments();
@@ -731,8 +696,8 @@
 					}
 
 					tbody.innerHTML = shipments.map(shipment => `
-						<tr>
-							<td><a class="waybill-link" onclick="if(window.koraflow_core && koraflow_core.courier_guy && koraflow_core.courier_guy.dashboard) { koraflow_core.courier_guy.dashboard.openWaybillModal('${shipment.waybill_number || shipment.tracking_number || ''}'); }">${shipment.waybill_number || shipment.name || '-'}</a></td>
+						<tr class="shipment-row" data-id="${shipment.waybill_number || shipment.name}" style="cursor: pointer;">
+							<td>${shipment.waybill_number || shipment.name || '-'}</td>
 							<td><span class="badge badge-${this.get_status_color(shipment.status)}">${shipment.status || '-'}</span></td>
 							<td>${shipment.service || shipment.service_type || 'N/A'}</td>
 							<td>${this.format_address(shipment.collection_address) || '-'}</td>
@@ -740,6 +705,121 @@
 							<td>${this.format_address(shipment.delivery_address) || '-'}</td>
 						</tr>
 					`).join('');
+
+					// Add click listeners
+					tbody.querySelectorAll('.shipment-row').forEach(row => {
+						row.addEventListener('click', () => {
+							const waybillNumber = row.getAttribute('data-id');
+							const shipment = shipments.find(s => (s.waybill_number || s.name) === waybillNumber);
+							if (shipment) {
+								this.show_shipment_details(shipment);
+							}
+						});
+					});
+				}
+
+				show_shipment_details(shipment) {
+					console.log('Showing details for:', shipment);
+
+					const d = new frappe.ui.Dialog({
+						title: `Waybill Details: ${shipment.waybill_number || shipment.name}`,
+						size: 'large',
+						fields: [
+							{
+								label: 'Status Information',
+								fieldtype: 'Section Break'
+							},
+							{
+								label: 'Current Status',
+								fieldname: 'status_html',
+								fieldtype: 'HTML',
+								options: `<div style="padding: 10px; background-color: var(--bg-light-gray); border-radius: 6px;">
+									<h3 class="text-${this.get_status_color(shipment.status)}" style="margin-top: 5px;">${shipment.status}</h3>
+									<p><strong>Service:</strong> ${shipment.service || shipment.service_type || 'N/A'}</p>
+									<p><strong>Tracking No:</strong> ${shipment.tracking_number || shipment.waybill_number || 'N/A'}</p>
+								</div>`
+							},
+							{
+								label: 'Addresses',
+								fieldtype: 'Section Break'
+							},
+							{
+								label: 'Collection',
+								fieldname: 'collection_col',
+								fieldtype: 'Column Break'
+							},
+							{
+								label: 'Collection Details',
+								fieldname: 'collection_html',
+								fieldtype: 'HTML',
+								options: `<div>
+									<h6>From:</h6>
+									<p>
+										<strong>${shipment.collection_contact_name || 'N/A'}</strong><br>
+										${shipment.collection_contact_number || ''}<br>
+										<span class="text-muted">${this.format_address(shipment.collection_address) || 'No address provided'}</span>
+									</p>
+									<p class="text-muted small">Requested: ${shipment.created || 'N/A'}</p>
+								</div>`
+							},
+							{
+								label: 'Delivery',
+								fieldname: 'delivery_col',
+								fieldtype: 'Column Break'
+							},
+							{
+								label: 'Delivery Details',
+								fieldname: 'delivery_html',
+								fieldtype: 'HTML',
+								options: `<div>
+									<h6>To:</h6>
+									<p>
+										<strong>${shipment.delivery_contact_name || 'N/A'}</strong><br>
+										${shipment.delivery_contact_number || ''}<br>
+										<span class="text-muted">${this.format_address(shipment.delivery_address) || 'No address provided'}</span>
+									</p>
+									<p class="text-muted small">Delivered: ${shipment.delivered_at || shipment.delivered_date || 'Pending'}</p>
+								</div>`
+							},
+							{
+								label: 'Shipment Info',
+								fieldtype: 'Section Break'
+							},
+							{
+								label: 'Details',
+								fieldname: 'details_html',
+								fieldtype: 'HTML',
+								options: `<table class="table table-bordered table-sm">
+									<tr>
+										<th width="30%">Total Value</th>
+										<td>R ${parseFloat(shipment.total_value || shipment.rate || 0).toFixed(2)}</td>
+									</tr>
+									<tr>
+										<th>Billable Weight</th>
+										<td>${parseFloat(shipment.total_weight || shipment.charged_weight || 0).toFixed(2)} kg</td>
+									</tr>
+									<tr>
+										<th>Parcels</th>
+										<td>${shipment.parcel_count || (shipment.parcels ? shipment.parcels.length : 1)}</td>
+									</tr>
+									<tr>
+										<th>Ref / Order No</th>
+										<td>${shipment.reference || shipment.client_reference || '-'}</td>
+									</tr>
+								</table>`
+							}
+						]
+					});
+
+					// Add Actions if needed
+					if (shipment.status !== 'Delivered' && shipment.status !== 'Cancelled') {
+						d.set_primary_action('Track', () => {
+							const trackingUrl = `https://thecourierguy.co.za/tracking?waybill=${shipment.waybill_number}`;
+							window.open(trackingUrl, '_blank');
+						});
+					}
+
+					d.show();
 				}
 
 				format_address(address) {
@@ -765,12 +845,7 @@
 						'Delivered': 'success',
 						'In Transit': 'primary',
 						'Pending': 'warning',
-						'Failed': 'danger',
-						'Collection Request': 'warning',
-						'Collection assigned': 'warning',
-						'At Hub': 'secondary',
-						'Collected': 'info',
-						'Out for Delivery': 'primary'
+						'Failed': 'danger'
 					};
 					return colors[status] || 'secondary';
 				}
@@ -819,449 +894,8 @@
 					this.fetch_dashboard_data();
 				}
 
-				applyFilters() {
-					const statusFilter = document.getElementById('filter-status')?.value;
-					const contactFilter = document.getElementById('filter-contact')?.value?.toLowerCase();
-					const cellFilter = document.getElementById('filter-cell')?.value;
-
-					console.log('Applying filters:', { statusFilter, contactFilter, cellFilter });
-					if (this.allShipments.length > 0) {
-						console.log('Sample row data:', this.allShipments[0]);
-						console.log('Sample contact info:', {
-							coll_name_field: this.allShipments[0].collection_contact_name,
-							del_name_field: this.allShipments[0].delivery_contact_name,
-							coll_obj: this.allShipments[0].collection_address,
-							del_obj: this.allShipments[0].delivery_address
-						});
-					}
-
-					// If no filters, reset
-					if (!statusFilter && !contactFilter && !cellFilter) {
-						this.clearFilters();
-						return;
-					}
-
-					this.filteredShipments = this.allShipments.filter(row => {
-						let match = true;
-
-						// Status filter
-						if (statusFilter) {
-							const rowStatus = String(row.status || '').toLowerCase().replace(/-/g, ' ').trim();
-							const filterValue = String(statusFilter).toLowerCase().replace(/-/g, ' ').trim();
-
-							if (rowStatus !== filterValue) {
-								// Special case: "collection assigned" and "collection request" are treated as same
-								const isCollection1 = rowStatus === 'collection assigned' || rowStatus === 'collection request';
-								const isCollection2 = filterValue === 'collection assigned' || filterValue === 'collection request';
-
-								if (!(isCollection1 && isCollection2)) {
-									match = false;
-								}
-							}
-						}
-
-						// Contact filter (check both collection and delivery)
-						if (match && contactFilter) {
-							const collName = (String(row.collection_address?.contact_name || row.collection_contact_name || '')).toLowerCase();
-							const delName = (String(row.delivery_address?.contact_name || row.delivery_contact_name || '')).toLowerCase();
-
-							// Debug first mismatch
-							if (contactFilter === 'debug') {
-								console.log('Checking contact:', { collName, delName, match: collName.includes(contactFilter) || delName.includes(contactFilter) });
-							}
-
-							if (!(collName.includes(contactFilter) || delName.includes(contactFilter))) {
-								match = false;
-							}
-						}
-
-						// Cell filter (check both collection and delivery)
-						if (match && cellFilter) {
-							const collNums = String(row.collection_address?.contact_phone || row.collection_contact_number || '');
-							const delNums = String(row.delivery_address?.contact_phone || row.delivery_contact_number || '');
-							if (!(collNums.includes(cellFilter) || delNums.includes(cellFilter))) {
-								match = false;
-							}
-						}
-
-						return match;
-					});
-
-					console.log('Filtered result count:', this.filteredShipments.length);
-
-					this.currentPage = 1;
-					this.renderPaginatedShipments();
-
-					// Update badge
-					const countBadge = document.querySelector('#shipments-count-badge');
-					if (countBadge) {
-						countBadge.textContent = `${this.filteredShipments.length} (filtered)`;
-					}
-				}
-
-				clearFilters() {
-					// Clear input fields
-					if (document.getElementById('filter-status')) document.getElementById('filter-status').value = '';
-					if (document.getElementById('filter-contact')) document.getElementById('filter-contact').value = '';
-					if (document.getElementById('filter-cell')) document.getElementById('filter-cell').value = '';
-
-					// Reset data
-					this.filteredShipments = [...this.allShipments];
-					this.currentPage = 1;
-					this.renderPaginatedShipments();
-
-					// Update badge
-					const countBadge = document.querySelector('#shipments-count-badge');
-					if (countBadge) {
-						countBadge.textContent = `${this.filteredShipments.length}`;
-					}
-				}
-
-				async openWaybillModal(waybillNumber) {
-					if (!waybillNumber || waybillNumber === 'N/A') return;
-
-					// Create dialog if it doesn't exist
-					if (!this.waybill_dialog) {
-						this.waybill_dialog = new frappe.ui.Dialog({
-							title: __('Waybill Details'),
-							fields: [
-								{
-									fieldtype: 'HTML',
-									fieldname: 'details_html',
-									options: '<div id="wb-dialog-body"></div>'
-								}
-							],
-							primary_action_label: __('Close'),
-							primary_action: () => this.waybill_dialog.hide()
-						});
-					}
-
-					this.waybill_dialog.set_title(__('Waybill: {0}', [waybillNumber]));
-					this.waybill_dialog.show();
-
-					// Show loading state
-					const dialogBody = this.waybill_dialog.get_field('details_html').$wrapper.find('#wb-dialog-body');
-					dialogBody.html(`
-						<div class="text-center" style="padding: 40px; color: #8d99a6;">
-							<i class="fa fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
-							<div>Loading waybill details...</div>
-						</div>
-					`);
-
-					// Check for local data first (case-insensitive search)
-					const wbUpper = waybillNumber.toUpperCase();
-					const localData = this.allShipments.find(s =>
-						(s.waybill_number || '').toUpperCase() === wbUpper ||
-						(s.tracking_number || '').toUpperCase() === wbUpper ||
-						(s.short_tracking_reference || '').toUpperCase() === wbUpper ||
-						(s.custom_tracking_reference || '').toUpperCase() === wbUpper
-					);
-
-					if (localData) {
-						console.log('Courier Guy Modal: Using cached local data for', waybillNumber, localData);
-						this.renderWaybillDetails(localData);
-					}
-
-
-					try {
-						const response = await frappe.call({
-							method: 'koraflow_core.api.courier_guy_dashboard.get_waybill_details',
-							args: { waybill_number: waybillNumber }
-						});
-
-						if (response.message && response.message.success) {
-							let apiData = response.message.data;
-
-							// Merge with local data - preserve local address/contact if API doesn't have them
-							if (localData) {
-								// Preserve delivery address from local data if API returned empty/missing
-								if (!apiData.delivery_address || (typeof apiData.delivery_address === 'object' && Object.keys(apiData.delivery_address).length === 0)) {
-									apiData.delivery_address = localData.delivery_address;
-								}
-								if (!apiData.collection_address || (typeof apiData.collection_address === 'object' && Object.keys(apiData.collection_address).length === 0)) {
-									apiData.collection_address = localData.collection_address;
-								}
-								// Preserve contact info if API lacks it
-								if (!apiData.delivery_contact_name) apiData.delivery_contact_name = localData.delivery_contact_name;
-								if (!apiData.delivery_contact_number) apiData.delivery_contact_number = localData.delivery_contact_number;
-								if (!apiData.delivery_email) apiData.delivery_email = localData.delivery_email;
-								if (!apiData.collection_contact_name) apiData.collection_contact_name = localData.collection_contact_name;
-								if (!apiData.collection_contact_number) apiData.collection_contact_number = localData.collection_contact_number;
-								// Also preserve other useful local fields
-								if (!apiData.service_level && localData.service) apiData.service_level = localData.service;
-								console.log('Courier Guy Modal: Merged API data with local data', apiData);
-							}
-
-							this.renderWaybillDetails(apiData);
-						} else if (!localData) {
-
-							dialogBody.html(`
-								<div class="alert alert-danger" style="margin: 20px;">
-									${response.message ? response.message.error : __('Waybill not found')}
-								</div>
-							`);
-						}
-					} catch (error) {
-						console.error('Error fetching waybill details:', error);
-						if (!localData) {
-							dialogBody.html(`
-								<div class="alert alert-danger" style="margin: 20px;">
-									${__('An error occurred while fetching details.')}
-								</div>
-							`);
-						}
-					}
-				}
-
-				renderWaybillDetails(data) {
-					if (!this.waybill_dialog) return;
-					const dialogBody = this.waybill_dialog.get_field('details_html').$wrapper.find('#wb-dialog-body');
-					if (!dialogBody.length) return;
-
-					// Simplified time formatting for vertical layout (placed next to labels)
-					const formatTrackerDate = (dateStr) => {
-						if (!dateStr) return '';
-						try {
-							const d = new Date(dateStr);
-							if (isNaN(d.getTime())) return '';
-							return d.toLocaleString('en-GB', {
-								day: '2-digit', month: 'short', year: 'numeric',
-								hour: '2-digit', minute: '2-digit', hour12: false
-							}).replace(',', '');
-						} catch (e) { return ''; }
-					};
-
-					const formatDate = (dateStr) => {
-						if (!dateStr) return '';
-						try {
-							const d = new Date(dateStr);
-							if (isNaN(d.getTime())) return dateStr;
-							return d.toLocaleString('en-GB', {
-								day: '2-digit',
-								month: 'short',
-								year: 'numeric',
-								hour: '2-digit',
-								minute: '2-digit',
-								hour12: false
-							}).replace(',', '');
-						} catch (e) { return dateStr; }
-					};
-
-					// Format addresses
-					const formatAddr = (addr) => {
-						if (!addr) return 'N/A';
-						if (typeof addr === 'string') return addr;
-						const lines = [
-							addr.street_address || addr.address_line1 || addr.entered_address,
-							addr.suburb || addr.local_area,
-							addr.city || addr.geo_city,
-							addr.postal_code || addr.zip_code,
-							addr.country || 'South Africa'
-						].filter(Boolean);
-						return lines.join('<br>') || 'N/A';
-					};
-
-					// Tracking History Logic
-					let trackingHistoryHtml = '';
-					if (data.tracking_history && data.tracking_history.length > 0) {
-						// Sort by date desc - Ship Logic uses 'date' not 'timestamp'
-						const sortedHistory = [...data.tracking_history].sort((a, b) => {
-							const dateA = new Date(a.date || a.timestamp || 0);
-							const dateB = new Date(b.date || b.timestamp || 0);
-							return dateB - dateA;
-						});
-
-						// Group by Date
-						let lastDate = null;
-						sortedHistory.forEach(event => {
-							// Ship Logic uses 'date' field, fallback to 'timestamp'
-							const eventDate = event.date || event.timestamp;
-							if (!eventDate) return;
-
-							const d = new Date(eventDate);
-							const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-							const timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-							if (dateStr !== lastDate) {
-								if (lastDate !== null) trackingHistoryHtml += `</div>`; // Close previous group
-								trackingHistoryHtml += `
-									<div class="tracking-date-group" style="margin-bottom: 25px;">
-										<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-											<div style="color: #28a745; font-size: 16px;">
-												<i class="fa fa-map-marker-alt"></i>
-											</div>
-											<span style="font-weight: 800; font-size: 15px; color: #000;">${dateStr}</span>
-										</div>
-								`;
-								lastDate = dateStr;
-							}
-
-							// Ship Logic uses 'status' and 'message' (not 'description')
-							// Format status: 'at-hub' -> 'At hub', 'collection-assigned' -> 'Collection assigned'
-							let statusRaw = event.status || 'Update';
-							let statusText = statusRaw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-							// Get detail: prefer message, then location
-							let detailText = event.message || event.description || '';
-							if (event.location && event.location.trim()) {
-								if (detailText) {
-									detailText += ` (${event.location})`;
-								} else {
-									detailText = event.location;
-								}
-							}
-
-							// If description is same as status, clear detail to avoid duplication
-							if (detailText.toLowerCase() === statusText.toLowerCase()) detailText = '';
-
-							trackingHistoryHtml += `
-								<div style="display: flex; gap: 20px; margin-bottom: 15px; padding-left: 5px;">
-									<div style="font-size: 14px; color: #36414c; width: 45px; text-align: right; flex-shrink: 0; font-weight: 500;">${timeStr}</div>
-									<div style="display: flex; flex-direction: column; gap: 3px;">
-										<div style="font-size: 14px; font-weight: 800; color: #000;">${statusText}</div>
-										${detailText ? `<div style="font-size: 14px; color: #555;">${detailText}</div>` : ''}
-									</div>
-								</div>
-							`;
-						});
-						if (lastDate) trackingHistoryHtml += `</div>`;
-					} else {
-						// Fallback if no history but status exists
-						trackingHistoryHtml = `<div style="padding: 20px; color: #888;">No detailed tracking history available.</div>`;
-					}
-
-
-					// Collect from logic
-					let collectFrom = 'N/A';
-					if (data.collection_contact_name) collectFrom = data.collection_contact_name;
-					else if (data.collection_address && data.collection_address.suburb) collectFrom = data.collection_address.suburb;
-					else if (data.collection_address && data.collection_address.city) collectFrom = data.collection_address.city;
-
-					dialogBody.html(`
-						<div class="cg-modal-body" style="padding: 0; background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-							<div style="padding: 20px;">
-								<div style="display: flex; gap: 20px; margin-bottom: 20px;">
-									<!-- Left Column: Tracking Events -->
-									<div class="cg-card" style="flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
-										<h3 style="font-size: 16px; font-weight: 800; color: #000; margin: 0 0 25px 0;">Tracking events</h3>
-										<div class="cg-tracking-timeline">
-											${trackingHistoryHtml}
-										</div>
-									</div>
-									
-									<!-- Right Column: Shipping Details -->
-									<div class="cg-card" style="flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
-										<h3 style="font-size: 16px; font-weight: 800; color: #000; margin: 0 0 25px 0;">Shipping details</h3>
-										
-										<div style="display: flex; flex-direction: column; gap: 15px;">
-											<div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: baseline;">
-												<span style="font-size: 14px; font-weight: 700; color: #000;">Waybill no</span>
-												<span style="font-size: 14px; font-weight: 700; color: #1976d2;">${data.waybill_number || '-'}</span>
-											</div>
-											
-											<div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: baseline;">
-												<span style="font-size: 14px; font-weight: 700; color: #000;">Service level</span>
-												<span style="font-size: 14px; color: #36414c;">${data.service_level || 'N/A'}</span>
-											</div>
-											
-											<div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: baseline;">
-												<span style="font-size: 14px; font-weight: 700; color: #000;">Hubs</span>
-												<span style="font-size: 14px; color: #36414c; font-weight: 700;">
-													${data.from_hub || 'N/A'} <i class="fa fa-arrow-right" style="margin: 0 5px; font-size: 12px;"></i> ${data.to_hub || 'N/A'}
-												</span>
-											</div>
-											
-											<div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: baseline;">
-												<span style="font-size: 14px; font-weight: 700; color: #000;">Collect from</span>
-												<span style="font-size: 14px; color: #36414c;">${collectFrom}</span>
-											</div>
-											
-											<div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: baseline;">
-												<span style="font-size: 14px; font-weight: 700; color: #000;">Expected delivery</span>
-												<span style="font-size: 14px; color: #36414c;">${data.delivered_at ? formatDate(data.delivered_at) : (data.estimated_delivery_at ? formatDate(data.estimated_delivery_at) : 'Processing...')}</span>
-											</div>
-											
-											<div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: baseline;">
-												<span style="font-size: 14px; font-weight: 700; color: #000;">Number of parcels</span>
-												<span style="font-size: 14px; color: #36414c;">${data.parcel_count || 1}</span>
-											</div>
-										</div>
-									</div>
-								</div>
-								
-								<!-- Delivery Section (Full Width) -->
-								<div class="cg-card" style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
-									<div style="background: #f8f9fa; padding: 18px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 15px;">
-										<div style="background: #e8f5e9; color: #4caf50; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-											<i class="fa fa-truck"></i>
-										</div>
-										<span style="font-weight: 700; font-size: 17px; color: #36414c;">Delivery</span>
-									</div>
-									
-									<div style="padding: 25px 30px;">
-										<!-- Expected Dates -->
-										<div style="margin-bottom: 30px; line-height: 2;">
-											<div style="display: flex; gap: 10px;">
-												<span style="font-size: 14px; font-weight: 700; color: #36414c; min-width: 180px;">Earliest requested delivery</span>
-												<span style="font-size: 14px; color: #36414c;">${data.delivery_min ? formatDate(data.delivery_min) : 'N/A'}</span>
-											</div>
-											<div style="display: flex; gap: 10px;">
-												<span style="font-size: 14px; font-weight: 700; color: #36414c; min-width: 180px;">Expected delivery</span>
-												<span style="font-size: 14px; color: #36414c;">${data.delivered_at ? formatDate(data.delivered_at) : (data.estimated_delivery_at ? formatDate(data.estimated_delivery_at) : 'Processing...')}</span>
-											</div>
-										</div>
-										
-										<!-- Address -->
-										<div style="margin-bottom: 35px;">
-											<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-												<div style="background: #ffebee; color: #f44336; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-													<i class="fa fa-map-marker-alt"></i>
-												</div>
-												<span style="font-size: 16px; font-weight: 700; color: #36414c;">Address and instructions</span>
-											</div>
-											<div style="padding-left: 40px; font-size: 14px; font-weight: 700; color: #36414c; line-height: 1.6;">
-												${formatAddr(data.delivery_address).split('<br>').map(line => `<div style="margin-bottom: 2px;">${line}</div>`).join('')}
-												${typeof data.delivery_address === 'object' && data.delivery_address && (data.delivery_address.suburb || data.delivery_address.city) ? `<div style="margin-top: 5px; color: #36414c;">(${data.delivery_address.suburb || '-'}, ${data.delivery_address.city || '-'})</div>` : ''}
-											</div>
-										</div>
-										
-										<!-- Contact -->
-										<div>
-											<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-												<div style="background: #fffde7; color: #fbc02d; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-													<i class="fa fa-user"></i>
-												</div>
-												<span style="font-size: 16px; font-weight: 700; color: #36414c;">Contact details</span>
-											</div>
-											<div style="padding-left: 40px; font-size: 14px; color: #36414c;">
-												<div style="margin-bottom: 10px;">
-													<span style="font-weight: 700; width: 140px; display: inline-block;">Name and surname</span>
-													<span>${data.delivery_contact_name || 'N/A'}</span>
-												</div>
-												<div style="margin-bottom: 10px;">
-													<span style="font-weight: 700; width: 140px; display: inline-block;">Email address</span>
-													<span>${data.delivery_email || '-'}</span>
-												</div>
-												<div>
-													<span style="font-weight: 700; width: 140px; display: inline-block;">Contact number</span>
-													<span>${data.delivery_contact_number || 'N/A'}</span>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-
-							</div>
-						</div>
-					`);
-				}
-
 				// Cleanup charts on destroy
 				destroy() {
-					if (this.waybill_dialog) {
-						this.waybill_dialog.hide();
-					}
-
 					if (this.shipmentsChart) {
 						this.shipmentsChart.destroy();
 					}

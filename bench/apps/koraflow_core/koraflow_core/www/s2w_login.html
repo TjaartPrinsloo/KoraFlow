@@ -1,0 +1,249 @@
+<!-- DEBUG: EDITED FILE CHECK -->
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login - Slim2Well</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#bef264",
+                        "background-light": "#ffffff",
+                        "background-dark": "#111827",
+                        charcoal: "#18181b",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "1rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .s2w-watermark {
+            font-weight: 800;
+            line-height: 1;
+            /* Dark grey color matching screenshot */
+            color: #27272a;
+            font-size: 20rem;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-x-hidden">
+
+    <div class="flex flex-col lg:flex-row min-h-screen">
+
+        <!-- Left Panel (Same as Signup) -->
+        <div class="hidden lg:flex lg:w-1/2 bg-charcoal relative overflow-hidden flex-col p-16">
+            <div class="z-20">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                        <span class="text-charcoal font-bold italic">s</span>
+                    </div>
+                    <span class="text-white font-bold text-2xl tracking-tight">Slim<span
+                            class="text-primary font-normal">2</span>Well</span>
+                </div>
+                <p class="text-slate-500 text-xs font-semibold tracking-widest uppercase ml-1">Your Journey, Simplified.
+                </p>
+            </div>
+
+            <div class="flex-1"></div>
+
+            <div class="z-20 relative max-w-lg">
+                <h2 class="text-6xl font-light text-white leading-[1.1]">
+                    Wellness <span class="text-primary font-normal">Simplified</span>.
+                </h2>
+                <p class="mt-6 text-slate-400 text-lg leading-relaxed max-w-sm">
+                    Experience a science-driven approach to health and longevity, tailored specifically for your
+                    lifestyle.
+                </p>
+            </div>
+
+            <div class="absolute bottom-[-6rem] right-[-4rem] z-10 select-none pointer-events-none">
+                <span class="s2w-watermark font-sans">s2w</span>
+            </div>
+        </div>
+
+        <!-- Right Panel (Login Form) -->
+        <div
+            class="flex-1 flex flex-col items-center justify-center p-8 lg:p-24 bg-background-light dark:bg-background-dark relative">
+
+            <div class="lg:hidden w-full max-w-md mb-12 flex flex-col items-center justify-center gap-1">
+                <span class="text-slate-900 dark:text-white font-bold text-2xl tracking-tight">Slim<span
+                        class="text-primary">2</span>Well</span>
+            </div>
+
+            <div class="w-full max-w-md">
+                <div class="mb-10 text-center lg:text-left">
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        Welcome Back
+                    </h1>
+                    <p class="mt-3 text-slate-500 dark:text-slate-400 text-sm">
+                        Login to access your dashboard and manage your health journey.
+                    </p>
+                </div>
+
+                <form id="login-form" class="space-y-5" onsubmit="handleLogin(event)">
+                    <div id="error-message" class="hidden p-4 rounded-lg bg-red-50 text-red-500 text-sm font-medium">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" for="email">Email
+                            Address</label>
+                        <input
+                            class="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-300 text-sm font-medium"
+                            id="email" name="usr" placeholder="john@example.com" type="text" required />
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex justify-between">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300"
+                                for="password">Password</label>
+                            <!-- <a href="/password_reset" class="text-xs text-primary hover:underline">Forgot?</a> -->
+                        </div>
+                        <input
+                            class="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-300 text-sm font-medium"
+                            id="password" name="pwd" placeholder="••••••••" type="password" required />
+                    </div>
+
+                    <button id="submit-btn"
+                        class="w-full py-3.5 px-6 bg-primary text-charcoal font-bold text-base rounded-full hover:brightness-105 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center mt-6"
+                        type="submit">
+                        <span>Login</span>
+                        <div id="loading-spinner"
+                            class="hidden ml-2 w-4 h-4 border-2 border-charcoal border-t-transparent rounded-full animate-spin">
+                        </div>
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Don't have an account?
+                        <a class="text-slate-900 dark:text-white font-bold underline decoration-2 decoration-primary/50 hover:decoration-primary transition-colors"
+                            href="/signup">
+                            Sign Up
+                        </a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const spinner = document.getElementById('loading-spinner');
+            const errorDiv = document.getElementById('error-message');
+            const form = document.getElementById('login-form');
+
+            errorDiv.classList.add('hidden');
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/method/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': window.csrf_token
+                    },
+                    body: JSON.stringify({
+                        usr: data.usr,
+                        pwd: data.pwd
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Login successful - now check user roles to determine redirect
+                    if (result.message === "Logged In") {
+                        // Fetch user roles to determine redirect
+                        try {
+                            const rolesResponse = await fetch('/api/method/frappe.client.get_list', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Frappe-CSRF-Token': window.csrf_token
+                                },
+                                body: JSON.stringify({
+                                    doctype: 'Has Role',
+                                    filters: { parent: result.full_name ? data.usr : data.usr },
+                                    fields: ['role'],
+                                    limit_page_length: 50
+                                })
+                            });
+                            const rolesResult = await rolesResponse.json();
+                            const roles = rolesResult.message ? rolesResult.message.map(r => r.role) : [];
+
+                            // Check if user is a Patient
+                            if (roles.includes('Patient')) {
+                                // Redirect to patient dashboard
+                                window.location.href = '/dashboard';
+                            } else if (roles.includes('Sales Agent') && !roles.includes('System Manager')) {
+                                // Redirect sales agents to their dashboard
+                                window.location.href = '/sales_agent_dashboard';
+                            } else {
+                                // Default to app for other users
+                                window.location.href = result.home_page || '/app';
+                            }
+                        } catch (roleError) {
+                            // If role check fails, use default redirect
+                            window.location.href = result.home_page || '/dashboard';
+                        }
+                    } else {
+                        // Fallback redirect
+                        window.location.href = '/dashboard';
+                    }
+                } else {
+                    let msg = 'Login failed';
+                    if (result._server_messages) {
+                        try {
+                            const msgs = JSON.parse(result._server_messages);
+                            msg = JSON.parse(msgs[0]).message;
+                        } catch (e) { }
+                    } else if (result.message) {
+                        msg = result.message;
+                    }
+                    throw new Error(msg);
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

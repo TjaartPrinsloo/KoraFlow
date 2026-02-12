@@ -36,11 +36,12 @@ def get_intake_form_status(user_email=None):
 			"patient_exists": False
 		}
 	
-	# Check if intake form exists and is completed
+	# Check if intake form has been submitted (child table rows exist)
 	intake_forms = frappe.get_all(
-		"GLP-1 Intake Form",
-		filters={"parent": patient, "form_status": "Completed"},
-		fields=["name", "completion_date"],
+		"GLP-1 Intake Submission",
+		filters={"parent": patient},
+		fields=["name", "creation"],
+		order_by="creation desc",
 		limit=1
 	)
 	
@@ -49,23 +50,11 @@ def get_intake_form_status(user_email=None):
 			"status": "completed",
 			"patient_exists": True,
 			"intake_form": intake_forms[0].name,
-			"completion_date": intake_forms[0].completion_date
+			"completion_date": intake_forms[0].creation
 		}
 	
-	# Check if draft exists
-	draft_forms = frappe.get_all(
-		"GLP-1 Intake Form",
-		filters={"parent": patient, "form_status": "Draft"},
-		fields=["name"],
-		limit=1
-	)
+	# Drafts are not tracked in child table, removing legacy draft check
 	
-	if draft_forms:
-		return {
-			"status": "draft",
-			"patient_exists": True,
-			"intake_form": draft_forms[0].name
-		}
 	
 	return {
 		"status": "not_started",
@@ -148,16 +137,36 @@ def create_patient_from_intake(intake_data, user_email=None):
 			"mobile": intake_data.get("mobile") or user.mobile_no or "",
 			"status": "Disabled",  # Set to "Disabled" until staff activates
 			"invite_user": 0,  # Don't create user - already exists
-			"user_id": user_email  # Link to existing user
+			"user_id": user_email,  # Link to existing user
+			"uid": intake_data.get("sa_id_number") or intake_data.get("passport_number") or intake_data.get("id_number") or intake_data.get("id_number__passport_number"),
+			"custom_referrer_name": intake_data.get("custom_referrer_name"),
+			"custom_address_line1": intake_data.get("address_line1"),
+			"custom_address_line2": intake_data.get("address_line2"),
+			"custom_city": intake_data.get("city"),
+			"custom_state": intake_data.get("state"),
+			"custom_pincode": intake_data.get("pincode"),
+			"custom_country": intake_data.get("country"),
+			"blood_group": intake_data.get("blood_group"),
+			"custom_height_cm": intake_data.get("intake_height_cm"),
+			"custom_target_weight": intake_data.get("intake_goal_weight"),
+			"custom_height_unit": height_unit,
+			"custom_weight_unit": weight_unit
 		}
 		
-		# Add height_unit and weight_unit if Patient DocType has these fields
+		# Add height_unit and weight_unit if Patient DocType has these fields (legacy support)
 		patient_meta = frappe.get_meta("Patient")
 		if patient_meta.get_field("height_unit"):
 			patient_data["height_unit"] = height_unit
 		if patient_meta.get_field("weight_unit"):
 			patient_data["weight_unit"] = weight_unit
 		
+		# Set BMI if possible
+		if intake_data.get("intake_weight_kg") and intake_data.get("intake_height_cm"):
+			weight = flt(intake_data.get("intake_weight_kg"))
+			height = flt(intake_data.get("intake_height_cm")) / 100
+			if height > 0:
+				patient_data["custom_bmi"] = weight / (height * height)
+
 		patient = frappe.get_doc(patient_data)
 		patient.flags.skip_user_creation = True  # Prevent user creation hook
 		patient.insert(ignore_permissions=True)
@@ -248,6 +257,13 @@ def create_patient_from_intake(intake_data, user_email=None):
 	
 	frappe.db.commit()
 	
+	# Send temporary password email
+	try:
+		from koraflow_core.api.send_password_email import send_temporary_password_email
+		send_temporary_password_email(user_email)
+	except Exception as e:
+		frappe.log_error(f"Failed to send temporary password email: {str(e)}", "Intake Submission Email Error")
+
 	return {
 		"success": True,
 		"patient": patient.name,
@@ -286,8 +302,16 @@ def create_patient_from_signup(email, full_name):
 		if not default_gender:
 			frappe.throw(_("No Gender options found. Please contact administrator."))
 		
+		# Create user doc reference
+		if frappe.db.exists("User", email):
+			user_doc = frappe.get_doc("User", email)
+		else:
+			# If user doesn't exist yet (this usually runs after user creation but just in case)
+			# We can't check user mobile if user doesn't exist
+			user_doc = None
+		
 		# Check for duplicate mobile before creating patient
-		if user_doc.mobile_no:
+		if user_doc and user_doc.mobile_no:
 			existing_mobile = frappe.db.get_value(
 				"Patient",
 				{"mobile": user_doc.mobile_no},
@@ -327,6 +351,12 @@ def create_patient_from_signup(email, full_name):
 		}
 
 
+from types import MethodType
+
+# Module level function to be picklable
+def bypass_notification_settings(self):
+	pass
+
 @frappe.whitelist(allow_guest=True)
 def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to: str = None) -> tuple[int, str]:
 	"""
@@ -340,6 +370,14 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 	if is_signup_disabled():
 		frappe.throw(_("Sign Up is disabled"), title=_("Not Allowed"))
 
+	# Ensure "Website User" User Type exists before creating user
+	if not frappe.db.exists("User Type", "Website User"):
+		try:
+			frappe.db.sql("INSERT INTO `tabUser Type` (name, is_standard, creation, modified, modified_by, owner, docstatus) VALUES ('Website User', 0, NOW(), NOW(), 'Administrator', 'Administrator', 0)")
+			frappe.db.commit()
+		except Exception as e:
+			frappe.log_error(f"Failed to create Website User type: {str(e)}", "Signup Setup")
+
 	user = frappe.db.get("User", {"email": email})
 	if user:
 		if user.enabled:
@@ -352,52 +390,10 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 		if users_created_past_hour >= max_signups_allowed_per_hour:
 			frappe.respond_as_web_page(
 				_("Temporarily Disabled"),
-				_(
-					"Too many users signed up recently, so the registration is disabled. Please try back in an hour"
-				),
+				_("Too many users created recently. Please try again in an hour."),
 				http_status_code=429,
 			)
-
-		# Create user with Patient user_type instead of Website User
-		# Set enabled=0 (disabled) - will be activated after medical review
-		# Temporarily override User's after_insert to handle Notification Settings with proper permissions
-		from frappe.core.doctype.user.user import User as FrappeUser
-		original_after_insert = FrappeUser.after_insert
-		
-		def safe_after_insert(self):
-			"""Override after_insert to create Notification Settings with Administrator permissions"""
-			original_user = frappe.session.user
-			try:
-				frappe.set_user("Administrator")
-				frappe.flags.ignore_permissions = True
-				# Try direct SQL insert first to bypass all permission checks
-				try:
-					if not frappe.db.exists("Notification Settings", self.name):
-						frappe.db.sql("""
-							INSERT INTO `tabNotification Settings` 
-							(name, enabled, enable_email_notifications, creation, modified, modified_by, owner, docstatus, user)
-							VALUES (%s, 1, 1, NOW(), NOW(), %s, %s, 0, %s)
-						""", (self.name, "Administrator", "Administrator", self.name))
-						frappe.db.commit()
-						frappe.logger().info(f"Notification Settings created via SQL for {self.name}")
-				except Exception as sql_e:
-					# Fallback to DocType method
-					try:
-						from frappe.desk.doctype.notification_settings.notification_settings import create_notification_settings
-						create_notification_settings(self.name)
-						frappe.db.commit()
-					except Exception as doc_e:
-						# Log but don't fail - notification settings are not critical
-						frappe.log_error(f"Error creating notification settings for {self.name}: SQL={str(sql_e)}, DocType={str(doc_e)}", "User Creation")
-			finally:
-				frappe.flags.ignore_permissions = False
-				frappe.set_user(original_user)
-			# Call other after_insert logic
-			frappe.cache.delete_key("users_for_mentions")
-			frappe.cache.delete_key("enabled_users")
-		
-		# Temporarily override the method
-		FrappeUser.after_insert = safe_after_insert
+			return
 		
 		# Temporarily set user to Administrator to ensure user creation has proper permissions
 		original_user = frappe.session.user
@@ -410,20 +406,22 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 					"doctype": "User",
 					"email": email,
 					"first_name": escape_html(full_name),
-					"enabled": 0,  # Disabled until medical review
+					"enabled": 1,  # Enabled for immediate login
 					"new_password": user_password,  # Use provided password or generated one
-					"user_type": "Patient",  # Set to Patient instead of Website User
+					"user_type": "Website User",  # Standard website user type
 				}
 			)
 			user.flags.ignore_permissions = True
 			user.flags.ignore_password_policy = True
 			# Set flag BEFORE insert to prevent hook from running (we'll create Patient manually)
 			user.flags.skip_patient_creation_hook = True
+			
+			# Bypass after_insert to avoid Notification Settings permission error
+			user.after_insert = MethodType(bypass_notification_settings, user)
+			
 			user.insert()
 		finally:
 			frappe.set_user(original_user)
-			# Restore original method
-			FrappeUser.after_insert = original_after_insert
 		
 		# Add Patient role
 		user.add_roles("Patient")
@@ -457,11 +455,11 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 			frappe.log_error(f"Error creating patient during signup: {str(e)}")
 			# Don't raise - allow signup to complete even if Patient creation fails
 
-		# Set redirect to intake form wizard if not already set
+		# Set redirect to intake form wizard if not already set		
 		if not redirect_to:
-			redirect_to = "/glp1-intake/new"
+			redirect_to = "/glp1_intake_wizard"
 		
-		# Ensure we commit any pending database changes
+		# Perform login immediately any pending database changes
 		frappe.db.commit()
 		
 		# Log the user in directly using LoginManager
@@ -472,10 +470,11 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 		login_manager.post_login()
 		
 		# Return success with redirect URL
-		# Format: (status_code, message, redirect_url)
-		# Status 3 = Success with redirect and auto-login
+		# Format: status code 200 with message 'Logged In' to trigger login.js redirect handler
 		try:
-			return 3, _("Account created successfully. Redirecting to intake form..."), redirect_to
+			frappe.response["message"] = "Logged In"
+			frappe.response["home_page"] = redirect_to
+			return
 		except Exception as e:
 			# If return fails for some reason, log and return basic success
 			frappe.log_error(f"Error returning signup response: {str(e)}", "Signup Response")
@@ -689,18 +688,46 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 				"mobile": patient_mobile,
 				"status": "Disabled",
 				"invite_user": 0,
-				"user_id": user_email
+				"user_id": user_email,
+				"uid": get_doc_value('sa_id_number') or get_doc_value('passport_number') or get_doc_value('id_number') or get_doc_value('id_number__passport_number')
 			})
+			
+			# Add height/weight units if present in doc
+			height_unit = get_doc_value('height_unit') or get_doc_value('intake_height_unit') or "Feet/Inches"
+			weight_unit = get_doc_value('weight_unit') or get_doc_value('intake_weight_unit') or "Pounds"
+			
+			patient_meta = frappe.get_meta("Patient")
+			if patient_meta.get_field("height_unit"):
+				patient_doc.height_unit = height_unit
+			if patient_meta.get_field("weight_unit"):
+				patient_doc.weight_unit = weight_unit
+			if patient_meta.get_field("intake_height_unit"):
+				patient_doc.intake_height_unit = height_unit
+			if patient_meta.get_field("intake_weight_unit"):
+				patient_doc.intake_weight_unit = weight_unit
+					
 			patient_doc.flags.skip_user_creation = True
 			patient_doc.insert(ignore_permissions=True)
 			patient = patient_doc  # Keep as Document object, not just name
-		else:
 			patient = frappe.get_doc("Patient", patient)
+			
+			# Update details from intake if missing
+			if not patient.uid:
+				patient.uid = get_doc_value('sa_id_number') or get_doc_value('passport_number') or get_doc_value('id_number') or get_doc_value('id_number__passport_number')
+			if not patient.dob:
+				patient.dob = get_doc_value('dob') or get_doc_value('date_of_birth')
+			if not patient.sex or patient.sex == "Other":
+				sex_val = get_doc_value('sex') or get_doc_value('biological_sex')
+				if sex_val:
+					patient.sex = frappe.db.get_value("Gender", {"name": sex_val}, "name") or sex_val
+			
 			if patient.status == "Active":
 				patient.status = "Disabled"
 			if not patient.user_id:
 				patient.user_id = user_email
 			patient.flags.skip_user_creation = True
+			patient.flags.ignore_mandatory = True
+			patient.save(ignore_permissions=True)
 		
 		# Copy all fields from doc to child table entry
 		# The doc object should have all values set via doc.set() in web_form.accept()

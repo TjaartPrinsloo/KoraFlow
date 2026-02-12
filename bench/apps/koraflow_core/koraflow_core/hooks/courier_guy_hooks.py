@@ -3,7 +3,7 @@ Courier Guy Hooks
 Hooks for integrating Courier Guy with Delivery Notes
 """
 import frappe
-from koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import create_waybill_from_delivery_note
+from koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import create_waybill_from_delivery_note
 
 
 def create_waybill_on_delivery_note_submit(doc, method):

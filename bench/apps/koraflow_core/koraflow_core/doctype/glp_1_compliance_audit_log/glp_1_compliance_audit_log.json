@@ -1,102 +1,102 @@
 {
- "actions": [],
- "allow_rename": 0,
- "creation": "2025-01-24 00:00:00.000000",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "event_type",
-  "reference_doctype",
-  "reference_name",
-  "patient",
-  "actor",
-  "actor_license",
-  "timestamp",
-  "details"
- ],
- "fields": [
-  {
-   "fieldname": "event_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Event Type",
-   "options": "\nPrescription\nDispense\nCompounding\nReview",
-   "reqd": 1
-  },
-  {
-   "fieldname": "reference_doctype",
-   "fieldtype": "Link",
-   "label": "Reference DocType",
-   "options": "DocType"
-  },
-  {
-   "fieldname": "reference_name",
-   "fieldtype": "Dynamic Link",
-   "label": "Reference Name",
-   "options": "reference_doctype"
-  },
-  {
-   "fieldname": "patient",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Patient",
-   "options": "Patient"
-  },
-  {
-   "fieldname": "actor",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Actor",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "actor_license",
-   "fieldtype": "Data",
-   "label": "Actor License"
-  },
-  {
-   "default": "Now",
-   "fieldname": "timestamp",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "label": "Timestamp",
-   "reqd": 1
-  },
-  {
-   "fieldname": "details",
-   "fieldtype": "JSON",
-   "label": "Details"
-  }
- ],
- "index_web_pages_for_search": 0,
- "links": [],
- "modified": "2025-01-24 00:00:00.000000",
- "modified_by": "Administrator",
- "module": "KoraFlow Core",
- "name": "GLP-1 Compliance Audit Log",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager"
-  },
-  {
-   "read": 1,
-   "role": "Compliance Officer"
-  },
-  {
-   "read": 1,
-   "role": "Pharmacist"
-  }
- ],
- "sort_field": "timestamp",
- "sort_order": "DESC",
- "states": []
+    "actions": [],
+    "allow_rename": 0,
+    "creation": "2025-01-24 00:00:00.000000",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "event_type",
+        "reference_doctype",
+        "reference_name",
+        "patient",
+        "actor",
+        "actor_license",
+        "timestamp",
+        "details"
+    ],
+    "fields": [
+        {
+            "fieldname": "event_type",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Event Type",
+            "options": "\nPrescription\nQuotation\nQuote Accepted\nSales Order\nPicking\nInvoice\nDispense\nCompounding\nReview\nShipment\nWaybill\nCourier Handover\nPayment\nXero Sync",
+            "reqd": 1
+        },
+        {
+            "fieldname": "reference_doctype",
+            "fieldtype": "Link",
+            "label": "Reference DocType",
+            "options": "DocType"
+        },
+        {
+            "fieldname": "reference_name",
+            "fieldtype": "Dynamic Link",
+            "label": "Reference Name",
+            "options": "reference_doctype"
+        },
+        {
+            "fieldname": "patient",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Patient",
+            "options": "Patient"
+        },
+        {
+            "fieldname": "actor",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Actor",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "actor_license",
+            "fieldtype": "Data",
+            "label": "Actor License"
+        },
+        {
+            "default": "Now",
+            "fieldname": "timestamp",
+            "fieldtype": "Datetime",
+            "in_list_view": 1,
+            "label": "Timestamp",
+            "reqd": 1
+        },
+        {
+            "fieldname": "details",
+            "fieldtype": "JSON",
+            "label": "Details"
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [],
+    "modified": "2025-01-24 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "KoraFlow Core",
+    "name": "GLP-1 Compliance Audit Log",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager"
+        },
+        {
+            "read": 1,
+            "role": "Compliance Officer"
+        },
+        {
+            "read": 1,
+            "role": "Pharmacist"
+        }
+    ],
+    "sort_field": "timestamp",
+    "sort_order": "DESC",
+    "states": []
 }

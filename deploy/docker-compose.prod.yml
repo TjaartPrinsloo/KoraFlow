@@ -1,0 +1,129 @@
+# Production Docker Compose - KoraFlow
+# Used for local prod-like testing or VM-based deployments.
+# For Cloud Run, use the Terraform modules instead.
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    restart: always
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --bind-address=0.0.0.0 # Allow connections from other containers on Docker network
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD must be set}
+      MYSQL_DATABASE: frappe
+      MYSQL_USER: frappe
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    # NO ports exposed to host - only accessible via internal network
+    networks:
+      - frappe_network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+    volumes:
+      - redis-data:/data
+    # NO ports exposed to host - only accessible via internal network
+    networks:
+      - frappe_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frappe:
+    build:
+      context: .. # Repo root
+      dockerfile: deploy/Dockerfile
+    restart: always
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis:6379/0
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis:6379/1
+      REDIS_SOCKETIO: redis://:${REDIS_PASSWORD}@redis:6379/2
+      ENVIRONMENT: ${ENVIRONMENT:-staging}
+      ALLOW_PROD_MIGRATE: ${ALLOW_PROD_MIGRATE:-false}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set}
+    ports:
+      - "8000:8000"
+    networks:
+      - frappe_network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - sites-data:/home/frappe/bench/frappe-bench/sites
+      - logs-data:/home/frappe/bench/frappe-bench/logs
+
+  # Frappe background workers (required for async jobs)
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: always
+    command: bench worker --queue default,short,long
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis:6379/0
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis:6379/1
+    networks:
+      - frappe_network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - sites-data:/home/frappe/bench/frappe-bench/sites
+      - logs-data:/home/frappe/bench/frappe-bench/logs
+
+  # Frappe scheduler (for scheduled jobs)
+  scheduler:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: always
+    command: bench schedule
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis:6379/0
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis:6379/1
+    networks:
+      - frappe_network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - sites-data:/home/frappe/bench/frappe-bench/sites
+      - logs-data:/home/frappe/bench/frappe-bench/logs
+
+networks:
+  frappe_network:
+    driver: bridge
+
+volumes:
+  mariadb-data:
+  redis-data:
+  sites-data:
+  logs-data:

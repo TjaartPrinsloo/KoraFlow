@@ -9,20 +9,23 @@
 			<div class="card">
 				<div class="card-header">
 					<h2 class="mb-0">{{ _("Clinical Intake & Metabolic Screening Protocol") }}</h2>
-					<p class="text-muted mb-0">{{ _("Subject: GLP-1/GIP Agonist Eligibility and Safety Assessment") }}</p>
+					<p class="text-muted mb-0">{{ _("Subject: GLP-1/GIP Agonist Eligibility and Safety Assessment") }}
+					</p>
 				</div>
 				<div class="card-body">
-					{% if intake_status.status == 'completed' %}
+					{% if intake_status is defined and intake_status and intake_status.status == 'completed' %}
 					<div class="alert alert-success">
 						{{ _("You have already completed the intake form.") }}
-						<a href="/app/patient" class="btn btn-primary btn-sm ml-2">{{ _("Go to Patient Dashboard") }}</a>
+						<a href="/app/patient" class="btn btn-primary btn-sm ml-2">{{ _("Go to Patient Dashboard")
+							}}</a>
 					</div>
 					{% else %}
 					<form id="glp1-intake-form">
 						<!-- Section 1: Personal & Vital Metrics -->
 						<div class="section mb-4">
-							<h4 class="section-title">{{ _("Section 1: Personal Identification and Vital Metrics") }}</h4>
-							
+							<h4 class="section-title">{{ _("Section 1: Personal Identification and Vital Metrics") }}
+							</h4>
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-group">
@@ -37,7 +40,7 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-group">
@@ -50,7 +53,7 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-group">
@@ -67,13 +70,15 @@
 										<div class="col-6">
 											<div class="form-group">
 												<label>{{ _("Feet") }}</label>
-												<input type="number" class="form-control" name="height_feet" min="0" max="10">
+												<input type="number" class="form-control" name="height_feet" min="0"
+													max="10">
 											</div>
 										</div>
 										<div class="col-6">
 											<div class="form-group">
 												<label>{{ _("Inches") }}</label>
-												<input type="number" class="form-control" name="height_inches" min="0" max="11" step="0.1">
+												<input type="number" class="form-control" name="height_inches" min="0"
+													max="11" step="0.1">
 											</div>
 										</div>
 									</div>
@@ -85,7 +90,7 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-group">
@@ -100,7 +105,8 @@
 								<div class="col-md-6" id="weight_pounds_div" style="display:none;">
 									<div class="form-group">
 										<label>{{ _("Weight (lbs)") }}</label>
-										<input type="number" class="form-control" name="weight_pounds" min="0" step="0.1">
+										<input type="number" class="form-control" name="weight_pounds" min="0"
+											step="0.1">
 									</div>
 								</div>
 								<div class="col-md-6" id="weight_kg_div" style="display:none;">
@@ -110,18 +116,20 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="row">
 								<div class="col-md-4">
 									<div class="form-group">
 										<label>{{ _("Blood Pressure (Systolic) mmHg") }}</label>
-										<input type="number" class="form-control" name="blood_pressure_systolic" min="0">
+										<input type="number" class="form-control" name="blood_pressure_systolic"
+											min="0">
 									</div>
 								</div>
 								<div class="col-md-4">
 									<div class="form-group">
 										<label>{{ _("Blood Pressure (Diastolic) mmHg") }}</label>
-										<input type="number" class="form-control" name="blood_pressure_diastolic" min="0">
+										<input type="number" class="form-control" name="blood_pressure_diastolic"
+											min="0">
 									</div>
 								</div>
 								<div class="col-md-4">
@@ -132,15 +140,17 @@
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Section 2: High-Risk Clinical Screening -->
 						<div class="section mb-4">
-							<h4 class="section-title">{{ _("Section 2: High-Risk Clinical Screening and Oncology Vigilance") }}</h4>
-							
+							<h4 class="section-title">{{ _("Section 2: High-Risk Clinical Screening and Oncology
+								Vigilance") }}</h4>
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="medullary_thyroid_carcinoma" id="mtc">
+										<input class="form-check-input" type="checkbox"
+											name="medullary_thyroid_carcinoma" id="mtc">
 										<label class="form-check-label" for="mtc">
 											{{ _("History of Medullary Thyroid Carcinoma (MTC)") }}
 										</label>
@@ -152,19 +162,22 @@
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="pancreatitis_history" id="pancreatitis">
+										<input class="form-check-input" type="checkbox" name="pancreatitis_history"
+											id="pancreatitis">
 										<label class="form-check-label" for="pancreatitis">
 											{{ _("History of Pancreatitis") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="gallstones_history" id="gallstones">
+										<input class="form-check-input" type="checkbox" name="gallstones_history"
+											id="gallstones">
 										<label class="form-check-label" for="gallstones">
 											{{ _("History of Gallstones") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="gallbladder_removal" id="gallbladder">
+										<input class="form-check-input" type="checkbox" name="gallbladder_removal"
+											id="gallbladder">
 										<label class="form-check-label" for="gallbladder">
 											{{ _("Gallbladder Removal") }}
 										</label>
@@ -172,19 +185,22 @@
 								</div>
 								<div class="col-md-6">
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="gastroparesis" id="gastroparesis">
+										<input class="form-check-input" type="checkbox" name="gastroparesis"
+											id="gastroparesis">
 										<label class="form-check-label" for="gastroparesis">
 											{{ _("Diagnosed with Gastroparesis") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="frequent_nausea" id="nausea">
+										<input class="form-check-input" type="checkbox" name="frequent_nausea"
+											id="nausea">
 										<label class="form-check-label" for="nausea">
 											{{ _("Frequent Nausea") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="early_fullness" id="fullness">
+										<input class="form-check-input" type="checkbox" name="early_fullness"
+											id="fullness">
 										<label class="form-check-label" for="fullness">
 											{{ _("Early Fullness") }}
 										</label>
@@ -192,15 +208,17 @@
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Section 3: Organ Systems Review -->
 						<div class="section mb-4">
-							<h4 class="section-title">{{ _("Section 3: Organ Systems Review and Laboratory Integration") }}</h4>
-							
+							<h4 class="section-title">{{ _("Section 3: Organ Systems Review and Laboratory Integration")
+								}}</h4>
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="kidney_disease_history" id="kidney">
+										<input class="form-check-input" type="checkbox" name="kidney_disease_history"
+											id="kidney">
 										<label class="form-check-label" for="kidney">
 											{{ _("History of Kidney Disease") }}
 										</label>
@@ -216,7 +234,8 @@
 								</div>
 								<div class="col-md-6">
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="diabetic_retinopathy" id="retinopathy">
+										<input class="form-check-input" type="checkbox" name="diabetic_retinopathy"
+											id="retinopathy">
 										<label class="form-check-label" for="retinopathy">
 											{{ _("Diabetic Retinopathy (if Diabetic)") }}
 										</label>
@@ -226,19 +245,22 @@
 										<input type="date" class="form-control" name="last_dilated_eye_exam">
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="heart_attack_history" id="heart_attack">
+										<input class="form-check-input" type="checkbox" name="heart_attack_history"
+											id="heart_attack">
 										<label class="form-check-label" for="heart_attack">
 											{{ _("History of Heart Attack") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="stroke_history" id="stroke">
+										<input class="form-check-input" type="checkbox" name="stroke_history"
+											id="stroke">
 										<label class="form-check-label" for="stroke">
 											{{ _("History of Stroke") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="heart_failure_history" id="heart_failure">
+										<input class="form-check-input" type="checkbox" name="heart_failure_history"
+											id="heart_failure">
 										<label class="form-check-label" for="heart_failure">
 											{{ _("History of Heart Failure") }}
 										</label>
@@ -246,60 +268,69 @@
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Section 4: Medication Review -->
 						<div class="section mb-4">
 							<h4 class="section-title">{{ _("Section 4: Current Medication and Substance Review") }}</h4>
-							
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="taking_insulin" id="insulin">
+										<input class="form-check-input" type="checkbox" name="taking_insulin"
+											id="insulin">
 										<label class="form-check-label" for="insulin">
 											{{ _("Taking Insulin") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="taking_sulfonylureas" id="sulfonylureas">
+										<input class="form-check-input" type="checkbox" name="taking_sulfonylureas"
+											id="sulfonylureas">
 										<label class="form-check-label" for="sulfonylureas">
 											{{ _("Taking Sulfonylureas (e.g., Glipizide, Glyburide)") }}
 										</label>
 									</div>
 									<div class="form-group">
 										<label>{{ _("Current Dose (if Yes)") }}</label>
-										<textarea class="form-control" name="insulin_sulfonylurea_dose" rows="2"></textarea>
+										<textarea class="form-control" name="insulin_sulfonylurea_dose"
+											rows="2"></textarea>
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="form-group">
 										<label>{{ _("Narrow Therapeutic Window Drugs") }}</label>
-										<textarea class="form-control" name="narrow_therapeutic_window_drugs" rows="4" placeholder="{{ _('e.g., Warfarin, Digoxin, Lithium, Levothyroxine') }}"></textarea>
+										<textarea class="form-control" name="narrow_therapeutic_window_drugs" rows="4"
+											placeholder="{{ _('e.g., Warfarin, Digoxin, Lithium, Levothyroxine') }}"></textarea>
 									</div>
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Section 5: GLP-1 History -->
 						<div class="section mb-4">
-							<h4 class="section-title">{{ _("Section 5: Longitudinal GLP-1 History and Titration Dynamics") }}</h4>
-							
+							<h4 class="section-title">{{ _("Section 5: Longitudinal GLP-1 History and Titration
+								Dynamics") }}</h4>
+
 							<div class="row">
 								<div class="col-md-6">
 									<label>{{ _("Medications Used") }}</label>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="medications_used_ozempic" id="ozempic">
+										<input class="form-check-input" type="checkbox" name="medications_used_ozempic"
+											id="ozempic">
 										<label class="form-check-label" for="ozempic">{{ _("Ozempic") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="medications_used_wegovy" id="wegovy">
+										<input class="form-check-input" type="checkbox" name="medications_used_wegovy"
+											id="wegovy">
 										<label class="form-check-label" for="wegovy">{{ _("Wegovy") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="medications_used_mounjaro" id="mounjaro">
+										<input class="form-check-input" type="checkbox" name="medications_used_mounjaro"
+											id="mounjaro">
 										<label class="form-check-label" for="mounjaro">{{ _("Mounjaro") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="medications_used_zepbound" id="zepbound">
+										<input class="form-check-input" type="checkbox" name="medications_used_zepbound"
+											id="zepbound">
 										<label class="form-check-label" for="zepbound">{{ _("Zepbound") }}</label>
 									</div>
 									<div class="form-group mt-3">
@@ -314,65 +345,78 @@
 								<div class="col-md-6">
 									<label>{{ _("Side Effects Experienced") }}</label>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="side_effects_nausea" id="se_nausea">
+										<input class="form-check-input" type="checkbox" name="side_effects_nausea"
+											id="se_nausea">
 										<label class="form-check-label" for="se_nausea">{{ _("Nausea") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="side_effects_vomiting" id="se_vomiting">
+										<input class="form-check-input" type="checkbox" name="side_effects_vomiting"
+											id="se_vomiting">
 										<label class="form-check-label" for="se_vomiting">{{ _("Vomiting") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="side_effects_diarrhea" id="se_diarrhea">
+										<input class="form-check-input" type="checkbox" name="side_effects_diarrhea"
+											id="se_diarrhea">
 										<label class="form-check-label" for="se_diarrhea">{{ _("Diarrhea") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="side_effects_constipation" id="se_constipation">
-										<label class="form-check-label" for="se_constipation">{{ _("Constipation") }}</label>
+										<input class="form-check-input" type="checkbox" name="side_effects_constipation"
+											id="se_constipation">
+										<label class="form-check-label" for="se_constipation">{{ _("Constipation")
+											}}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="side_effects_reflux" id="se_reflux">
+										<input class="form-check-input" type="checkbox" name="side_effects_reflux"
+											id="se_reflux">
 										<label class="form-check-label" for="se_reflux">{{ _("Reflux") }}</label>
 									</div>
 									<div class="form-group mt-3">
 										<label>{{ _("Severity (1-10)") }}</label>
-										<input type="number" class="form-control" name="side_effects_severity" min="1" max="10">
+										<input type="number" class="form-control" name="side_effects_severity" min="1"
+											max="10">
 									</div>
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Section 6: Psychological Readiness -->
 						<div class="section mb-4">
-							<h4 class="section-title">{{ _("Section 6: Psychological Readiness (SCOFF Questionnaire)") }}</h4>
-							
+							<h4 class="section-title">{{ _("Section 6: Psychological Readiness (SCOFF Questionnaire)")
+								}}</h4>
+
 							<div class="row">
 								<div class="col-md-6">
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="scoff_question_1" id="scoff1">
+										<input class="form-check-input" type="checkbox" name="scoff_question_1"
+											id="scoff1">
 										<label class="form-check-label" for="scoff1">
 											{{ _("Do you make yourself Sick because you feel uncomfortably full?") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="scoff_question_2" id="scoff2">
+										<input class="form-check-input" type="checkbox" name="scoff_question_2"
+											id="scoff2">
 										<label class="form-check-label" for="scoff2">
 											{{ _("Do you worry you have lost Control over how much you eat?") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="scoff_question_3" id="scoff3">
+										<input class="form-check-input" type="checkbox" name="scoff_question_3"
+											id="scoff3">
 										<label class="form-check-label" for="scoff3">
 											{{ _("Have you recently lost more than One stone (14 lbs) in 3 months?") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="scoff_question_4" id="scoff4">
+										<input class="form-check-input" type="checkbox" name="scoff_question_4"
+											id="scoff4">
 										<label class="form-check-label" for="scoff4">
 											{{ _("Do you believe yourself to be Fat when others say you are thin?") }}
 										</label>
 									</div>
 									<div class="form-check mb-2">
-										<input class="form-check-input" type="checkbox" name="scoff_question_5" id="scoff5">
+										<input class="form-check-input" type="checkbox" name="scoff_question_5"
+											id="scoff5">
 										<label class="form-check-label" for="scoff5">
 											{{ _("Would you say that Food dominates your life?") }}
 										</label>
@@ -381,15 +425,19 @@
 								<div class="col-md-6">
 									<label>{{ _("Motivation for Treatment") }}</label>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="motivation_health" id="mot_health">
+										<input class="form-check-input" type="checkbox" name="motivation_health"
+											id="mot_health">
 										<label class="form-check-label" for="mot_health">{{ _("Health") }}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="motivation_appearance" id="mot_appearance">
-										<label class="form-check-label" for="mot_appearance">{{ _("Appearance") }}</label>
+										<input class="form-check-input" type="checkbox" name="motivation_appearance"
+											id="mot_appearance">
+										<label class="form-check-label" for="mot_appearance">{{ _("Appearance")
+											}}</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="motivation_mobility" id="mot_mobility">
+										<input class="form-check-input" type="checkbox" name="motivation_mobility"
+											id="mot_mobility">
 										<label class="form-check-label" for="mot_mobility">{{ _("Mobility") }}</label>
 									</div>
 									<div class="form-group mt-3">
@@ -399,11 +447,12 @@
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Section 7: Reproductive Health -->
 						<div class="section mb-4">
-							<h4 class="section-title">{{ _("Section 7: Reproductive Health and Teratogenicity Safety") }}</h4>
-							
+							<h4 class="section-title">{{ _("Section 7: Reproductive Health and Teratogenicity Safety")
+								}}</h4>
+
 							<div class="row">
 								<div class="col-md-4">
 									<div class="form-check">
@@ -415,7 +464,8 @@
 								</div>
 								<div class="col-md-4">
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="breastfeeding" id="breastfeeding">
+										<input class="form-check-input" type="checkbox" name="breastfeeding"
+											id="breastfeeding">
 										<label class="form-check-label" for="breastfeeding">
 											{{ _("Are you breastfeeding?") }}
 										</label>
@@ -423,7 +473,8 @@
 								</div>
 								<div class="col-md-4">
 									<div class="form-check">
-										<input class="form-check-input" type="checkbox" name="planning_to_conceive" id="conceive">
+										<input class="form-check-input" type="checkbox" name="planning_to_conceive"
+											id="conceive">
 										<label class="form-check-label" for="conceive">
 											{{ _("Planning to conceive?") }}
 										</label>
@@ -431,7 +482,7 @@
 								</div>
 							</div>
 						</div>
-						
+
 						<div class="form-actions mt-4">
 							<button type="submit" class="btn btn-primary btn-lg">{{ _("Submit Intake Form") }}</button>
 						</div>
@@ -444,113 +495,112 @@
 </div>
 
 <script>
-frappe.ready(function() {
-	// Handle height unit change
-	$('#height_unit').on('change', function() {
-		if ($(this).val() === 'Feet/Inches') {
-			$('#height_feet_inches').show();
-			$('#height_cm_div').hide();
-		} else if ($(this).val() === 'Centimeters') {
-			$('#height_feet_inches').hide();
-			$('#height_cm_div').show();
-		} else {
-			$('#height_feet_inches').hide();
-			$('#height_cm_div').hide();
-		}
-	});
-	
-	// Handle weight unit change
-	$('#weight_unit').on('change', function() {
-		if ($(this).val() === 'Pounds') {
-			$('#weight_pounds_div').show();
-			$('#weight_kg_div').hide();
-		} else if ($(this).val() === 'Kilograms') {
-			$('#weight_pounds_div').hide();
-			$('#weight_kg_div').show();
-		} else {
-			$('#weight_pounds_div').hide();
-			$('#weight_kg_div').hide();
-		}
-	});
-	
-	// Handle form submission
-	$('#glp1-intake-form').on('submit', function(e) {
-		e.preventDefault();
-		
-		// Collect form data
-		var formData = {};
-		$(this).serializeArray().forEach(function(item) {
-			if (item.name.endsWith('_history') || item.name.endsWith('_carcinoma') || 
-				item.name.startsWith('medications_used_') || item.name.startsWith('side_effects_') ||
-				item.name.startsWith('scoff_question_') || item.name.startsWith('motivation_') ||
-				item.name === 'pregnant' || item.name === 'breastfeeding' || item.name === 'planning_to_conceive' ||
-				item.name === 'taking_insulin' || item.name === 'taking_sulfonylureas' ||
-				item.name === 'gastroparesis' || item.name === 'frequent_nausea' || item.name === 'early_fullness' ||
-				item.name === 'diabetic_retinopathy' || item.name === 'heart_attack_history' ||
-				item.name === 'stroke_history' || item.name === 'heart_failure_history' ||
-				item.name === 'kidney_disease_history' || item.name === 'men2_syndrome' ||
-				item.name === 'pancreatitis_history' || item.name === 'gallstones_history' ||
-				item.name === 'gallbladder_removal') {
-				formData[item.name] = item.value ? 1 : 0;
+	frappe.ready(function () {
+		// Handle height unit change
+		$('#height_unit').on('change', function () {
+			if ($(this).val() === 'Feet/Inches') {
+				$('#height_feet_inches').show();
+				$('#height_cm_div').hide();
+			} else if ($(this).val() === 'Centimeters') {
+				$('#height_feet_inches').hide();
+				$('#height_cm_div').show();
 			} else {
-				formData[item.name] = item.value || '';
+				$('#height_feet_inches').hide();
+				$('#height_cm_div').hide();
 			}
 		});
-		
-		// Convert checkboxes
-		$('input[type="checkbox"]').each(function() {
-			if (!formData[$(this).attr('name')]) {
-				formData[$(this).attr('name')] = $(this).is(':checked') ? 1 : 0;
+
+		// Handle weight unit change
+		$('#weight_unit').on('change', function () {
+			if ($(this).val() === 'Pounds') {
+				$('#weight_pounds_div').show();
+				$('#weight_kg_div').hide();
+			} else if ($(this).val() === 'Kilograms') {
+				$('#weight_pounds_div').hide();
+				$('#weight_kg_div').show();
+			} else {
+				$('#weight_pounds_div').hide();
+				$('#weight_kg_div').hide();
 			}
 		});
-		
-		// Submit via API
-		frappe.call({
-			method: 'koraflow_core.api.patient_signup.create_patient_from_intake',
-			args: {
-				intake_data: formData
-			},
-			callback: function(r) {
-				if (r.message && r.message.success) {
-					// Redirect to my account page
-					window.location.href = '/me';
+
+		// Handle form submission
+		$('#glp1-intake-form').on('submit', function (e) {
+			e.preventDefault();
+
+			// Collect form data
+			var formData = {};
+			$(this).serializeArray().forEach(function (item) {
+				if (item.name.endsWith('_history') || item.name.endsWith('_carcinoma') ||
+					item.name.startsWith('medications_used_') || item.name.startsWith('side_effects_') ||
+					item.name.startsWith('scoff_question_') || item.name.startsWith('motivation_') ||
+					item.name === 'pregnant' || item.name === 'breastfeeding' || item.name === 'planning_to_conceive' ||
+					item.name === 'taking_insulin' || item.name === 'taking_sulfonylureas' ||
+					item.name === 'gastroparesis' || item.name === 'frequent_nausea' || item.name === 'early_fullness' ||
+					item.name === 'diabetic_retinopathy' || item.name === 'heart_attack_history' ||
+					item.name === 'stroke_history' || item.name === 'heart_failure_history' ||
+					item.name === 'kidney_disease_history' || item.name === 'men2_syndrome' ||
+					item.name === 'pancreatitis_history' || item.name === 'gallstones_history' ||
+					item.name === 'gallbladder_removal') {
+					formData[item.name] = item.value ? 1 : 0;
 				} else {
+					formData[item.name] = item.value || '';
+				}
+			});
+
+			// Convert checkboxes
+			$('input[type="checkbox"]').each(function () {
+				if (!formData[$(this).attr('name')]) {
+					formData[$(this).attr('name')] = $(this).is(':checked') ? 1 : 0;
+				}
+			});
+
+			// Submit via API
+			frappe.call({
+				method: 'koraflow_core.api.patient_signup.create_patient_from_intake',
+				args: {
+					intake_data: formData
+				},
+				callback: function (r) {
+					if (r.message && r.message.success) {
+						// Redirect to my account page
+						window.location.href = '/me';
+					} else {
+						frappe.show_alert({
+							message: __('Error submitting intake form. Please try again.'),
+							indicator: 'red'
+						});
+					}
+				},
+				error: function (r) {
 					frappe.show_alert({
 						message: __('Error submitting intake form. Please try again.'),
 						indicator: 'red'
 					});
 				}
-			},
-			error: function(r) {
-				frappe.show_alert({
-					message: __('Error submitting intake form. Please try again.'),
-					indicator: 'red'
-				});
-			}
+			});
 		});
 	});
-});
 </script>
 
 <style>
-.section {
-	border-bottom: 1px solid #e0e0e0;
-	padding-bottom: 20px;
-}
+	.section {
+		border-bottom: 1px solid #e0e0e0;
+		padding-bottom: 20px;
+	}
 
-.section-title {
-	color: #2c3e50;
-	margin-bottom: 20px;
-	font-weight: 600;
-}
+	.section-title {
+		color: #2c3e50;
+		margin-bottom: 20px;
+		font-weight: 600;
+	}
 
-.card {
-	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+	.card {
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
 
-.form-check-label {
-	font-weight: normal;
-}
+	.form-check-label {
+		font-weight: normal;
+	}
 </style>
 {% endblock %}
-

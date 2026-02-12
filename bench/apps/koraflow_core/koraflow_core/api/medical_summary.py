@@ -149,6 +149,13 @@ def format_intake_data_for_llm(intake_data, patient_name=None):
 		high_risk.append("Frequent Nausea")
 	if intake_data.get('intake_early_fullness'):
 		high_risk.append("Early Fullness")
+	if intake_data.get('intake_diabetes_type') and intake_data.get('intake_diabetes_type') != "No Diabetes":
+		high_risk.append(f"Diabetes: {intake_data.get('intake_diabetes_type')}")
+	if intake_data.get('intake_upcoming_surgery'):
+		surgery_info = "Upcoming Surgery"
+		if intake_data.get('intake_surgery_details'):
+			surgery_info += f" ({intake_data.get('intake_surgery_details')})"
+		high_risk.append(surgery_info)
 	
 	if high_risk:
 		lines.append("High Risk Conditions: " + ", ".join(high_risk))
@@ -183,6 +190,12 @@ def format_intake_data_for_llm(intake_data, patient_name=None):
 		medications.append("Sulfonylureas")
 	if intake_data.get('intake_narrow_window_drugs'):
 		medications.append("Narrow Therapeutic Window Drugs")
+	
+	if intake_data.get('intake_known_allergies'):
+		medications.append(f"Allergies: {intake_data.get('intake_known_allergies')}")
+	
+	if intake_data.get('intake_alcohol_frequency'):
+		medications.append(f"Alcohol: {intake_data.get('intake_alcohol_frequency')}")
 	
 	if medications:
 		lines.append("Current Medications: " + ", ".join(medications))
@@ -288,4 +301,59 @@ Provide a medical summary for this patient using the EXACT structure below. Be s
 Medical Summary:
 """
 	return prompt
+
+
+def classify_bmi_rag(weight_kg, height_cm, age, sex):
+	"""
+	Classify BMI using RAG/LLM system to account for age and gender nuances.
+	Returns a dictionary with classification and rag_color.
+	"""
+	try:
+		# Ollama config
+		ollama_host = frappe.conf.get('ollama_host') or 'localhost'
+		ollama_port = frappe.conf.get('ollama_port') or 11434
+		medical_model = frappe.conf.get('ollama_medical_model') or 'medllama2'
+		
+		prompt = f"""
+		Task: Analyze BMI for a patient.
+		Input:
+		- Age: {age}
+		- Sex: {sex}
+		- Weight: {weight_kg} kg
+		- Height: {height_cm} cm
+		
+		Instructions:
+		1. Calculate BMI.
+		2. determining the Clinical Category (Underweight, Normal, Overweight, Obese Class I/II/III). Consider age/sex adjustments if medically relevant (e.g. elderly).
+		3. Assign a RAG Status (Red, Amber, Green). Green=Healthy, Amber=Risk/Warning, Red=High Risk.
+		
+		Output Format: JSON only.
+		{{
+			"bmi": <float>,
+			"category": "<string>",
+			"rag_color": "<Green|Amber|Red>",
+			"reason": "<short explanation>"
+		}}
+		"""
+		
+		url = f"http://{ollama_host}:{ollama_port}/api/generate"
+		payload = {
+			"model": medical_model,
+			"prompt": prompt,
+			"stream": False,
+			"format": "json", # Force JSON
+			"options": {
+				"temperature": 0.0,
+			}
+		}
+		
+		response = requests.post(url, json=payload, timeout=5)
+		if response.status_code == 200:
+			res = response.json()
+			return json.loads(res.get('response', '{}'))
+	except Exception as e:
+		frappe.log_error(f"BMI RAG Error: {str(e)}")
+		# Fallback to standard calculation if RAG fails
+		return None
+
 

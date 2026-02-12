@@ -4,7 +4,7 @@ Central branding system for frontend-only rebranding.
 """
 
 import frappe
-from koraflow_core.koraflow_core.hooks import get_branding_map, get_branded_name
+from koraflow_core.hooks import get_branding_map, get_branded_name
 
 
 def apply_branding(text, context=None):

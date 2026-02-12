@@ -30,6 +30,77 @@ class GLP1PatientPrescription(Document):
 			actor=frappe.session.user,
 			details={"status": self.status, "medication": self.medication}
 		)
+		
+		# Auto-create Quotation
+		self.create_quotation()
+
+	def on_update(self):
+		"""Handle updates (e.g. status change on save)"""
+		self.create_quotation()
+
+	def create_quotation(self):
+		"""Create a quotation for the prescribed medication"""
+		frappe.log_error(f"Creating Quotation for {self.name}, Status: {self.status}", "Quotation Debug")
+		
+		if self.status != "Doctor Approved":
+			frappe.log_error(f"Status mismatch: {self.status}", "Quotation Debug")
+			return
+			
+		# Check if quotation already exists
+		existing_qty = frappe.db.get_value("Quotation", {"custom_prescription": self.name}, "name")
+		if existing_qty:
+			frappe.log_error(f"Quotation exists: {existing_qty}", "Quotation Debug")
+			return
+
+		patient = frappe.get_doc("Patient", self.patient)
+		if not patient.customer:
+			# Create customer if missing
+			customer = frappe.new_doc("Customer")
+			customer.customer_name = patient.patient_name
+			customer.customer_type = "Individual"
+			customer.customer_group = "Individual"
+			customer.save(ignore_permissions=True)
+			
+			# Link to patient
+			patient.customer = customer.name
+			patient.save(ignore_permissions=True)
+			frappe.log_error(f"Created Customer: {customer.name}", "Quotation Debug")
+		
+		# Get Item from Medication (Child Table: linked_items)
+		# medication -> linked_items (Medication Linked Item) -> item
+		linked_item = frappe.get_all("Medication Linked Item", filters={"parent": self.medication}, fields=["item"], limit=1)
+		
+		if not linked_item or not linked_item[0].item:
+			frappe.log_error(f"No Linked Item found for {self.medication}", "Quotation Debug")
+			frappe.msgprint(_("Warning: No Linked Item found for Medication {0}. Cannot create Quotation.").format(self.medication))
+			return
+			
+		item_code = linked_item[0].item
+		frappe.log_error(f"Found Item: {item_code}", "Quotation Debug")
+
+		# Create Quotation
+		quotation = frappe.new_doc("Quotation")
+		quotation.quotation_to = "Customer"
+		quotation.party_name = patient.customer
+		quotation.transaction_date = frappe.utils.today()
+		quotation.valid_till = frappe.utils.add_days(frappe.utils.today(), 30)
+		quotation.company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+		quotation.custom_prescription = self.name
+		
+		# Add Item
+		price = frappe.get_all("Item Price", filters={"item_code": item_code, "price_list": "Standard Selling"}, fields=["price_list_rate"], limit=1)
+		rate = price[0].price_list_rate if price else 0
+		
+		quotation.append("items", {
+			"item_code": item_code,
+			"qty": self.quantity or 1,
+			"rate": rate 
+		})
+		
+		quotation.save(ignore_permissions=True)
+		# Link back
+		frappe.db.set_value(self.doctype, self.name, "linked_quotation", quotation.name)
+		frappe.msgprint(_("Quotation {0} created").format(quotation.name), alert=True)
 	
 	def validate_doctor_license(self):
 		"""Validate doctor is licensed"""

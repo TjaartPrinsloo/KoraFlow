@@ -45,7 +45,7 @@
             "fieldname": "redirect_uri",
             "fieldtype": "Data",
             "label": "Redirect URI",
-            "description": "Must match the URI configured in Xero App. Example: https://your-site.com/api/method/koraflow_core.koraflow_core.doctype.xero_settings.xero_settings.xero_callback"
+            "description": "Must match the URI configured in Xero App. Example: https://your-site.com/api/method/koraflow_core.doctype.xero_settings.xero_settings.xero_callback"
         },
         {
             "fieldname": "sb_connection",

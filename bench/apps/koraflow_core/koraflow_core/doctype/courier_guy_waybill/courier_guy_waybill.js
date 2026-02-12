@@ -1,14 +1,14 @@
 frappe.ui.form.on('Courier Guy Waybill', {
-	refresh: function(frm) {
+	refresh: function (frm) {
 		// Add custom buttons
 		if (frm.doc.status === 'Created' && frm.doc.tracking_number) {
-			frm.add_custom_button(__('Update Tracking'), function() {
+			frm.add_custom_button(__('Update Tracking'), function () {
 				frappe.call({
-					method: 'koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.update_tracking_status',
+					method: 'koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.update_tracking_status',
 					args: {
 						waybill_name: frm.doc.name
 					},
-					callback: function(r) {
+					callback: function (r) {
 						if (r.message) {
 							frappe.msgprint(__('Tracking updated. Status: {0}', [r.message]));
 							frm.reload_doc();
@@ -16,14 +16,14 @@ frappe.ui.form.on('Courier Guy Waybill', {
 					}
 				});
 			}, __('Actions'));
-			
-			frm.add_custom_button(__('Print Waybill'), function() {
+
+			frm.add_custom_button(__('Print Waybill'), function () {
 				frappe.call({
-					method: 'koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.get_waybill_print_url',
+					method: 'koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.get_waybill_print_url',
 					args: {
 						waybill_name: frm.doc.name
 					},
-					callback: function(r) {
+					callback: function (r) {
 						if (r.message) {
 							window.open(r.message, '_blank');
 						}
@@ -31,7 +31,7 @@ frappe.ui.form.on('Courier Guy Waybill', {
 				});
 			}, __('Actions'));
 		}
-		
+
 		// Show tracking history if available
 		if (frm.doc.tracking_history) {
 			try {
@@ -51,8 +51,8 @@ frappe.ui.form.on('Courier Guy Waybill', {
 			}
 		}
 	},
-	
-	delivery_note: function(frm) {
+
+	delivery_note: function (frm) {
 		// Auto-populate from delivery note
 		if (frm.doc.delivery_note) {
 			frappe.call({
@@ -61,10 +61,10 @@ frappe.ui.form.on('Courier Guy Waybill', {
 					doctype: 'Delivery Note',
 					name: frm.doc.delivery_note
 				},
-				callback: function(r) {
+				callback: function (r) {
 					if (r.message) {
 						frm.set_value('customer', r.message.customer);
-						
+
 						// Try to find patient
 						if (r.message.customer) {
 							frappe.call({
@@ -76,7 +76,7 @@ frappe.ui.form.on('Courier Guy Waybill', {
 									},
 									limit: 1
 								},
-								callback: function(patient_r) {
+								callback: function (patient_r) {
 									if (patient_r.message && patient_r.message.length > 0) {
 										frm.set_value('patient', patient_r.message[0].name);
 									}

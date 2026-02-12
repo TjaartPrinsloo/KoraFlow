@@ -41,7 +41,7 @@ koraflow_core.sales_agent.Dashboard = class {
 
 	load_dashboard_data() {
 		frappe.call({
-			method: "koraflow_core.koraflow_core.api.sales_agent_dashboard.get_dashboard_data",
+			method: "koraflow_core.api.sales_agent_dashboard.get_dashboard_data",
 			callback: (r) => {
 				if (r.message) {
 					this.render_dashboard(r.message);

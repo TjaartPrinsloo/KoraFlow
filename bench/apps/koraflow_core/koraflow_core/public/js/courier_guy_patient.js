@@ -4,19 +4,19 @@
  */
 
 frappe.ui.form.on('Patient', {
-	refresh: function(frm) {
+	refresh: function (frm) {
 		// Add Courier Guy tracking section
 		if (frm.doc.name) {
 			frappe.call({
-				method: 'koraflow_core.koraflow_core.api.courier_guy_tracking.get_patient_tracking',
+				method: 'koraflow_core.api.courier_guy_tracking.get_patient_tracking',
 				args: {
 					patient_name: frm.doc.name
 				},
-				callback: function(r) {
+				callback: function (r) {
 					if (r.message && r.message.success && r.message.waybills.length > 0) {
 						// Create dashboard section
 						const waybills = r.message.waybills;
-						
+
 						// Add section to dashboard
 						frm.dashboard.add_section(
 							__('Courier Guy Shipments'),
@@ -24,12 +24,12 @@ frappe.ui.form.on('Patient', {
 								label: __('Waybill {0}', [wb.waybill_number || wb.tracking_number]),
 								value: wb.status,
 								indicator: get_status_indicator(wb.status),
-								action: function() {
+								action: function () {
 									frappe.set_route('Form', 'Courier Guy Waybill', wb.name);
 								}
 							}))
 						);
-						
+
 						// Add tracking details
 						waybills.forEach(wb => {
 							if (wb.tracking_number) {

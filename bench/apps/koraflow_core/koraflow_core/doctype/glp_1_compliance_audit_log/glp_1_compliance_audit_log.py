@@ -8,7 +8,7 @@ from frappe import _
 
 class GLP1ComplianceAuditLog(Document):
 	def validate(self):
-		"""Audit logs are immutable - prevent modifications"""
+		"""Audit logs are immutable - prevent modifications after creation"""
 		if not self.is_new():
 			frappe.throw(_("Audit logs cannot be modified"))
 	
@@ -17,7 +17,3 @@ class GLP1ComplianceAuditLog(Document):
 		if not self.timestamp:
 			from frappe.utils import now
 			self.timestamp = now()
-	
-	def on_update(self):
-		"""Block updates to audit logs"""
-		frappe.throw(_("Audit logs are immutable and cannot be modified"))

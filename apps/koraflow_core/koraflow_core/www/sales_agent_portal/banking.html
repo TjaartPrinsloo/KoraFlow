@@ -1,0 +1,154 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Banking Details - Slim2Well</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "s2w-charcoal": "#2D2D2D",
+                        "s2w-lime": "#C1E12F",
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-white text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar (Simplified for reuse or duplicate code) -->
+        <aside class="w-64 bg-s2w-charcoal flex flex-col shrink-0">
+            <div class="p-6 flex items-center gap-3">
+                <div class="flex items-center justify-center size-10 rounded bg-s2w-lime">
+                    <span class="text-s2w-charcoal font-black text-xl tracking-tighter italic">s2w</span>
+                </div>
+                <h2 class="text-white text-xl font-bold tracking-tight">Slim2Well</h2>
+            </div>
+            <nav class="flex-1 mt-6">
+                <ul class="space-y-1">
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                            href="/sales-agent-portal">
+                            <span class="material-symbols-outlined">dashboard</span>
+                            <span class="text-sm font-medium">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 bg-[#C1E12F]/10 text-s2w-lime border-r-4 border-s2w-lime"
+                            href="#">
+                            <span class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1">account_balance</span>
+                            <span class="text-sm font-medium">Banking Details</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-white">
+            <header
+                class="h-16 border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 bg-white/80 backdrop-blur-md z-10">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-500">Rep Dashboard</span>
+                    <span class="text-sm text-gray-500">/</span>
+                    <span class="text-sm font-medium">Banking Details</span>
+                </div>
+            </header>
+            <div class="max-w-4xl mx-auto py-12 px-8">
+                <div class="mb-10">
+                    <h1 class="text-3xl font-bold tracking-tight text-gray-900 mb-2">Banking Details</h1>
+                    <p class="text-gray-500">Ensure your payment information is up to date to receive timely commission
+                        payouts.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">Bank Name</label>
+                            <input id="bank_name" value="{{ bank.bank_name }}"
+                                class="w-full rounded-md border-gray-200 px-4 py-3 text-sm focus:border-s2w-lime focus:ring-4 focus:ring-s2w-lime/10 transition-all placeholder:text-gray-300 shadow-sm border"
+                                placeholder="e.g. Standard Bank" type="text">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">Account Holder
+                                Name</label>
+                            <input id="account_holder" value="{{ bank.account_holder }}"
+                                class="w-full rounded-md border-gray-200 px-4 py-3 text-sm focus:border-s2w-lime focus:ring-4 focus:ring-s2w-lime/10 transition-all placeholder:text-gray-300 shadow-sm border"
+                                placeholder="Full name" type="text">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">Account
+                                Number</label>
+                            <input id="account_number" value="{{ bank.account_number }}"
+                                class="w-full rounded-md border-gray-200 px-4 py-3 text-sm focus:border-s2w-lime focus:ring-4 focus:ring-s2w-lime/10 transition-all placeholder:text-gray-300 shadow-sm border"
+                                placeholder="Account Number" type="text">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">Branch Code</label>
+                            <input id="branch_code" value="{{ bank.branch_code }}"
+                                class="w-full rounded-md border-gray-200 px-4 py-3 text-sm focus:border-s2w-lime focus:ring-4 focus:ring-s2w-lime/10 transition-all placeholder:text-gray-300 shadow-sm border"
+                                placeholder="Branch Code" type="text">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">Account Type</label>
+                            <select id="account_type"
+                                class="w-full rounded-md border-gray-200 px-4 py-3 text-sm focus:border-s2w-lime focus:ring-4 focus:ring-s2w-lime/10 transition-all shadow-sm border">
+                                <option value="Savings" {% if bank.account_type=='Savings' %}selected{% endif %}>Savings
+                                    Account</option>
+                                <option value="Current" {% if bank.account_type=='Current' %}selected{% endif %}>Current
+                                    / Checking Account</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4 border-t border-gray-100">
+                        <button onclick="saveDetails()"
+                            class="bg-s2w-lime hover:bg-[#b0ce2a] active:scale-[0.98] text-black font-bold py-3.5 px-10 rounded-md transition-all flex items-center gap-2 shadow-sm">
+                            <span class="material-symbols-outlined text-[20px]">verified_user</span>
+                            Save Information
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        function saveDetails() {
+            const data = {
+                bank_name: document.getElementById('bank_name').value,
+                account_holder: document.getElementById('account_holder').value,
+                account_number: document.getElementById('account_number').value,
+                branch_code: document.getElementById('branch_code').value,
+                account_type: document.getElementById('account_type').value
+            };
+
+            frappe.call({
+                method: 'koraflow_core.koraflow_core.api.agent_portal.update_banking_details',
+                args: data,
+                callback: function (r) {
+                    if (!r.exc) {
+                        frappe.msgprint('Banking details updated successfully.');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
+{% endblock %}

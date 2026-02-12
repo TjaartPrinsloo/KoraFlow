@@ -4,7 +4,7 @@ API endpoints for patient tracking and waybill management
 """
 import frappe
 from frappe import _
-from koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import CourierGuyWaybill
+from koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import CourierGuyWaybill
 
 
 @frappe.whitelist(allow_guest=True)
@@ -95,8 +95,8 @@ def get_patient_tracking(patient_name):
 		"Courier Guy Waybill",
 		filters={"patient": patient_name},
 		fields=["name", "delivery_note", "status", "tracking_number", "waybill_number", 
-				"creation", "last_tracking_update"],
-		order_by="creation desc"
+				"created", "last_tracking_update"],
+		order_by="created desc"
 	)
 	
 	result = []
@@ -118,7 +118,7 @@ def get_patient_tracking(patient_name):
 			"status": waybill.status,
 			"tracking_number": waybill.tracking_number,
 			"waybill_number": waybill.waybill_number,
-			"created": waybill.creation,
+			"created": waybill.created,
 			"last_update": waybill.last_tracking_update,
 			"tracking_history": tracking_history,
 			"delivery_address": {

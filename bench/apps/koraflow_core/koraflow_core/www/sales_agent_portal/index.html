@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Slim2Well Rep Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "s2w-charcoal": "#2D2D2D",
+                        "s2w-lime": "#C1E12F",
+                        "s2w-bg": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F9FAFB] text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-s2w-charcoal flex flex-col h-full shrink-0">
+            <div class="px-6 py-8 flex flex-col h-full">
+                <div class="mb-10 flex items-center gap-2">
+                    <div class="flex items-center justify-center size-10 rounded bg-s2w-lime">
+                        <span class="text-s2w-charcoal font-black text-xl tracking-tighter italic">s2w</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-white text-lg font-bold leading-none tracking-tight">Slim2Well</span>
+                        <span class="text-s2w-lime text-[10px] font-bold uppercase tracking-widest mt-0.5">Partner
+                            Portal</span>
+                    </div>
+                </div>
+                <nav class="flex flex-col gap-1 flex-1">
+                    <a class="relative flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 text-white group"
+                        href="/sales-agent-portal">
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-s2w-lime rounded-r-full"></div>
+                        <span class="material-symbols-outlined text-s2w-lime">grid_view</span>
+                        <span class="text-sm font-semibold">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group"
+                        href="/sales-agent-portal/banking">
+                        <span
+                            class="material-symbols-outlined text-[20px] group-hover:text-s2w-lime transition-colors">account_balance</span>
+                        <span class="text-sm font-medium">Banking Details</span>
+                    </a>
+                </nav>
+                <div class="pt-6 border-t border-white/10 mt-auto">
+                    <div class="flex items-center gap-3 px-2 mb-4">
+                        <div
+                            class="size-10 rounded-full border-2 border-s2w-lime bg-center bg-cover flex-shrink-0 bg-gray-500">
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-white text-sm font-bold truncate">{{ data.agent.name }}</p>
+                            <p class="text-gray-400 text-[11px] font-medium truncate">Sales Rep</p>
+                        </div>
+                    </div>
+                    <button onclick="frappe.app.logout()"
+                        class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition-colors w-full group">
+                        <span class="material-symbols-outlined text-[20px]">logout</span>
+                        <span class="text-sm font-medium">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <header class="h-24 flex items-center justify-between px-10 bg-transparent shrink-0">
+                <div>
+                    <h1 class="text-2xl font-bold text-s2w-charcoal">Sales Dashboard</h1>
+                    <p class="text-sm text-slate-500">Welcome back to your referral performance overview.</p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-s2w-charcoal">{{ data.agent.name }}</p>
+                            <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{{ data.agent.id
+                                }}</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="px-10 pb-12 w-full max-w-[1400px]">
+                <!-- Commission Wallet -->
+                <div class="mt-4 mb-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-s2w-charcoal p-2 rounded-lg">
+                                <span class="material-symbols-outlined text-s2w-lime">account_balance_wallet</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-s2w-charcoal">Commission Wallet</h3>
+                        </div>
+                        {% if data.totals.available > 0 %}
+                        <a href="/sales-agent-portal/withdrawal"
+                            class="flex items-center justify-center gap-2 rounded-lg px-6 h-11 bg-s2w-lime text-s2w-charcoal hover:bg-[#B0D02A] transition-all font-bold text-sm shadow-sm cursor-pointer">
+                            <span class="material-symbols-outlined text-[20px]">payments</span>
+                            Request Withdrawal
+                        </a>
+                        {% else %}
+                        <button disabled
+                            class="flex items-center justify-center gap-2 rounded-lg px-6 h-11 bg-gray-200 text-gray-400 font-bold text-sm shadow-sm cursor-not-allowed">
+                            <span class="material-symbols-outlined text-[20px]">payments</span>
+                            No Funds Available
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Total Earned -->
+                        <div
+                            class="bg-white p-7 rounded-xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 relative overflow-hidden">
+                            <div class="flex flex-col gap-1 relative z-10">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total
+                                    Earned</span>
+                                <span class="text-3xl font-bold text-s2w-charcoal tracking-tight">{{
+                                    frappe.format(data.totals.earned, {'fieldtype': 'Currency'}) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Pending Payout -->
+                        <div
+                            class="bg-white p-7 rounded-xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 relative overflow-hidden">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pending
+                                    Payout</span>
+                                <span class="text-3xl font-bold text-s2w-charcoal tracking-tight">{{
+                                    frappe.format(data.totals.pending, {'fieldtype': 'Currency'}) }}</span>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2">
+                                <span
+                                    class="inline-flex items-center text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                                    <span class="material-symbols-outlined text-[14px] mr-1">schedule</span>Awaiting
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Available -->
+                        <div
+                            class="bg-s2w-charcoal p-7 rounded-xl shadow-xl border border-s2w-charcoal relative overflow-hidden group">
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-s2w-lime opacity-[0.03] rounded-full -mr-16 -mt-16">
+                            </div>
+                            <div class="flex flex-col gap-1 relative z-10">
+                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Available for
+                                    Withdrawal</span>
+                                <span class="text-3xl font-bold text-s2w-lime tracking-tight">{{
+                                    frappe.format(data.totals.available, {'fieldtype': 'Currency'}) }}</span>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 relative z-10">
+                                {% if data.totals.available > 0 %}
+                                <span
+                                    class="inline-flex items-center text-[11px] font-bold text-s2w-charcoal bg-s2w-lime px-2 py-0.5 rounded">
+                                    <span class="material-symbols-outlined text-[14px] mr-1">check_circle</span>Ready
+                                </span>
+                                {% else %}
+                                <span
+                                    class="inline-flex items-center text-[11px] font-bold text-gray-400 bg-gray-800 px-2 py-0.5 rounded">
+                                    <span class="material-symbols-outlined text-[14px] mr-1">remove_circle</span>Empty
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referrals Table -->
+                <div
+                    class="bg-white rounded-xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 overflow-hidden">
+                    <div class="px-8 py-6 flex items-center justify-between border-b border-slate-100">
+                        <div>
+                            <h3 class="text-lg font-bold text-s2w-charcoal">Recent Referrals</h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
+                                    <span class="material-symbols-outlined text-[12px] mr-1">verified_user</span> POPIA
+                                    Compliant
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/50">
+                                    <th
+                                        class="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                        Creation Date</th>
+                                    <th
+                                        class="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                        Patient Status</th>
+                                    <th
+                                        class="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                        Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {% for ref in data.referrals %}
+                                <tr class="hover:bg-slate-50/80 transition-colors group">
+                                    <td class="px-8 py-5 text-sm text-slate-600 font-medium">{{
+                                        frappe.format(ref.creation, {'fieldtype': 'Date'}) }}</td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-sm font-bold text-s2w-charcoal">{{ ref.status or
+                                            ref.current_journey_status }}</span>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-700">
+                                            Active
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="px-8 py-5 text-center text-slate-500">No referrals found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        window.frappe = {};
+        frappe.app = {
+            logout: function () {
+                window.location.href = '/login?logout=1';
+            }
+        }
+    </script>
+</body>
+
+</html>

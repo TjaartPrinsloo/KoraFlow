@@ -26,6 +26,7 @@ ENV/
 
 # Node.js
 node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -35,6 +36,23 @@ yarn-error.log*
 # Docker
 *.log
 .docker/
+
+# Terraform
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.log.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+_override.tf
+_override.tf.json
+.terraformrc
+terraform.rc
 
 # Frappe/Bench
 # Note: apps/ is allowed here for KoraFlow source apps
@@ -87,4 +105,3 @@ bench_config.json
 repo_metadata.json
 chunk_metadata.json
 index_metadata.json
-

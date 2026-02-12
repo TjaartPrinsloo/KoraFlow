@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("Treatment & Quote Acceptance") }} | {{ _("Slim2Well") }}</title>
+
+    <!-- Frappe Framework Scripts (required for API calls) -->
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script>
+        // Initialize frappe namespace
+        window.frappe = window.frappe || {};
+        frappe.csrf_token = "{{ frappe.session.csrf_token }}";
+        frappe.session = {
+            user: "{{ frappe.session.user }}",
+            csrf_token: "{{ frappe.session.csrf_token }}"
+        };
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #2D2D2D;
+            color: #C1E12F;
+            font-weight: 700;
+        }
+
+        .active-nav:hover {
+            color: #C1E12F;
+        }
+
+        .logo-circle {
+            background-color: #2D2D2D;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .ruby-card {
+            background-color: #F8F9FA;
+            border: 1px solid #E9ECEF;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .ruby-card:hover {
+            border-color: #C1E12F;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex transition-colors duration-300">
+    <!-- Sidebar Navigation -->
+    <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-black">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-white font-bold text-xs logo-circle">
+                <span class="text-white">s<span class="text-primary">2</span>w</span>
+            </div>
+            <div>
+                <h1 class="font-display font-bold text-xl tracking-tight dark:text-white">slim<span
+                        class="text-primary">2</span>well</h1>
+                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Patient Portal</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/portal_dashboard">
+                <span class="material-symbols-outlined">grid_view</span>
+                <span class="font-semibold text-sm">{{ _("Dashboard") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/my_treatment">
+                <span class="material-symbols-outlined">prescriptions</span>
+                <span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="#">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="font-semibold text-sm">{{ _("Vitals") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/billing">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span class="font-semibold text-sm">{{ _("Billing") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/resources">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span class="font-semibold text-sm">{{ _("Resources") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/patient_profile">
+                <span class="material-symbols-outlined">settings_suggest</span>
+                <span class="font-semibold text-sm">{{ _("Profile") }}</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <!-- Logout Button -->
+            <a href="/?cmd=web_logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                {{ _("Log Out") }}
+            </a>
+            <div class="bg-primary/10 p-4 rounded-xl border border-primary/20">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="bg-primary size-8 rounded-full flex items-center justify-center text-charcoal">
+                        <span class="material-symbols-outlined text-sm">verified</span>
+                    </div>
+                    <p class="text-xs font-bold text-primary uppercase tracking-wider">{{ _("Active Plan") }}</p>
+                </div>
+                <p class="text-sm font-bold text-charcoal dark:text-white">{{ patient.status or "Active Patient" }}</p>
+                <p class="text-xs text-slate-500">{{ _("Cycle 3 of 6") }}</p>
+            </div>
+        </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+        <!-- Top Navigation Bar -->
+        <header
+            class="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="hidden md:block">
+                    <h2 class="text-xl font-bold font-display tracking-tight">{{ _("Treatment Management") }}</h2>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <!-- Theme Toggle Removed -->
+                <!-- Notifications/Settings Removed -->
+                <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold leading-none">{{ patient.first_name }} {{ patient.last_name or "" }}
+                        </p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
+                            Member") }}</p>
+                    </div>
+                    <div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 shadow-sm bg-cover bg-center"
+                        data-alt="Patient profile avatar circular image"
+                        style='background-image: url("{{ patient.image or "https://lh3.googleusercontent.com/aida-public/AB6AXuAL3hA5SD4KcL_OB0mXuu9sGKrcMcP5j_8ZlLJRX6j6Gqh_tySVYhVWjA4Xj5EKALG8M5qC3tqtyFxAvoqiUEXVatC6Fe6La800cTFqqxVTZo9D8jXsz00kcvJzEf6SWDx3mwglb60dmMGLL81KW1SLfVGpELoDvLE65mPUl3gxgLBXZICCxCN_agNqVqqY9-2H99y9zHbIzkb1WS4owE1bgx4VXk0VLkxqrA0Xmz18rBkCNDpi7IDrXrkmajNW_GMbyxpY9BLY8jwy" }}");'>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="p-8 max-w-6xl mx-auto space-y-10">
+            <!-- Page Heading - Show different content based on available data -->
+            {% if quotations or prescriptions %}
+            <!-- Review & Confirm Header - shown when there's something to review -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div class="space-y-4">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-sm">verified</span>
+                        S4 Medicine Regulatory Status
+                    </div>
+                    <h2 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white">{{
+                        _("Review & Confirm") }}</h2>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-lg">{{ _("Your healthcare provider has issued a
+                        new prescription. Please review the breakdown and accept the quote.") }}</p>
+                </div>
+                <button
+                    class="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold hover:shadow-md transition-all">
+                    <span class="material-symbols-outlined text-lg">download</span>
+                    Export PDF
+                </button>
+            </div>
+            {% else %}
+            <!-- Treatment Overview Header - shown when there's nothing to review -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div class="space-y-4">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        {{ _("All Up To Date") }}
+                    </div>
+                    <h2 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white">{{
+                        _("Treatment Overview") }}</h2>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-lg">{{ _("Your GLP-1 medications are being
+                        managed and dispensed directly by our pharmacy. No action required.") }}</p>
+                </div>
+            </div>
+            {% endif %}
+            <!-- External Pharmacy Prescriptions -->
+            {% if prescriptions %}
+            <section class="space-y-6">
+                <div class="flex flex-col gap-1 px-2 border-l-4 border-primary pl-4">
+                    <h3 class="text-xl font-bold tracking-tight">{{ _("External Pharmacy Prescriptions") }}</h3>
+                    <p class="text-sm text-slate-500">{{ _("These prescriptions can be taken to a pharmacy of your
+                        choice") }}</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for p in prescriptions %}
+                    <div
+                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-primary/10 text-primary rounded-xl">
+                                <span class="material-symbols-outlined">prescription</span>
+                            </div>
+                            <span
+                                class="text-xs font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">{{
+                                p.status }}</span>
+                        </div>
+                        <h4 class="font-bold text-lg text-charcoal dark:text-white mb-1">{{ p.medication }}</h4>
+                        <p class="text-xs text-slate-500 mb-4">{{ p.dosage }} • {{ p.duration }}</p>
+                        <a href="/printview?doctype=GLP-1 Patient Prescription&name={{ p.name }}&format=Standard"
+                            target="_blank"
+                            class="flex items-center justify-center gap-2 w-full py-3 bg-charcoal text-white rounded-xl text-sm font-bold hover:bg-black transition-colors">
+                            <span class="material-symbols-outlined text-sm">download</span>
+                            {{ _("Download Prescription") }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Pending Quotation Card -->
+            {% if quotations %}
+            <section class="space-y-6">
+                <div class="flex items-center gap-3 px-2 border-l-4 border-primary pl-4">
+                    <h3 class="text-xl font-bold tracking-tight">{{ _("Pending Quotation") }}</h3>
+                </div>
+                {% for quote in quotations %}
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <!-- Detailed Quote Breakdown -->
+                    <div
+                        class="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-primary/20 shadow-md shadow-primary/5 overflow-hidden">
+                        <div
+                            class="bg-primary/5 border-b border-primary/10 px-8 py-4 flex items-center justify-between">
+                            <span
+                                class="text-xs font-bold text-charcoal/70 uppercase tracking-widest flex items-center gap-2">
+                                <span class="size-2 bg-primary rounded-full animate-pulse"></span>
+                                {{ _("Action Required: Awaiting Acceptance") }}
+                            </span>
+                            <span class="text-xs font-medium text-slate-500">{{
+                                frappe.format_date(quote.transaction_date) }}</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex flex-col md:flex-row gap-8">
+                                <!-- Medicine Image Placeholder -->
+                                <div class="size-32 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-cover bg-center shrink-0"
+                                    data-alt="Medicine bottle illustration for GLP-1 treatment"
+                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4ZO2kkhFcbXXHiv1xMKtf8CXi-_jCJEwaRsC45RAlmM9lLeH6hDuBU1JAbDNrIZ6YQ2qqKflu65W16D6Q-cugPKKB5KqzwRM5yl4n-hHOef50ifxMOjfku-MlIy2JLQ5I08Q--lSqM0o0J4uav_VSSB94nmJnz6j1nls2nfiVg_zy-WvTwKh2c01xI1IbSWbMvdzVTBEtVxSNlMsExIhuQc31QLuUbzUd8aOxORQXju-WUgmQ3K_GagGAx895JraU28Nk3H1fQYpE");'>
+                                </div>
+                                <div class="flex-1 space-y-4">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <h4 class="text-2xl font-bold tracking-tight">{{ _("GLP-1 Treatment Quote")
+                                                }}</h4>
+                                            <span
+                                                class="px-2 py-0.5 bg-primary/20 text-charcoal rounded text-[10px] font-bold border border-primary/30 tracking-tighter">S4</span>
+                                        </div>
+                                        <p class="text-slate-500 text-sm">{{ _("Quote ID") }}: <span
+                                                class="text-slate-900 dark:text-slate-200 font-semibold">{{ quote.name
+                                                }}</span></p>
+                                    </div>
+                                    <!-- Line Items (Simulated description) -->
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-sm text-slate-600">
+                                            <span>Semaglutide 0.25mg Pen (4 weeks)</span>
+                                            <span class="font-bold">1 Unit</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-slate-600">
+                                            <span>Needles & Alcohol Swabs</span>
+                                            <span class="font-bold">1 Pack</span>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="grid grid-cols-2 gap-y-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                        <span class="text-lg font-extrabold text-charcoal dark:text-white">{{ _("Total
+                                            Amount")
+                                            }}</span>
+                                        <span class="text-2xl font-black text-right text-primary">{{
+                                            frappe.format_value(quote.grand_total, currency=quote.currency)
+                                            }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sidebar Actions -->
+                    <div class="space-y-4">
+                        <div
+                            class="bg-charcoal p-8 rounded-2xl text-white shadow-xl shadow-charcoal/20 flex flex-col justify-between min-h-[300px] relative overflow-hidden">
+                            <!-- Background Pattern Decorative -->
+                            <div class="absolute -top-10 -right-10 size-40 bg-white/5 rounded-full blur-3xl"></div>
+
+                            <div class="relative space-y-4 z-10">
+                                <span class="material-symbols-outlined text-4xl text-primary">verified_user</span>
+                                <p class="text-lg font-bold leading-tight">{{ _("Authorize Dispensing") }}</p>
+                                <p class="text-white/70 text-sm leading-relaxed">{{ _("By accepting, you confirm your
+                                    order and authorize the pharmacy to dispense your S4 medication.") }}</p>
+                            </div>
+                            <button
+                                class="relative z-10 w-full bg-primary text-charcoal hover:bg-white hover:text-charcoal font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/20 mt-6">
+                                {{ _("Confirm & Accept") }}
+                                <span class="material-symbols-outlined">chevron_right</span>
+                            </button>
+                        </div>
+                        <div
+                            class="bg-slate-100 dark:bg-slate-800 p-6 rounded-2xl flex items-start gap-3 border border-slate-200 dark:border-slate-700">
+                            <span class="material-symbols-outlined text-slate-400">info</span>
+                            <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                {{ _("Regulatory Notice: As an S4 classified medicine, this requires a valid
+                                prescription and professional pharmacist oversight as per SAHPRA guidelines.") }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+            <!-- Order History & Progress -->
+            <section class="space-y-6 pt-6 mb-12">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="text-xl font-bold tracking-tight">{{ _("Order Lifecycle") }}</h3>
+                    <a class="text-primary text-sm font-bold hover:underline" href="#">{{ _("View Full History") }}</a>
+                </div>
+                {% if shipments %}
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead
+                                class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+                                <tr>
+                                    <th class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                        {{ _("Order Details") }}</th>
+                                    <th class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                        {{ _("Status") }}</th>
+                                    <th
+                                        class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">
+                                        {{ _("Delivery") }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                {% for shipment in shipments %}
+                                <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <td class="px-8 py-6">
+                                        <p class="font-bold text-sm mb-1 text-charcoal dark:text-white">{{ shipment.name
+                                            }}</p>
+                                        <p class="text-xs text-slate-500">{{ frappe.format_date(shipment.creation) }}
+                                        </p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <!-- Status Badge -->
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold border
+											{% if shipment.status == 'Delivered' %} bg-green-50 text-green-700 border-green-200
+											{% elif shipment.status == 'Failed' %} bg-red-50 text-red-700 border-red-200
+											{% else %} bg-blue-50 text-blue-700 border-blue-200 {% endif %}">
+                                            {{ shipment.status }}
+                                        </span>
+                                        {% if shipment.waybill_number %}
+                                        <p class="text-xs text-slate-400 mt-2 font-mono ml-1">{{ _("Ref:") }} {{
+                                            shipment.waybill_number }}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        {% if shipment.actual_delivery %}
+                                        <p class="font-bold text-sm text-charcoal dark:text-white">{{
+                                            frappe.format_date(shipment.actual_delivery) }}</p>
+                                        {% else %}
+                                        <p class="text-xs text-slate-400 italic">{{ _("In Progress") }}</p>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div
+                    class="p-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 border-dashed">
+                    <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">local_shipping</span>
+                    <p>{{ _("No active shipments found.") }}</p>
+                </div>
+                {% endif %}
+            </section>
+            <!-- Help Section -->
+            <div
+                class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between gap-8 border border-slate-200 dark:border-slate-700">
+                <div class="flex-1 space-y-4">
+                    <h4 class="text-2xl font-bold font-display tracking-tight text-charcoal dark:text-white">{{ _("Need
+                        help with your prescription?") }}</h4>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ _("Our clinical support team and
+                        pharmacists are available to answer your questions regarding dosages, side effects, or delivery
+                        logistics.") }}</p>
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <button
+                            class="px-6 py-3 bg-charcoal text-white hover:bg-black rounded-xl text-sm font-bold shadow-lg shadow-charcoal/20 transition-all">
+                            {{ _("Talk to Doctor") }}
+                        </button>
+                        <button
+                            class="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-charcoal dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-sm font-bold transition-all">
+                            {{ _("Pharmacy Support") }}
+                        </button>
+                    </div>
+                </div>
+                <div
+                    class="hidden md:flex relative size-48 bg-white dark:bg-slate-800 rounded-full border-4 border-white dark:border-slate-700 shadow-xl items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-6xl text-primary">support_agent</span>
+                </div>
+            </div>
+        </div>
+        <!-- Footer -->
+        <footer
+            class="px-4 md:px-10 py-6 md:py-8 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-8 mt-auto bg-white dark:bg-black">
+            <div class="flex items-center gap-2 opacity-50">
+                <span class="material-symbols-outlined text-sm">copyright</span>
+                <span class="text-xs font-bold uppercase tracking-widest">{{ _("2026 Slim2Well South Africa")
+                    }}</span>
+            </div>
+            <div class="flex gap-4 md:gap-8 opacity-60">
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/privacy">{{
+                    _("Privacy") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/legal">{{
+                    _("Legal") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/terms">{{
+                    _("Terms") }}</a>
+            </div>
+        </footer>
+    </main>
+</body>
+
+</html>

@@ -22,7 +22,7 @@ def xero_callback(code=None, state=None, error=None):
     if not code:
         return _("No authentication code received")
 
-    from koraflow_core.koraflow_core.utils.xero_connector import get_xero_connector
+    from koraflow_core.utils.xero_connector import get_xero_connector
     connector = get_xero_connector()
     
     success, msg = connector.callback(state, code)
@@ -39,7 +39,7 @@ def xero_callback(code=None, state=None, error=None):
 
 @frappe.whitelist()
 def authorize():
-    from koraflow_core.koraflow_core.utils.xero_connector import get_xero_connector
+    from koraflow_core.utils.xero_connector import get_xero_connector
     connector = get_xero_connector()
     url = connector.get_authorization_url()
     return url

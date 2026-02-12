@@ -44,7 +44,7 @@ services:
       - OLLAMA_HOST=${OLLAMA_HOST:-host.docker.internal}
       - OLLAMA_PORT=${OLLAMA_PORT:-11434}
     ports:
-      - "8000:8000"
+      - "8000:8001"
     networks:
       - koraflow-network
     depends_on:
@@ -83,27 +83,27 @@ services:
       timeout: 5s
       retries: 5
 
-  frappe:
-    image: frappe/bench:latest
-    command: bash /workspace/bench/docker_start.sh
-    volumes:
-      - ./bench:/workspace/bench
-    ports:
-      - "8080:8080"
-      - "9000:9000"
-    environment:
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - REDIS_CACHE=redis://redis:6379
-      - REDIS_QUEUE=redis://redis:6379
-      - REDIS_SOCKETIO=redis://redis:6379
-    networks:
-      - koraflow-network
-    depends_on:
-      mariadb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+#   frappe:
+#     image: frappe/bench:latest
+#     command: bash /workspace/bench/docker_start.sh
+#     volumes:
+#       - ./bench:/workspace/bench
+#     ports:
+#       - "8080:8080"
+#       - "9000:9000"
+#     environment:
+#       - DB_HOST=mariadb
+#       - DB_PORT=3306
+#       - REDIS_CACHE=redis://redis:6379
+#       - REDIS_QUEUE=redis://redis:6379
+#       - REDIS_SOCKETIO=redis://redis:6379
+#     networks:
+#       - koraflow-network
+#     depends_on:
+#       mariadb:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
 
 networks:
   koraflow-network:

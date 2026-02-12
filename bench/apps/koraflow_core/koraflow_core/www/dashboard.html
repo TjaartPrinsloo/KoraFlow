@@ -1,0 +1,751 @@
+<!-- PROBE: KORAFLOW_CORE DASHBOARD -->
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+	<title>{{ _("Patient Dashboard") }} | {{ _("Slim2Well") }}</title>
+
+	<!-- Frappe Framework Scripts (required for API calls) -->
+	<script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+	<script>
+		// Initialize frappe namespace
+		window.frappe = window.frappe || {};
+		frappe.csrf_token = "{{ frappe.session.csrf_token }}";
+		frappe.session = {
+			user: "{{ frappe.session.user }}",
+			csrf_token: "{{ frappe.session.csrf_token }}"
+		};
+
+		// Custom Modal Logic
+		let modalState = {
+			onConfirm: null,
+			onCancel: null
+		};
+
+		function showCustomModal(options) {
+			const modal = document.getElementById('custom-modal');
+			const titleEl = document.getElementById('custom-modal-title');
+			const msgEl = document.getElementById('custom-modal-message');
+			const iconEl = document.getElementById('modal-icon');
+			const iconContainer = document.getElementById('modal-icon-container');
+			const confirmBtn = document.getElementById('modal-confirm-btn');
+			const cancelBtn = document.getElementById('modal-cancel-btn');
+
+			if (!modal) {
+				if (options.onConfirm) {
+					if (confirm(options.message)) options.onConfirm();
+				} else {
+					alert(options.message);
+				}
+				return;
+			}
+
+			titleEl.textContent = options.title || 'Notification';
+			msgEl.textContent = options.message || '';
+
+			// Icon & Colors
+			iconEl.textContent = options.icon || 'info';
+			iconContainer.className = 'flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10';
+			confirmBtn.className = 'inline-flex w-full justify-center rounded-xl px-3 py-2 text-sm font-bold shadow-sm sm:w-auto transition-all';
+
+			if (options.type === 'error') {
+				iconContainer.classList.add('bg-red-100');
+				iconEl.className = 'material-symbols-outlined text-red-600';
+				confirmBtn.classList.add('bg-red-600', 'text-white', 'hover:bg-red-500');
+			} else if (options.type === 'success') {
+				iconContainer.classList.add('bg-green-100');
+				iconEl.className = 'material-symbols-outlined text-green-600';
+				confirmBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-500');
+			} else {
+				confirmBtn.classList.add('bg-primary', 'text-charcoal', 'hover:bg-primary/90');
+			}
+
+			confirmBtn.textContent = options.confirmText || '{{ _("OK") }}';
+			if (options.hideCancel) {
+				cancelBtn.classList.add('hidden');
+			} else {
+				cancelBtn.classList.remove('hidden');
+				cancelBtn.textContent = options.cancelText || '{{ _("Cancel") }}';
+			}
+
+			// Callbacks
+			modalState.onConfirm = options.onConfirm;
+			modalState.onCancel = options.onCancel;
+
+			confirmBtn.onclick = function () {
+				if (modalState.onConfirm) modalState.onConfirm();
+				closeCustomModal();
+			};
+
+			modal.classList.remove('hidden');
+		}
+
+		function closeCustomModal() {
+			const modal = document.getElementById('custom-modal');
+			if (modal) modal.classList.add('hidden');
+		}
+
+		// Polyfills for standalone page using Custom Modal
+		frappe.confirm = function (msg, yes_callback, no_callback) {
+			showCustomModal({
+				title: '{{ _("Please Confirm") }}',
+				message: msg,
+				icon: 'help',
+				confirmText: '{{ _("Continue") }}',
+				onConfirm: yes_callback,
+				onCancel: no_callback
+			});
+		};
+
+		frappe.msgprint = function (msg) {
+			let text = msg;
+			let type = 'info';
+			let title = '{{ _("Message") }}';
+			let icon = 'info';
+
+			if (typeof msg === 'object') {
+				text = msg.message || JSON.stringify(msg);
+				title = msg.title || title;
+				if (msg.indicator === 'green') { type = 'success'; icon = 'check_circle'; }
+				if (msg.indicator === 'red') { type = 'error'; icon = 'error'; }
+				if (msg.indicator === 'orange') { type = 'warning'; icon = 'warning'; }
+			}
+
+			showCustomModal({
+				title: title,
+				message: text,
+				type: type,
+				icon: icon,
+				hideCancel: true,
+				confirmText: '{{ _("Close") }}'
+			});
+		};
+
+		frappe.show_alert = function (msg) {
+			if (typeof msg === 'string') {
+				frappe.msgprint({ message: msg, indicator: 'green' });
+			} else {
+				frappe.msgprint(msg);
+			}
+		}
+
+		frappe.throw = function (msg) {
+			console.error(msg);
+			frappe.msgprint({
+				title: '{{ _("Error") }}',
+				message: msg,
+				indicator: 'red'
+			});
+			throw new Error(msg);
+		}
+
+		frappe.call = function (opts) {
+			return $.ajax({
+				type: opts.type || "POST",
+				url: "/api/method/" + opts.method,
+				data: opts.args || {},
+				headers: {
+					"X-Frappe-CSRF-Token": frappe.csrf_token
+				},
+				beforeSend: function () {
+					if (opts.freeze) {
+						document.body.style.cursor = 'wait';
+					}
+				},
+				success: function (data) {
+					if (opts.callback) opts.callback(data);
+				},
+				error: function (xhr) {
+					document.body.style.cursor = 'default';
+					try {
+						let err = JSON.parse(xhr.responseText);
+						if (opts.error) opts.error(err);
+						else frappe.msgprint(err._server_messages ? JSON.parse(JSON.parse(err._server_messages)[0]).message : "An error occurred");
+					} catch (e) {
+						console.error(xhr);
+						alert("An error occurred during the request.");
+					}
+				},
+				complete: function () {
+					document.body.style.cursor = 'default';
+				}
+			});
+		};
+	</script>
+
+	<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+		rel="stylesheet" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+		rel="stylesheet" />
+
+	<script id="tailwind-config">
+		tailwind.config = {
+			darkMode: "class",
+			theme: {
+				extend: {
+					colors: {
+						"primary": "#C1E12F",
+						"charcoal": "#2D2D2D",
+						"background-light": "#F9FAFB",
+						"background-dark": "#121212",
+						"accent-warning": "#FFB300",
+					},
+					fontFamily: {
+						"display": ["Montserrat", "sans-serif"],
+						"sans": ["Inter", "sans-serif"],
+					},
+					borderRadius: { "DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+				},
+			},
+		}
+	</script>
+	<style>
+		.material-symbols-outlined {
+			font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+		}
+
+		.active-nav {
+			background-color: #2D2D2D;
+			color: #C1E12F;
+			font-weight: 700;
+		}
+
+		.active-nav:hover {
+			color: #C1E12F;
+		}
+
+		.logo-circle {
+			background-color: #2D2D2D;
+			border: 4px solid white;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		}
+
+		body {
+			font-family: 'Inter', sans-serif;
+		}
+
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6 {
+			font-family: 'Montserrat', sans-serif;
+		}
+	</style>
+</head>
+
+<body
+	class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex transition-colors duration-300">
+	<!-- Sidebar Navigation -->
+	<aside
+		class="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-black hidden md:flex">
+		<div class="p-6 flex items-center gap-3">
+			<div
+				class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-white font-bold text-xs logo-circle">
+				<span class="text-white">s<span class="text-primary">2</span>w</span>
+			</div>
+			<div>
+				<h1 class="font-display font-bold text-xl tracking-tight dark:text-white">slim<span
+						class="text-primary">2</span>well</h1>
+				<p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Patient Portal</p>
+			</div>
+		</div>
+		<nav class="flex-1 px-4 py-4 space-y-2">
+			<a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/patient_dashboard">
+				<span class="material-symbols-outlined">grid_view</span>
+				<span class="font-semibold text-sm">{{ _("Dashboard") }}</span>
+			</a>
+			<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+				href="/my_treatment">
+				<span class="material-symbols-outlined">prescriptions</span>
+				<span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
+			</a>
+			<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+				href="/vitals">
+				<span class="material-symbols-outlined">monitoring</span>
+				<span class="font-semibold text-sm">{{ _("Vitals") }}</span>
+			</a>
+			<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+				href="/billing">
+				<span class="material-symbols-outlined">receipt_long</span>
+				<span class="font-semibold text-sm">{{ _("Billing") }}</span>
+			</a>
+			<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+				href="/resources">
+				<span class="material-symbols-outlined">menu_book</span>
+				<span class="font-semibold text-sm">{{ _("Resources") }}</span>
+			</a>
+			<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+				href="/patient_profile">
+				<span class="material-symbols-outlined">settings_suggest</span>
+				<span class="font-semibold text-sm">{{ _("Profile") }}</span>
+			</a>
+		</nav>
+		<div class="p-4 border-t border-slate-100 dark:border-slate-800">
+			<!-- Logout Button -->
+			<a href="/?cmd=web_logout"
+				class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all mb-4">
+				<span class="material-symbols-outlined text-sm">logout</span>
+				{{ _("Log Out") }}
+			</a>
+
+			{% if refill_info %}
+			<div class="bg-primary/10 p-4 rounded-xl border border-primary/20">
+				<div class="flex items-center gap-3 mb-2">
+					<div class="bg-primary size-8 rounded-full flex items-center justify-center text-charcoal">
+						<span class="material-symbols-outlined text-sm">verified</span>
+					</div>
+					<p class="text-xs font-bold text-primary uppercase tracking-wider">{{ _("Active Plan") }}</p>
+				</div>
+				<p class="text-sm font-bold text-charcoal dark:text-white">{{ refill_info.status or "Active" }}</p>
+				{% if refill_info.current_cycle and refill_info.total_cycles %}
+				<p class="text-xs text-slate-500">{{ _("Cycle {0} of {1}").format(refill_info.current_cycle,
+					refill_info.total_cycles) }}</p>
+				{% endif %}
+			</div>
+			{% endif %}
+		</div>
+	</aside>
+
+	<!-- Main Content Area -->
+	<main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+		<!-- Top Navigation Bar -->
+		<header
+			class="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
+			<div class="flex items-center gap-4">
+				<div class="md:hidden">
+					<!-- Mobile Menu Button Placeholder -->
+					<button class="text-slate-500 hover:text-charcoal"><span
+							class="material-symbols-outlined">menu</span></button>
+				</div>
+				<div class="hidden md:block">
+					<h2 class="text-xl font-bold font-display tracking-tight">{{ _("Patient Dashboard") }}</h2>
+				</div>
+			</div>
+			<div class="flex items-center gap-6">
+				<!-- Notifications/Settings Removed -->
+				<div class="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+				<div class="flex items-center gap-3">
+					<div class="text-right hidden sm:block">
+						<p class="text-sm font-bold leading-none">{{ patient.first_name if patient else "Guest" }} {{
+							patient.last_name or "" if patient else "" }}
+						</p>
+						<p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
+							Member") }}</p>
+					</div>
+					<div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 shadow-sm bg-cover bg-center"
+						style='background-image: url("{{ patient.image or "https://lh3.googleusercontent.com/aida-public/AB6AXuAL3hA5SD4KcL_OB0mXuu9sGKrcMcP5j_8ZlLJRX6j6Gqh_tySVYhVWjA4Xj5EKALG8M5qC3tqtyFxAvoqiUEXVatC6Fe6La800cTFqqxVTZo9D8jXsz00kcvJzEf6SWDx3mwglb60dmMGLL81KW1SLfVGpELoDvLE65mPUl3gxgLBXZICCxCN_agNqVqqY9-2H99y9zHbIzkb1WS4owE1bgx4VXk0VLkxqrA0Xmz18rBkCNDpi7IDrXrkmajNW_GMbyxpY9BLY8jwy" if patient else "" }}");'>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<div class="p-8 max-w-6xl mx-auto space-y-8 flex-grow">
+			<!-- Welcome Section -->
+			<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+				<div>
+					<h1 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white mb-2">
+						{{ _("Welcome back, {0}").format(patient.first_name) }}
+					</h1>
+					<p class="text-slate-500 dark:text-slate-400 max-w-xl">{{ _("Here is your progress overview and
+						active treatment plan.") }}</p>
+				</div>
+				<!-- Action Button -->
+				<button onclick="openVitalsModal()"
+					class="bg-primary text-charcoal px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-white hover:text-black border border-primary transition-all flex items-center gap-2">
+					<span class="material-symbols-outlined">add</span>
+					{{ _("Log Measurement") }}
+				</button>
+			</div>
+
+			<!-- Alerts -->
+			{% if alerts %}
+			<div class="space-y-4">
+				{% for alert in alerts %}
+				<div class="p-4 rounded-xl border flex items-start gap-4 
+                    {% if alert.type == 'warning' %} bg-orange-50 border-orange-200 text-orange-800 {% endif %}
+                    {% if alert.type == 'info' %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
+					<span class="material-symbols-outlined mt-0.5">
+						{% if alert.type == 'warning' %}warning{% else %}info{% endif %}
+					</span>
+					<div class="flex-1">
+						<h4 class="font-bold font-display">{{ alert.title }}</h4>
+						<p class="text-sm opacity-90">{{ alert.message }}</p>
+					</div>
+					{% if alert.action == 'go_to_intake' %}
+					<a href="/glp1-intake"
+						class="px-4 py-2 bg-white rounded-lg text-sm font-bold shadow-sm hover:shadow text-charcoal">
+						{{ _("Complete Now") }}
+					</a>
+					{% elif alert.action == 'log_vitals' %}
+					<button onclick="openVitalsModal()"
+						class="px-4 py-2 bg-white rounded-lg text-sm font-bold shadow-sm hover:shadow text-charcoal">
+						{{ _("Log Now") }}
+					</button>
+					{% endif %}
+				</div>
+				{% endfor %}
+			</div>
+			{% endif %}
+
+			<!-- Vitals Cards Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<!-- Current Weight -->
+				<div
+					class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="font-bold text-slate-500 uppercase tracking-wider text-xs">{{ _("Current Weight") }}
+						</h3>
+						<span
+							class="material-symbols-outlined text-purple-500 bg-purple-50 p-2 rounded-lg">monitor_weight</span>
+					</div>
+					<div class="flex items-end gap-2">
+						<span class="text-4xl font-black text-charcoal dark:text-white">
+							{{ "{:.1f}".format(latest_vital.weight_kg) if latest_vital else "--" }}
+						</span>
+						<span class="text-slate-500 mb-1 font-bold">kg</span>
+					</div>
+					{% if weight_change != 0 %}
+					<div class="mt-2 text-sm {{ 'text-green-500' if weight_change < 0 else 'text-red-500' }} font-bold">
+						<span>{{ "{:+.1f}".format(weight_change) }}kg</span>
+						<span class="text-slate-400 font-normal">since start</span>
+					</div>
+					{% endif %}
+				</div>
+
+				<!-- BMI Card -->
+				<div
+					class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="font-bold text-slate-500 uppercase tracking-wider text-xs">{{ _("Current BMI") }}
+						</h3>
+						<span
+							class="material-symbols-outlined text-blue-500 bg-blue-50 p-2 rounded-lg">accessibility_new</span>
+					</div>
+					<div class="flex items-end gap-2">
+						<span class="text-4xl font-black text-charcoal dark:text-white">
+							{{ "{:.1f}".format(latest_vital.bmi) if latest_vital and latest_vital.bmi else "--" }}
+						</span>
+					</div>
+					<div class="mt-2">
+						<span
+							class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-{{ bmi_badge_color }} text-slate-800">
+							{{ bmi_class }}
+						</span>
+					</div>
+				</div>
+
+				<!-- Goal Card -->
+				<div
+					class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="font-bold text-slate-500 uppercase tracking-wider text-xs">{{ _("Target Weight") }}
+						</h3>
+						<span class="material-symbols-outlined text-green-500 bg-green-50 p-2 rounded-lg">flag</span>
+					</div>
+					<div class="flex items-end gap-2">
+						<span class="text-4xl font-black text-charcoal dark:text-white">
+							{{ "{:.1f}".format(target_weight) }}
+						</span>
+						<span class="text-slate-500 mb-1 font-bold">kg</span>
+					</div>
+					<div class="mt-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+						<div class="bg-green-500 h-2 rounded-full transition-all duration-1000"
+							style="width: {{ progress_percent }}%"></div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Graph & Prescription Row -->
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<!-- Graph Section -->
+				<div
+					class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+					<h3 class="font-bold font-display text-xl mb-6 text-charcoal dark:text-white">{{ _("Weight Journey")
+						}}</h3>
+					<div id="weightChart" style="min-height: 300px;"></div>
+				</div>
+
+				<!-- Prescription Info -->
+				<div
+					class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col">
+					<h3 class="font-bold font-display text-xl mb-6 text-charcoal dark:text-white">{{ _("Current Plan")
+						}}</h3>
+
+					{% if refill_info %}
+					<div class="flex-1">
+						<div class="mb-6">
+							<span
+								class="inline-block px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg mb-2">Active</span>
+							<h4 class="text-2xl font-black text-primary">{{ refill_info.medication }}</h4>
+							<p class="text-slate-500 font-medium">{{ refill_info.dosage }}</p>
+						</div>
+
+						<div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+							<div class="flex justify-between text-sm">
+								<span class="text-slate-500 font-medium">{{ _("Next Refill") }}</span>
+								<span class="font-bold text-charcoal dark:text-white">
+									{{ frappe.format_date(refill_info.refill_due_date) if refill_info.refill_due_date
+									else "N/A" }}
+								</span>
+							</div>
+
+							{% if refill_info.days_until_refill <= 7 %} <div
+								class="bg-orange-50 border border-orange-100 text-orange-700 p-4 rounded-xl text-xs font-bold flex items-center gap-2">
+								<span class="material-symbols-outlined text-base">warning</span>
+								Refill due in {{ refill_info.days_until_refill }} days
+						</div>
+						{% endif %}
+					</div>
+				</div>
+
+				<a href="/my_treatment"
+					class="mt-6 w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary hover:text-charcoal transition-all">
+					{{ _("Manage Prescription") }}
+				</a>
+				{% else %}
+				<div class="flex-1 flex flex-col items-center justify-center text-center py-6">
+					<div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-full mb-4">
+						<span class="material-symbols-outlined text-slate-400">medical_services</span>
+					</div>
+					<p class="text-slate-500 font-medium mb-6">{{ _("No active prescription plan found.") }}</p>
+					<a href="/glp1-intake"
+						class="w-full inline-flex justify-center px-4 py-3 bg-primary text-charcoal rounded-xl font-bold hover:bg-white border border-transparent hover:border-primary transition-all">
+						{{ _("Start Intake") }}
+					</a>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+		</div>
+
+		<!-- Footer -->
+		<footer
+			class="px-4 md:px-10 py-6 md:py-8 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-8 mt-auto bg-white dark:bg-black">
+			<div class="flex items-center gap-2 opacity-50">
+				<span class="material-symbols-outlined text-sm">copyright</span>
+				<span class="text-xs font-bold uppercase tracking-widest">{{ _("2026 Slim2Well South Africa")
+					}}</span>
+			</div>
+			<div class="flex gap-4 md:gap-8 opacity-60">
+				<a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+					href="/privacy">{{
+					_("Privacy") }}</a>
+				<a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+					href="/legal">{{
+					_("Legal") }}</a>
+				<a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+					href="/terms">{{
+					_("Terms") }}</a>
+			</div>
+		</footer>
+	</main>
+
+	<!-- Log Vitals Modal -->
+	<div id="vitalsModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+		aria-modal="true">
+		<div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeVitalsModal()"></div>
+		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+			<div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+				<div
+					class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-800">
+					<div
+						class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+						<h3 class="text-lg font-bold font-display text-charcoal dark:text-white">{{ _("Log Measurement")
+							}}</h3>
+						<button onclick="closeVitalsModal()"
+							class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+							<span class="material-symbols-outlined">close</span>
+						</button>
+					</div>
+					<div class="p-6 space-y-4 bg-white dark:bg-slate-900">
+						<div>
+							<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{
+								_("Weight (kg)") }}</label>
+							<input type="number" id="inputWeight" step="0.1"
+								class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/50 border-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-black transition-all outline-none text-charcoal dark:text-white font-bold"
+								placeholder="0.0">
+						</div>
+						<div>
+							<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{
+								_("Height (cm)") }} (Optional)</label>
+							<input type="number" id="inputHeight" step="1"
+								class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/50 border-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-black transition-all outline-none text-charcoal dark:text-white font-bold"
+								placeholder="{{ latest_vital.height_cm if latest_vital else '' }}">
+						</div>
+					</div>
+					<div class="bg-slate-50 dark:bg-black/30 px-6 py-4 flex gap-3">
+						<button onclick="closeVitalsModal()"
+							class="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">Cancel</button>
+						<button onclick="submitVitals()"
+							class="flex-1 px-4 py-3 rounded-xl bg-primary text-charcoal font-bold hover:bg-primary/90 shadow-sm transition-all">Save
+							Log</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Custom Confirmation/Alert Modal (Copied from Billing) -->
+	<div id="custom-modal" class="fixed inset-0 z-[60] hidden" aria-labelledby="custom-modal-title" role="dialog"
+		aria-modal="true">
+		<div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"></div>
+		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+			<div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+				<div
+					class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-800">
+					<div class="p-6">
+						<div class="flex items-start gap-4">
+							<div id="modal-icon-container"
+								class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
+								<span id="modal-icon" class="material-symbols-outlined text-primary">info</span>
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-bold text-charcoal dark:text-white" id="custom-modal-title">
+								</h3>
+								<div class="mt-2">
+									<p class="text-sm text-slate-500 dark:text-slate-400" id="custom-modal-message"></p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="bg-slate-50 dark:bg-black/30 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+						<button type="button" id="modal-confirm-btn"
+							class="inline-flex w-full justify-center rounded-xl bg-primary px-3 py-2 text-sm font-bold text-charcoal shadow-sm hover:bg-primary/90 sm:w-auto transition-all">
+							{{ _("Confirm") }}
+						</button>
+						<button type="button" id="modal-cancel-btn" onclick="closeCustomModal()"
+							class="inline-flex w-full justify-center rounded-xl bg-white dark:bg-slate-800 px-3 py-2 text-sm font-bold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 sm:w-auto transition-all">
+							{{ _("Cancel") }}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// Initialize Chart
+		const chartData = {{ vitals_chart_data | safe }};
+
+		document.addEventListener('DOMContentLoaded', function () {
+			if (chartData && chartData.length > 0) {
+				const options = {
+					series: [{
+						name: 'Weight',
+						data: chartData.map(d => d.weight)
+					}],
+					chart: {
+						type: 'area',
+						height: 350,
+						fontFamily: 'Inter, sans-serif',
+						toolbar: { show: false },
+						zoom: { enabled: false }
+					},
+					dataLabels: { enabled: false },
+					stroke: { curve: 'smooth', width: 3, colors: ['#C1E12F'] }, // Primary color
+					fill: {
+						type: 'gradient',
+						gradient: {
+							shadeIntensity: 1,
+							opacityFrom: 0.7,
+							opacityTo: 0.2,
+							stops: [0, 90, 100],
+							colorStops: [{ offset: 0, color: '#C1E12F', opacity: 0.2 }, { offset: 100, color: '#C1E12F', opacity: 0 }]
+						}
+					},
+					xaxis: {
+						categories: chartData.map(d => d.date),
+						axisBorder: { show: false },
+						axisTicks: { show: false },
+						labels: {
+							formatter: function (val) {
+								const d = new Date(val);
+								return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+							},
+							style: {
+								colors: '#94a3b8',
+								fontSize: '12px',
+								fontFamily: 'Inter, sans-serif',
+								fontWeight: 500
+							}
+						}
+					},
+					yaxis: {
+						show: true,
+						labels: {
+							formatter: (val) => val.toFixed(1) + ' kg',
+							style: {
+								colors: '#94a3b8',
+								fontSize: '12px',
+								fontFamily: 'Inter, sans-serif',
+								fontWeight: 500
+							}
+						}
+					},
+					grid: {
+						borderColor: '#f1f5f9',
+						strokeDashArray: 4,
+					},
+					theme: { mode: 'light' }
+				};
+
+				const chart = new ApexCharts(document.querySelector("#weightChart"), options);
+				chart.render();
+			} else {
+				document.querySelector("#weightChart").innerHTML = `
+                    <div class='flex flex-col items-center justify-center h-full text-slate-400 py-12'>
+                        <span class='material-symbols-outlined text-4xl mb-2'>show_chart</span>
+                        <p class='font-medium'>No weight data yet. Log your first measurement!</p>
+                    </div>`;
+			}
+		});
+
+		// Modal Logic
+		const modal = document.getElementById('vitalsModal');
+
+		function openVitalsModal() {
+			modal.classList.remove('hidden');
+		}
+
+		function closeVitalsModal() {
+			modal.classList.add('hidden');
+		}
+
+		// Submit Vitals
+		function submitVitals() {
+			const weight = document.getElementById('inputWeight').value;
+			const height = document.getElementById('inputHeight').value;
+
+			if (!weight) {
+				frappe.msgprint('Please enter your weight');
+				return;
+			}
+
+			frappe.call({
+				method: 'koraflow_core.www.dashboard.submit_vital',
+				args: {
+					weight: weight,
+					height: height
+				},
+				freeze: true,
+				callback: function (r) {
+					if (!r.exc) {
+						frappe.msgprint({ message: 'Log saved successfully!', indicator: 'green' });
+						closeVitalsModal();
+						setTimeout(() => window.location.reload(), 1000);
+					}
+				}
+			});
+		}
+	</script>
+</body>
+
+</html>

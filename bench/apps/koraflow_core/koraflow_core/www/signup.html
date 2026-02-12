@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sign Up - Slim2Well</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#bef264", // Lime Green matching reference
+                        "background-light": "#ffffff",
+                        "background-dark": "#111827",
+                        charcoal: "#18181b",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "1rem", // Slightly tighter radius as per screenshot
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .s2w-watermark {
+            font-weight: 800;
+            line-height: 1;
+            /* Dark grey color matching screenshot */
+            color: #27272a;
+            font-size: 20rem;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-x-hidden">
+
+    <div class="flex flex-col lg:flex-row min-h-screen">
+
+        <!-- Left Panel (Dark) -->
+        <div class="hidden lg:flex lg:w-1/2 bg-charcoal relative overflow-hidden flex-col p-16">
+
+            <!-- Logo Area (Top Left) -->
+            <div class="z-20">
+                <div class="flex items-center gap-3 mb-2">
+                    <!-- Logo Icon -->
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                        <span class="text-charcoal font-bold italic">s</span>
+                    </div>
+                    <span class="text-white font-bold text-2xl tracking-tight">Slim<span
+                            class="text-primary font-normal">2</span>Well</span>
+                </div>
+                <p class="text-slate-500 text-xs font-semibold tracking-widest uppercase ml-1">Your Journey, Simplified.
+                </p>
+            </div>
+
+            <!-- Spacer -->
+            <div class="flex-1"></div>
+
+            <!-- Hero Text (Bottom Left) -->
+            <div class="z-20 relative max-w-lg">
+                <h2 class="text-6xl font-light text-white leading-[1.1]">
+                    Wellness <span class="text-primary font-normal">Simplified</span>.
+                </h2>
+                <p class="mt-6 text-slate-400 text-lg leading-relaxed max-w-sm">
+                    Experience a science-driven approach to health and longevity, tailored specifically for your
+                    lifestyle.
+                </p>
+            </div>
+
+            <!-- Watermark (Bottom Right of Left Panel) -->
+            <div class="absolute bottom-[-6rem] right-[-4rem] z-10 select-none pointer-events-none">
+                <span class="s2w-watermark font-sans">s2w</span>
+            </div>
+        </div>
+
+        <!-- Right Panel (Form) -->
+        <div
+            class="flex-1 flex flex-col items-center justify-center p-8 lg:p-24 bg-background-light dark:bg-background-dark relative">
+
+            <!-- Mobile Logo -->
+            <div class="lg:hidden w-full max-w-md mb-12 flex flex-col items-center justify-center gap-1">
+                <span class="text-slate-900 dark:text-white font-bold text-2xl tracking-tight">Slim<span
+                        class="text-primary">2</span>Well</span>
+            </div>
+
+            <div class="w-full max-w-md">
+                <div class="mb-10 text-center lg:text-left">
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        Join Slim2Well
+                    </h1>
+                    <p class="mt-3 text-slate-500 dark:text-slate-400 text-sm">
+                        Start your weight loss journey today with premium healthcare support.
+                    </p>
+                </div>
+
+                <form id="signup-form" class="space-y-5" onsubmit="handleSignup(event)">
+                    <div id="error-message" class="hidden p-4 rounded-lg bg-red-50 text-red-500 text-sm font-medium">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" for="full-name">Full
+                            Name</label>
+                        <input
+                            class="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-300 text-sm font-medium"
+                            id="full-name" name="full_name" placeholder="John Doe" type="text" required />
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" for="email">Email
+                            Address</label>
+                        <input
+                            class="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-300 text-sm font-medium"
+                            id="email" name="email" placeholder="john@example.com" type="email" required />
+                    </div>
+
+                    <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 pt-1">
+                        <input
+                            class="w-4 h-4 rounded-full border-slate-300 text-primary focus:ring-primary bg-slate-50 dark:bg-slate-800"
+                            id="terms" type="checkbox" required />
+                        <label for="terms" class="text-xs">I agree to the <a
+                                class="underline hover:text-primary transition-colors" href="/terms"
+                                target="_blank">Terms of
+                                Service</a></label>
+                    </div>
+
+                    <button id="submit-btn"
+                        class="w-full py-3.5 px-6 bg-primary text-charcoal font-bold text-base rounded-full hover:brightness-105 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center mt-4"
+                        type="submit">
+                        <span>Create Account</span>
+                        <div id="loading-spinner"
+                            class="hidden ml-2 w-4 h-4 border-2 border-charcoal border-t-transparent rounded-full animate-spin">
+                        </div>
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Already have an account?
+                        <a class="text-slate-900 dark:text-white font-bold underline decoration-2 decoration-primary/50 hover:decoration-primary transition-colors"
+                            href="/login">
+                            Login
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Footer Logos (Small) -->
+                <!-- Footer Logos Removed -->
+
+            </div>
+
+            <!-- Dark Mode Toggle -->
+            <!-- Dark Mode Toggle Removed -->
+
+        </div>
+    </div>
+
+    <script>
+        async function handleSignup(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const spinner = document.getElementById('loading-spinner');
+            const errorDiv = document.getElementById('error-message');
+            const form = document.getElementById('signup-form');
+
+            // Reset state
+            errorDiv.classList.add('hidden');
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/method/koraflow_core.api.patient_signup.custom_sign_up', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': window.csrf_token
+                    },
+                    body: JSON.stringify({
+                        email: data.email,
+                        full_name: data.full_name
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Determine redirect
+                    const redirectUrl = result.home_page || "/glp1_intake_wizard";
+                    window.location.href = redirectUrl;
+                } else {
+                    let msg = 'Registration failed';
+                    if (result._server_messages) {
+                        try {
+                            const msgs = JSON.parse(result._server_messages);
+                            msg = JSON.parse(msgs[0]).message;
+                        } catch (e) { }
+                    } else if (result.message) {
+                        msg = result.message;
+                    }
+                    throw new Error(msg);
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

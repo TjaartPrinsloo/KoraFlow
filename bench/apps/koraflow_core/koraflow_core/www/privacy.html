@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("Privacy Policy (POPIA)") }} | {{ _("Slim2Well") }}</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #C1E12F;
+            color: #2D2D2D;
+            font-weight: 700;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light text-slate-800 min-h-screen">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="material-symbols-outlined text-primary text-2xl">gavel</span>
+                    <h1 class="font-display font-bold text-xl tracking-tight">{{ _("Legal Center") }}</h1>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">{{ _("LEGAL DOCUMENTS") }}</p>
+                <p class="text-xs text-slate-400">Version 1.0 • Updated Jan 2026</p>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="/terms"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="font-semibold text-sm">{{ _("Terms & Conditions") }}</span>
+                </a>
+                <a href="/privacy" class="flex items-center gap-3 px-4 py-3 rounded-xl active-nav">
+                    <span class="material-symbols-outlined">shield</span>
+                    <span class="font-semibold text-sm">{{ _("Privacy Policy (POPIA)") }}</span>
+                </a>
+                <a href="/paia"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <span class="font-semibold text-sm">{{ _("PAIA Manual") }}</span>
+                </a>
+                <a href="/sahpra"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">local_pharmacy</span>
+                    <span class="font-semibold text-sm">{{ _("SAHPRA Compliance") }}</span>
+                </a>
+                <a href="/cookies"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">cookie</span>
+                    <span class="font-semibold text-sm">{{ _("Cookie Policy") }}</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">{{ _("Questions about our policies? Contact us at") }}</p>
+                <a href="mailto:legal@slim2well.com"
+                    class="text-sm font-bold text-primary hover:underline">legal@slim2well.com</a>
+
+                <a href="/portal_dashboard"
+                    class="mt-4 w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    {{ _("Exit Legal Center") }}
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <!-- Breadcrumb -->
+                <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+                    <a href="/legal" class="hover:text-primary">{{ _("LEGAL CENTER") }}</a>
+                    <span>›</span>
+                    <span class="text-charcoal font-bold">{{ _("PRIVACY POLICY (POPIA)") }}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                            <span class="material-symbols-outlined text-green-600 text-2xl">verified_user</span>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-black font-display text-charcoal">{{ _("Privacy Policy") }}</h1>
+                            <p class="text-sm text-green-600 font-bold">{{ _("POPIA Compliant") }}</p>
+                        </div>
+                    </div>
+                    <p class="text-slate-500 mb-8">{{ _("This Privacy Policy explains how Slim2Well (Pty) Ltd collects,
+                        uses, and protects your personal information in accordance with the Protection of Personal
+                        Information Act 4 of 2013 (POPIA).") }}</p>
+
+                    <!-- POPIA Notice -->
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mb-8">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-blue-600">info</span>
+                            <div>
+                                <p class="text-sm font-bold text-blue-900 mb-1">{{ _("Your Rights Under POPIA") }}</p>
+                                <p class="text-sm text-blue-800">{{ _("As a data subject, you have the right to access,
+                                    correct, and delete your personal information. You may also object to the processing
+                                    of your data and lodge a complaint with the Information Regulator.") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Information Officer -->
+                    <div class="mb-8 p-6 bg-slate-50 rounded-xl">
+                        <h2 class="text-lg font-bold text-charcoal mb-4">{{ _("Information Officer") }}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-slate-500">{{ _("Name") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("Slim2Well Information Officer") }}</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Email") }}</p>
+                                <p class="font-bold text-primary">privacy@slim2well.com</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Address") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("South Africa") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 1 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("1. Information We Collect") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("We collect the following categories of personal information:")
+                        }}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="p-4 bg-slate-50 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Identity Information") }}</h3>
+                            <p class="text-sm text-slate-600">{{ _("Full name, ID number, date of birth, gender") }}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Contact Information") }}</h3>
+                            <p class="text-sm text-slate-600">{{ _("Email, phone number, physical address") }}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Health Information") }}</h3>
+                            <p class="text-sm text-slate-600">{{ _("Medical history, current conditions, medications,
+                                vitals") }}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Financial Information") }}</h3>
+                            <p class="text-sm text-slate-600">{{ _("Payment details, billing history") }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("2. How We Use Your Information") }}</h2>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6">
+                        <li>{{ _("To provide healthcare services and facilitate prescriptions") }}</li>
+                        <li>{{ _("To communicate with you about your treatment and appointments") }}</li>
+                        <li>{{ _("To process payments and billing") }}</li>
+                        <li>{{ _("To comply with legal and regulatory obligations (SAHPRA, HPCSA)") }}</li>
+                        <li>{{ _("To improve our services and platform") }}</li>
+                        <li>{{ _("To send important updates about your health journey") }}</li>
+                    </ul>
+
+                    <!-- Section 3 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("3. Legal Basis for Processing") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("We process your personal information based on:") }}</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6">
+                        <li><strong>{{ _("Consent") }}</strong> – {{ _("You have given explicit consent for processing")
+                            }}</li>
+                        <li><strong>{{ _("Contract") }}</strong> – {{ _("Processing is necessary to fulfill our service
+                            agreement") }}</li>
+                        <li><strong>{{ _("Legal Obligation") }}</strong> – {{ _("We are required to comply with
+                            healthcare regulations") }}</li>
+                        <li><strong>{{ _("Legitimate Interest") }}</strong> – {{ _("To improve and protect our
+                            services") }}</li>
+                    </ul>
+
+                    <!-- Section 4 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("4. Data Sharing") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("We may share your information with:") }}</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6">
+                        <li>{{ _("Licensed healthcare practitioners for consultations and prescriptions") }}</li>
+                        <li>{{ _("Registered pharmacies for medication dispensing") }}</li>
+                        <li>{{ _("Payment processors for secure transactions") }}</li>
+                        <li>{{ _("Regulatory bodies when required by law (SAHPRA, HPCSA)") }}</li>
+                    </ul>
+                    <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg mb-6">
+                        <p class="text-sm text-green-800">{{ _("We do NOT sell your personal information to third
+                            parties for marketing purposes.") }}</p>
+                    </div>
+
+                    <!-- Section 5 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("5. Data Security") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("We implement appropriate security measures to protect your
+                        data:") }}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="p-4 bg-slate-50 rounded-xl text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-600 mb-2">lock</span>
+                            <p class="text-sm font-bold">{{ _("AES-256 Encryption") }}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-600 mb-2">security</span>
+                            <p class="text-sm font-bold">{{ _("Secure SSL/TLS") }}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-600 mb-2">verified_user</span>
+                            <p class="text-sm font-bold">{{ _("Access Controls") }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 6 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("6. Your Rights") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("Under POPIA, you have the right to:") }}</p>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                            <span class="material-symbols-outlined text-primary">visibility</span>
+                            <span class="text-sm">{{ _("Access your personal information") }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                            <span class="material-symbols-outlined text-primary">edit</span>
+                            <span class="text-sm">{{ _("Correct inaccurate information") }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                            <span class="material-symbols-outlined text-primary">delete</span>
+                            <span class="text-sm">{{ _("Request deletion of your data (where applicable)") }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                            <span class="material-symbols-outlined text-primary">block</span>
+                            <span class="text-sm">{{ _("Object to processing of your data") }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                            <span class="material-symbols-outlined text-primary">report</span>
+                            <span class="text-sm">{{ _("Lodge a complaint with the Information Regulator") }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 7 -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("7. Data Retention") }}</h2>
+                    <p class="text-slate-600 mb-6">{{ _("We retain your personal information for as long as necessary to
+                        provide our services and comply with legal obligations. Medical records are retained in
+                        accordance with the Health Professions Act requirements (minimum 5 years after last
+                        consultation).") }}</p>
+
+                    <!-- Contact -->
+                    <div class="mt-8 p-6 bg-slate-50 rounded-xl">
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("Exercise Your Rights") }}</h3>
+                        <p class="text-sm text-slate-600 mb-2">{{ _("To exercise any of your rights or submit a data
+                            request, contact our Information Officer:") }}</p>
+                        <p class="text-sm font-bold text-primary">privacy@slim2well.com</p>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-8 text-center">{{ _("Last updated: January 2026") }}</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

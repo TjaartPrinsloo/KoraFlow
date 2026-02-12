@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("Profile & Settings") }} | {{ _("Slim2Well") }}</title>
+
+    <!-- Frappe Framework Scripts (required for API calls) -->
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script>
+        // Initialize frappe namespace
+        window.frappe = window.frappe || {};
+        frappe.csrf_token = "{{ frappe.session.csrf_token }}";
+        frappe.session = {
+            user: "{{ frappe.session.user }}",
+            csrf_token: "{{ frappe.session.csrf_token }}"
+        };
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    {% if enable_google_maps and google_maps_api_key %}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+    <script>
+        function initAutocomplete() {
+            const addressInput = document.querySelector('input[name="address_line1"]');
+            if (!addressInput) return;
+
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'za' } // Restricted to South Africa as per branding
+            });
+
+            autocomplete.addListener('place_changed', function () {
+                const place = autocomplete.getPlace();
+                if (!place.address_components) return;
+
+                let address = '';
+                let city = '';
+                let state = '';
+                let zip = '';
+
+                for (const component of place.address_components) {
+                    const type = component.types[0];
+                    if (type === 'street_number') {
+                        address = component.long_name + ' ' + address;
+                    } else if (type === 'route') {
+                        address += component.long_name;
+                    } else if (type === 'locality') {
+                        city = component.long_name;
+                    } else if (type === 'administrative_area_level_1') {
+                        state = component.long_name;
+                    } else if (type === 'postal_code') {
+                        zip = component.long_name;
+                    }
+                }
+
+                document.querySelector('input[name="address_line1"]').value = address;
+                document.querySelector('input[name="city"]').value = city;
+                // Note: We don't have explicit state/pincode inputs in all profile views but we can set them if they exist
+                const zipInput = document.querySelector('input[name="zip_code"]');
+                if (zipInput) zipInput.value = zip;
+            });
+        }
+        google.maps.event.addDomListener(window, 'load', initAutocomplete);
+    </script>
+    {% endif %}
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                        "accent-warning": "#FFB300",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #2D2D2D;
+            color: #C1E12F;
+            font-weight: 700;
+        }
+
+        .active-nav:hover {
+            color: #C1E12F;
+        }
+
+        .logo-circle {
+            background-color: #2D2D2D;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex transition-colors duration-300">
+    <!-- Sidebar Navigation -->
+    <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-black">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-white font-bold text-xs logo-circle">
+                <span class="text-white">s<span class="text-primary">2</span>w</span>
+            </div>
+            <div>
+                <h1 class="font-display font-bold text-xl tracking-tight dark:text-white">slim<span
+                        class="text-primary">2</span>well</h1>
+                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Patient Portal</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/portal_dashboard">
+                <span class="material-symbols-outlined">grid_view</span>
+                <span class="font-semibold text-sm">{{ _("Dashboard") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/my_treatment">
+                <span class="material-symbols-outlined">prescriptions</span>
+                <span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
+            </a>
+            <!-- Vitals Link Removed -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/billing">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span class="font-semibold text-sm">{{ _("Billing") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/resources">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span class="font-semibold text-sm">{{ _("Resources") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/patient_profile">
+                <span class="material-symbols-outlined">settings_suggest</span>
+                <span class="font-semibold text-sm">{{ _("Profile") }}</span>
+            </a>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <!-- Logout Button -->
+            <a href="/?cmd=web_logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                {{ _("Log Out") }}
+            </a>
+        </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+        <!-- Top Navigation Bar -->
+        <header
+            class="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="hidden md:block">
+                    <h2 class="text-xl font-bold font-display tracking-tight">{{ _("Profile & Settings") }}</h2>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <!-- Notifications/Settings Removed -->
+                <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold leading-none">{{ patient.first_name }} {{ patient.last_name or "" }}
+                        </p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
+                            Member") }}</p>
+                    </div>
+                    <div class="relative group cursor-pointer"
+                        onclick="document.getElementById('profile-upload').click()">
+                        <div
+                            class="size-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
+                            {% if patient.image %}
+                            <img src="{{ patient.image }}" alt="Profile" class="w-full h-full object-cover">
+                            {% else %}
+                            <span class="font-bold text-primary text-sm uppercase">
+                                {{ patient.first_name[0] if patient.first_name else '' }}{{ patient.last_name[0] if
+                                patient.last_name else '' }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <!-- Edit Overlay -->
+                        <div
+                            class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="material-symbols-outlined text-white text-[10px]">edit</span>
+                        </div>
+                    </div>
+                    <input type="file" id="profile-upload" class="hidden" accept="image/*"
+                        onchange="uploadProfileImage(this)">
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-6xl mx-auto space-y-8">
+            <!-- Page Header -->
+            <div>
+                <h1 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white mb-2">{{
+                    _("Profile & Settings") }}</h1>
+                <p class="text-slate-500 dark:text-slate-400 max-w-xl">{{ _("Manage your personal details and account
+                    security.") }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Personal Details Form -->
+                <div
+                    class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3
+                        class="text-xl font-bold font-display mb-6 flex items-center gap-3 text-charcoal dark:text-white">
+                        <span class="material-symbols-outlined text-primary">person</span> {{ _("Personal Details") }}
+                    </h3>
+                    <form id="profile-form" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Full Name")
+                                }}</label>
+                            <input type="text" value="{{ patient.patient_name }}" disabled
+                                class="w-full rounded-xl border-slate-200 bg-slate-50 dark:bg-black text-slate-500 cursor-not-allowed px-4 py-3 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Email Address")
+                                }}</label>
+                            <input type="email" value="{{ patient.email }}" disabled
+                                class="w-full rounded-xl border-slate-200 bg-slate-50 dark:bg-black text-slate-500 cursor-not-allowed px-4 py-3 font-medium">
+                        </div>
+
+                        <!-- Added Personal Details -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                    _("ID / Passport Number")
+                                    }}</label>
+                                <input type="text" value="{{ patient.uid or '' }}" disabled
+                                    class="w-full rounded-xl border-slate-200 bg-slate-50 dark:bg-black text-slate-500 cursor-not-allowed px-4 py-3 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                    _("Date of Birth")
+                                    }}</label>
+                                <input type="text" value="{{ frappe.format_date(patient.dob) }}" disabled
+                                    class="w-full rounded-xl border-slate-200 bg-slate-50 dark:bg-black text-slate-500 cursor-not-allowed px-4 py-3 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                    _("Biological Sex")
+                                    }}</label>
+                                <input type="text" value="{{ patient.sex or '' }}" disabled
+                                    class="w-full rounded-xl border-slate-200 bg-slate-50 dark:bg-black text-slate-500 cursor-not-allowed px-4 py-3 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                    _("Blood Group")
+                                    }}</label>
+                                <input type="text" value="{{ patient.blood_group or '' }}" disabled
+                                    class="w-full rounded-xl border-slate-200 bg-slate-50 dark:bg-black text-slate-500 cursor-not-allowed px-4 py-3 font-medium">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Mobile Number")
+                                }}</label>
+                            <input type="tel" name="mobile" value="{{ patient.mobile or '' }}"
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Street Address")
+                                }}</label>
+                            <input type="text" name="address_line1" value="{{ patient.address_line1 or '' }}"
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white mb-4">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                    _("City")
+                                    }}</label>
+                                <input type="text" name="city" value="{{ patient.city or '' }}"
+                                    class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                    _("Postal Code")
+                                    }}</label>
+                                <input type="text" name="zip_code" value="{{ patient.zip_code or '' }}"
+                                    class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
+                            </div>
+                        </div>
+
+                        <!-- Billing Address -->
+                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Billing Address") }}</label>
+                            <textarea name="billing_address" rows="2"
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white"
+                                placeholder="{{ _('Enter billing address if different from above') }}">{{ patient.custom_billing_address or '' }}</textarea>
+                        </div>
+
+                        <!-- Marketing Consent -->
+                        <div class="pt-4">
+                            <label
+                                class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 cursor-pointer hover:border-primary transition-colors">
+                                <input type="checkbox" name="marketing_consent"
+                                    class="size-5 rounded border-slate-300 text-primary focus:ring-primary" {{ 'checked'
+                                    if patient.custom_marketing_consent else '' }}>
+                                <div>
+                                    <span class="block text-sm font-bold text-charcoal dark:text-white">{{ _("Marketing
+                                        Preferences") }}</span>
+                                    <span class="block text-xs text-slate-500">{{ _("I consent to receive marketing
+                                        communications and newsletters.") }}</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit"
+                                class="w-full py-3 bg-primary text-charcoal font-bold rounded-xl hover:brightness-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
+                                {{ _("Save Changes") }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password Change Form -->
+                <div
+                    class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm h-fit">
+                    <h3
+                        class="text-xl font-bold mb-6 flex items-center gap-3 font-display text-charcoal dark:text-white">
+                        <span class="material-symbols-outlined text-primary">lock</span> {{ _("Security") }}
+                    </h3>
+                    <form id="password-form" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{ _("New
+                                Password")
+                                }}</label>
+                            <input type="password" name="new_password" required
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Confirm Password")
+                                }}</label>
+                            <input type="password" name="confirm_password" required
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit"
+                                class="w-full py-3 bg-charcoal text-white font-bold rounded-xl hover:bg-black active:scale-95 transition-all shadow-lg shadow-charcoal/20">
+                                {{ _("Update Password") }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer
+            class="px-4 md:px-10 py-6 md:py-8 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-8 mt-auto bg-white dark:bg-black">
+            <div class="flex items-center gap-2 opacity-50">
+                <span class="material-symbols-outlined text-sm">copyright</span>
+                <span class="text-xs font-bold uppercase tracking-widest">{{ _("2026 Slim2Well South Africa")
+                    }}</span>
+            </div>
+            <div class="flex gap-4 md:gap-8 opacity-60">
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/privacy">{{
+                    _("Privacy") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/legal">{{
+                    _("Legal") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/terms">{{
+                    _("Terms") }}</a>
+            </div>
+        </footer>
+    </main>
+</body>
+
+<script>
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        // Simple loading state
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = 'Saving...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/method/koraflow_core.www.patient_profile.update_profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Frappe-CSRF-Token': frappe.csrf_token
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                // Success Toast or Alert would be better, but sticking to basic alert for now
+                alert('Profile updated successfully');
+                window.location.reload();
+            } else {
+                const err = await response.json();
+                alert('Error: ' + (err.message || 'Update failed'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('An error occurred');
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        if (data.new_password !== data.confirm_password) {
+            alert('Passwords do not match');
+            return;
+        }
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = 'Updating...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/method/koraflow_core.www.patient_profile.update_password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Frappe-CSRF-Token': frappe.csrf_token
+                },
+                body: JSON.stringify({ new_password: data.new_password })
+            });
+
+            if (response.ok) {
+                alert('Password updated successfully');
+                e.target.reset();
+            } else {
+                const err = await response.json();
+                alert('Error: ' + (err.message || 'Update failed'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('An error occurred');
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // Profile Image Upload
+    async function uploadProfileImage(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file, file.name);
+            formData.append('is_private', 0);
+            formData.append('doctype', 'Patient');
+            formData.append('docname', '{{ patient.name }}');
+            formData.append('fieldname', 'image'); // Attach to image field directly
+
+            try {
+                // Show loading state (optimistic)
+                frappe.show_alert?.({ message: 'Uploading...', indicator: 'blue' }) || alert('Uploading...');
+
+                const response = await fetch('/api/method/upload_file', {
+                    method: 'POST',
+                    headers: {
+                        'X-Frappe-CSRF-Token': frappe.csrf_token
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Success
+                    alert('Profile picture updated!');
+                    window.location.reload();
+                } else {
+                    const err = await response.json();
+                    throw new Error(err.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Upload failed: ' + error.message);
+            }
+        }
+    }
+</script>
+
+</html>

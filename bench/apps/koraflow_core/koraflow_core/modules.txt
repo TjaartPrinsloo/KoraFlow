@@ -1,2 +1,2 @@
-Koraflow Core
-Courier Guy Waybill
+KoraFlow Core
+koraflow_core

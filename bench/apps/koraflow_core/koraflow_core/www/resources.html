@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("Resources & Education") }} | {{ _("Slim2Well") }}</title>
+
+    <!-- Frappe Framework Scripts (required for API calls) -->
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script>
+        // Initialize frappe namespace
+        window.frappe = window.frappe || {};
+        frappe.csrf_token = "{{ frappe.session.csrf_token }}";
+        frappe.session = {
+            user: "{{ frappe.session.user }}",
+            csrf_token: "{{ frappe.session.csrf_token }}"
+        };
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                        "accent-warning": "#FFB300",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #2D2D2D;
+            color: #C1E12F;
+            font-weight: 700;
+        }
+
+        .active-nav:hover {
+            color: #C1E12F;
+        }
+
+        .logo-circle {
+            background-color: #2D2D2D;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 min-h-screen flex transition-colors duration-300">
+    <!-- Sidebar Navigation -->
+    <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-black">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-white font-bold text-xs logo-circle">
+                <span class="text-white">s<span class="text-primary">2</span>w</span>
+            </div>
+            <div>
+                <h1 class="font-display font-bold text-xl tracking-tight dark:text-white">slim<span
+                        class="text-primary">2</span>well</h1>
+                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Patient Portal</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/portal_dashboard">
+                <span class="material-symbols-outlined">grid_view</span>
+                <span class="font-semibold text-sm">{{ _("Dashboard") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/my_treatment">
+                <span class="material-symbols-outlined">prescriptions</span>
+                <span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/vitals">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="font-semibold text-sm">{{ _("Vitals") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/billing">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span class="font-semibold text-sm">{{ _("Billing") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/resources">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span class="font-semibold text-sm">{{ _("Resources") }}</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
+                href="/patient_profile">
+                <span class="material-symbols-outlined">settings_suggest</span>
+                <span class="font-semibold text-sm">{{ _("Profile") }}</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <!-- Logout Button -->
+            <a href="/?cmd=web_logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                {{ _("Log Out") }}
+            </a>
+        </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+        <!-- Top Navigation Bar -->
+        <header
+            class="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="hidden md:block">
+                    <h2 class="text-xl font-bold font-display tracking-tight">{{ _("Education Hub") }}</h2>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <!-- Theme/Notifications/Settings Removed -->
+                <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold leading-none">{{ patient.first_name }} {{ patient.last_name or "" }}
+                        </p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
+                            Member") }}</p>
+                    </div>
+                    <div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 shadow-sm bg-cover bg-center"
+                        data-alt="Patient profile avatar circular image"
+                        style='background-image: url("{{ patient.image or "https://lh3.googleusercontent.com/aida-public/AB6AXuAL3hA5SD4KcL_OB0mXuu9sGKrcMcP5j_8ZlLJRX6j6Gqh_tySVYhVWjA4Xj5EKALG8M5qC3tqtyFxAvoqiUEXVatC6Fe6La800cTFqqxVTZo9D8jXsz00kcvJzEf6SWDx3mwglb60dmMGLL81KW1SLfVGpELoDvLE65mPUl3gxgLBXZICCxCN_agNqVqqY9-2H99y9zHbIzkb1WS4owE1bgx4VXk0VLkxqrA0Xmz18rBkCNDpi7IDrXrkmajNW_GMbyxpY9BLY8jwy" }}");'>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-6xl mx-auto space-y-10">
+            <!-- Page Heading & Progress -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold uppercase tracking-widest mb-4">
+                        <span class="material-symbols-outlined text-sm">verified</span>
+                        Clinically Verified Content
+                    </div>
+                    <h1 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white mb-2">{{
+                        _("Resources & Education") }}</h1>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-2xl">{{ _("Manage your weight loss journey with
+                        expert clinical guidance and nutritional support tailored for the South African lifestyle.") }}
+                    </p>
+                </div>
+                <div
+                    class="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 min-w-[280px]">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-charcoal dark:text-white">{{ _("Onboarding Progress")
+                            }}</span>
+                        <span class="text-sm font-bold text-primary">{{ _("3/5 Complete") }}</span>
+                    </div>
+                    <div class="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary" style="width: 60%;"></div>
+                    </div>
+                    <p class="text-[11px] mt-2 text-slate-500">{{ _("Complete all medication guides to unlock advanced
+                        plans.") }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                <!-- Left Section: Nutrition Hub -->
+                <section>
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary font-bold text-2xl">restaurant_menu</span>
+                        <h2 class="text-2xl font-bold font-display tracking-tight text-charcoal dark:text-white">{{
+                            _("Nutrition Hub") }}</h2>
+                    </div>
+                    <div class="space-y-6">
+                        <!-- Nutrition Card 1 -->
+                        <div
+                            class="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800">
+                            <div class="flex flex-col sm:flex-row">
+                                <div class="sm:w-40 h-40 bg-cover bg-center" data-alt="Healthy protein rich meal"
+                                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA-3SxiQyUqsYHUSWs6LkJqk5eh6BcRMPVWlyV7gpmigHx8ESHltpanbTrmDLqswvoxZ8psUUgPcqhdqlMd-g9pSGJI_JjI7gx8tZhbH5HowKEIezQ-NjypI1Z_uMQrlP0VGRne31kAwYsVVzFKSUouMn0PNNXOt7MPVoaAE1FxZb0XEtG_gSwjDyWbd3OvbREqwyNIU5LDUairaTW28jOMuQOjK_WrzW-Hmh_SRgQc7FakrxPuuzLwB4CX2PYvRYwwpr2gCBL5Ihw5');">
+                                </div>
+                                <div class="flex-1 p-5 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h3 class="text-lg font-bold text-charcoal dark:text-white">{{
+                                                _("High-Protein Meal Plan") }}</h3>
+                                            <span
+                                                class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">{{
+                                                _("PDF Guide") }}</span>
+                                        </div>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ _("Structured
+                                            daily targets to preserve lean muscle mass during GLP-1 therapy.") }}
+                                        </p>
+                                    </div>
+                                    <button
+                                        class="flex items-center justify-center gap-2 py-2 px-4 bg-primary text-charcoal rounded-lg font-bold text-sm hover:brightness-110 transition-all shadow-md shadow-primary/10">
+                                        <span class="material-symbols-outlined text-sm">download</span> {{
+                                        _("Download Plan") }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Nutrition Card 2 -->
+                        <div
+                            class="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800">
+                            <div class="flex flex-col sm:flex-row">
+                                <div class="sm:w-40 h-40 bg-cover bg-center"
+                                    data-alt="South African grocery shopping cart"
+                                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDIsrlmQ6Au848Ox6xnP-dgbrUiu0xLSJMImLfxQq2pAyqi9oyw3TVxvLoD_K4NS_fYhLObCz3NM33LUjX18Z7UQiveUmBo9oGQz3MGBPfw17ZA0fFpjVM_nPQ47nHIN8Rq9SsrB9LmnlQh9n0FtmT4XFnoxk8UlEzdLzq9Z6t9HpOBp_zbNhb9JBVfXy8hF0lISeM7JW4kg5hurlQ3UQ6-NLj0Bg8-1BiIxSnGp68i0iXXdgMMVpbLevL50gXPFXv5SGSkW6mqdPqB');">
+                                </div>
+                                <div class="flex-1 p-5 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h3 class="text-lg font-bold text-charcoal dark:text-white">{{ _("ZA Smart
+                                                Shopping List") }}</h3>
+                                            <span
+                                                class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">{{
+                                                _("Checklist") }}</span>
+                                        </div>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ _("Curated list of
+                                            low-GI options at Woolworths, Checkers, and Pick n Pay.") }}</p>
+                                    </div>
+                                    <button
+                                        class="flex items-center justify-center gap-2 py-2 px-4 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-sm hover:border-primary hover:text-primary transition-all">
+                                        <span class="material-symbols-outlined text-sm">view_list</span> {{ _("View
+                                        Shopping List") }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Nutrition Card 3 (Empty State Style) -->
+                        <div
+                            class="p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center">
+                            <span
+                                class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-4xl mb-2">lock</span>
+                            <p class="text-sm font-bold text-slate-400">{{ _("Personalized Fasting Guide") }}</p>
+                            <p class="text-xs text-slate-400">{{ _("Unlocks after Week 4 check-in") }}</p>
+                        </div>
+                    </div>
+                </section>
+                <!-- Right Section: Medication Guide -->
+                <section>
+                    <div class="flex items-center gap-2 mb-6">
+                        <span
+                            class="material-symbols-outlined text-primary font-bold text-2xl">medical_information</span>
+                        <h2 class="text-2xl font-bold font-display tracking-tight text-charcoal dark:text-white">{{
+                            _("Medication Guide") }}</h2>
+                    </div>
+                    <div class="space-y-6">
+                        <!-- Video Module -->
+                        <div
+                            class="bg-black rounded-2xl overflow-hidden shadow-xl aspect-video relative group border border-slate-800">
+                            <div class="absolute inset-0 bg-cover bg-center opacity-70 group-hover:scale-105 transition-transform duration-700"
+                                data-alt="GLP-1 injection tutorial preview"
+                                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCi6vCUxjWxVjQWC-m1h7qnDPFC1y8NHefTFBVYutCqYzez6ms49fTiVC1AKGkHAu4Hmfvu0JvaeIkBKRyAwsDM7WBNgHLlwTaes-OPgdZURla5yHz5lA-Rf3YB1YlRHR89dyZxZgx-INQrYgVip7OP_HPwpssq4nhgWTC2TPHpb8pEX_AOEZ0nD0muSP8eYynrJURyN1kc-s82xRTTaFAkh0gwfpmjUooo_8KQdNcHXmiJYhfIIq_9agfiWkZm2C1a2nGSaE4HcvR1');">
+                            </div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex flex-col justify-end p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-bold text-lg font-display">{{ _("How to Inject your
+                                            GLP-1") }}
+                                        </h4>
+                                        <p class="text-white/70 text-sm">{{ _("Step-by-step clinical instructions
+                                            (4:12)") }}</p>
+                                    </div>
+                                    <button
+                                        class="size-14 bg-primary text-charcoal rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                                        <span class="material-symbols-outlined text-4xl fill-1">play_arrow</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Cold Chain Info Box -->
+                        <div
+                            class="bg-amber-50 dark:bg-amber-950/20 border-l-4 border-accent-warning rounded-xl p-6 flex gap-4">
+                            <div class="text-accent-warning">
+                                <span class="material-symbols-outlined text-3xl">ac_unit</span>
+                            </div>
+                            <div>
+                                <h4
+                                    class="text-amber-900 dark:text-amber-200 font-extrabold text-sm uppercase tracking-wide mb-1">
+                                    {{ _("Critical: Cold Chain Storage") }}</h4>
+                                <p class="text-amber-800 dark:text-amber-300 text-sm leading-relaxed">
+                                    {{ _("Your S4 medication must be stored in a refrigerator at 2°C–8°C. Do not freeze.
+                                    During South African summer heatwaves, ensure transport from pharmacy to home is in
+                                    an insulated bag with an ice pack.") }}
+                                </p>
+                                <div class="mt-3 flex items-center gap-4">
+                                    <span
+                                        class="flex items-center gap-1 text-[11px] font-bold text-amber-900/60 dark:text-amber-200/60">
+                                        <span class="material-symbols-outlined text-xs">thermostat</span> {{ _("Keep
+                                        Chilled") }}
+                                    </span>
+                                    <span
+                                        class="flex items-center gap-1 text-[11px] font-bold text-amber-900/60 dark:text-amber-200/60">
+                                        <span class="material-symbols-outlined text-xs">dark_mode</span> {{ _("Avoid
+                                        Sunlight") }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- FAQ List -->
+                        <div
+                            class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <h4 class="font-bold mb-4 flex items-center gap-2 text-charcoal dark:text-white">
+                                <span class="material-symbols-outlined text-primary text-lg">help</span> {{
+                                _("Prescription FAQ") }}
+                            </h4>
+                            <div class="space-y-4">
+                                <div class="border-b border-slate-100 dark:border-slate-700 pb-3">
+                                    <p class="text-sm font-bold mb-1 text-charcoal dark:text-white">{{ _("Can I travel
+                                        with my medication?") }}
+                                    </p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ _("Yes, with a travel
+                                        cool-bag and a copy of your S4 script for customs.") }}</p>
+                                </div>
+                                <div class="border-b border-slate-100 dark:border-slate-700 pb-3">
+                                    <p class="text-sm font-bold mb-1 text-charcoal dark:text-white">{{ _("What if I miss
+                                        a dose?") }}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ _("If within 5 days, take
+                                        immediately. Otherwise, skip and wait for your next scheduled day.") }}
+                                    </p>
+                                </div>
+                                <button class="text-xs font-bold text-primary hover:underline">{{ _("View all 15 FAQs")
+                                    }} →</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <!-- Footer -->
+        <footer
+            class="px-4 md:px-10 py-6 md:py-8 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-8 mt-auto bg-white dark:bg-black">
+            <div class="flex items-center gap-2 opacity-50">
+                <span class="material-symbols-outlined text-sm">copyright</span>
+                <span class="text-xs font-bold uppercase tracking-widest">{{ _("2026 Slim2Well South Africa")
+                    }}</span>
+            </div>
+            <div class="flex gap-4 md:gap-8 opacity-60">
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/privacy">{{
+                    _("Privacy") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/legal">{{
+                    _("Legal") }}</a>
+                <a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                    href="/terms">{{
+                    _("Terms") }}</a>
+            </div>
+        </footer>
+    </main>
+</body>
+
+</html>

@@ -7,24 +7,19 @@ from frappe import _
 
 def on_login(login_manager):
 	"""
-	Hook called after user login
-	Set default route and workspace for Sales Agents to /app/sales-agent-dash
+	Hook called after user login (before set_user_info).
+	Sets default_route for client-side routing.
+	Note: home_page set here gets overwritten by set_user_info(),
+	so we use on_session_creation for the actual home_page override.
 	"""
 	user = login_manager.user
 	roles = frappe.get_roles(user)
-	
-	# If user is a Sales Agent (and not a manager), set default route
+
+	# Set default_route (this survives set_user_info)
 	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
-		# Override home_page to redirect to custom dashboard page
-		frappe.local.response["home_page"] = "/app/sales-agent-dash"
-		
-		# Also set it in the user's boot info for client-side routing
-		if hasattr(frappe.local, "response"):
-			frappe.local.response["default_route"] = "/app/sales-agent-dash"
-		
-		# Clear default workspace for Sales Agents
-		# Since we're using a custom Page (/app/sales-agent-dash) instead of a workspace,
-		# we should not set a default workspace. The home_page redirect will handle routing.
+		frappe.local.response["default_route"] = "/sales_agent_dashboard"
+
+		# Clear default workspace so set_user_info doesn't redirect to /app/<workspace>
 		try:
 			user_doc = frappe.get_doc("User", user)
 			if user_doc.default_workspace:
@@ -32,36 +27,56 @@ def on_login(login_manager):
 				user_doc.save(ignore_permissions=True)
 				frappe.db.commit()
 		except Exception as e:
-			# If clearing workspace fails, continue anyway
 			frappe.log_error(f"Error clearing default workspace for {user}: {str(e)}")
+
+	elif "Patient" in roles:
+		frappe.local.response["default_route"] = "/dashboard"
+
+
+def on_session_creation(login_manager=None):
+	"""
+	Hook called AFTER set_user_info() — the right place to override home_page.
+	Unlike on_login, values set here are NOT overwritten by Frappe's auth flow.
+	Actually, set_user_info() runs just after make_session() which triggers this,
+	so we set both home_page and default_route here.
+	"""
+	if frappe.session.user == "Guest":
+		return
+
+	roles = frappe.get_roles()
+
+	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
+		frappe.local.response["home_page"] = "/sales_agent_dashboard"
+		frappe.local.response["default_route"] = "/sales_agent_dashboard"
+	elif "Patient" in roles:
+		frappe.local.response["home_page"] = "/dashboard"
+		frappe.local.response["default_route"] = "/dashboard"
+
+
+def get_website_user_home_page(user):
+	"""
+	Hook for get_website_user_home_page — called by get_home_page()
+	to determine the home page for Website Users.
+	Returns the dashboard path for Patients.
+	"""
+	roles = frappe.get_roles(user)
+	if "Patient" in roles:
+		return "/dashboard"
+	return None
 
 
 def redirect_sales_agents():
 	"""
-	Before request hook to redirect Sales Agents from /app/build, /app/home, /app/user-profile to dashboard
-	Note: Client-side routes like /app/user-profile are handled by JavaScript, but we can inject redirect script
+	Before request hook to redirect Sales Agents from /app routes to dashboard
 	"""
 	if frappe.session.user == "Guest":
 		return
-	
-	# Check if user is a Sales Agent
+
 	roles = frappe.get_roles()
 	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
-		# Get the current path
 		path = frappe.local.request.path if hasattr(frappe.local, "request") and frappe.local.request else ""
-		
-		# For server-side routes, do a proper redirect
-		if path in ["/app/build", "/app/home", "/app/sales-agent-dashboard", "/app/user-profile"]:
-			# Check if this is an AJAX request (client-side routing)
-			is_ajax = frappe.local.is_ajax if hasattr(frappe.local, "is_ajax") else False
-			
-			if is_ajax:
-				# For AJAX requests (client-side routing), return redirect response
-				frappe.local.response["type"] = "redirect"
-				frappe.local.response["location"] = "/app/sales-agent-dash"
-			else:
-				# For full page loads, do server-side redirect
-				frappe.local.response["type"] = "redirect"
-				frappe.local.response["location"] = "/app/sales-agent-dash"
-			return
 
+		if path in ["/app/build", "/app/home", "/app/sales-agent-dashboard", "/app/user-profile"]:
+			frappe.local.response["type"] = "redirect"
+			frappe.local.response["location"] = "/sales_agent_dashboard"
+			return

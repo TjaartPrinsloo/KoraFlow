@@ -71,13 +71,16 @@ class PatientReferral(Document):
 			self.sales_partner = user.sales_partner
 		else:
 			# Try to find Sales Partner by user email or name
-			sales_partner = frappe.db.get_value(
-				"Sales Partner",
-				{"email_id": user.email or user.name},
-				"name"
-			)
-			if sales_partner:
-				self.sales_partner = sales_partner
+			filters = {}
+			if frappe.db.has_column("Sales Partner", "email_id"):
+				filters["email_id"] = user.email or user.name
+			elif frappe.db.has_column("Sales Partner", "email"):
+				filters["email"] = user.email or user.name
+			
+			if filters:
+				sales_partner = frappe.db.get_value("Sales Partner", filters, "name")
+				if sales_partner:
+					self.sales_partner = sales_partner
 
 	def _update_commission(self):
 		"""Calculate and update commission when invoice is paid"""

@@ -121,6 +121,10 @@ def create_intake_submission(intake_data):
 	
 	user_email = frappe.session.user
 	
+	# Parse intake_data if it's a string
+	if isinstance(intake_data, str):
+		intake_data = frappe.parse_json(intake_data)
+	
 	# Ensure email is set in intake_data
 	if not intake_data.get('email'):
 		intake_data['email'] = user_email
@@ -128,7 +132,10 @@ def create_intake_submission(intake_data):
 	# Map wizard field names to intake submission field names
 	# The wizard uses different field names (e.g., legal_name vs first_name/last_name)
 	field_mapping = {
-		'legal_name': 'first_name',  # Will need to split this
+		'first_name': 'first_name',
+		'last_name': 'last_name',
+		'mobile': 'mobile',
+		'blood_group': 'blood_group',
 		'date_of_birth': 'dob',
 		'biological_sex': 'sex',
 		'height_unit': 'intake_height_unit',
@@ -195,15 +202,14 @@ def create_intake_submission(intake_data):
 		else:
 			mapped_data[key] = value
 	
-	# Handle legal_name -> first_name/last_name split
+	# Handle legal_name -> first_name/last_name split (Legacy support)
 	if 'legal_name' in intake_data and intake_data['legal_name']:
 		legal_name = intake_data['legal_name'].strip()
 		name_parts = legal_name.split(' ', 1)
-		mapped_data['first_name'] = name_parts[0]
-		if len(name_parts) > 1:
+		if not mapped_data.get('first_name'):
+			mapped_data['first_name'] = name_parts[0]
+		if len(name_parts) > 1 and not mapped_data.get('last_name'):
 			mapped_data['last_name'] = name_parts[1]
-		else:
-			mapped_data['last_name'] = ''
 	
 	# Ensure email is set
 	mapped_data['email'] = user_email
@@ -226,7 +232,7 @@ def create_intake_submission(intake_data):
 				"message": error_msg or _("Failed to submit intake form")
 			}
 	except Exception as e:
-		frappe.log_error(f"Error creating intake submission: {str(e)}", "Intake Submission Error")
+		frappe.log_error(message=f"Error creating intake submission: {str(e)}", title="Intake Submission Error")
 		return {
 			"success": False,
 			"message": _("Error submitting intake form. Please try again or contact support.")

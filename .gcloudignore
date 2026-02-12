@@ -1,0 +1,25 @@
+
+# General
+.git/
+.github/
+.vscode/
+.idea/
+**/__pycache__/
+**/*.pyc
+**/*.DS_Store
+*.log
+*.tar.gz
+*.tgz
+*.zip
+
+# Bench specific (The big ones)
+**/env/
+**/node_modules/
+**/sites/
+**/logs/
+**/config/
+bench/bench/
+
+# Ignore all apps except the custom core app
+bench/apps/*
+!bench/apps/koraflow_core/

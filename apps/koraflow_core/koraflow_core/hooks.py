@@ -127,13 +127,7 @@ has_permission = {
 
 # Document Events
 doc_events = {
-	"Sales Invoice": {
-		"on_submit": [
-            "koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.update_referral_on_invoice_paid",
-            "koraflow_core.koraflow_core.utils.xero_connector.sync_invoice"
-        ],
-		"on_update_after_submit": "koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.update_referral_on_invoice_paid"
-	},
+
 	"Patient": {
 		"on_update": "koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.sync_patient_name_to_referrals"
 	},
@@ -142,7 +136,18 @@ doc_events = {
 	},
     "Quotation": {
         "on_submit": "koraflow_core.koraflow_core.utils.xero_connector.sync_quotation"
-    }
+    },
+	"Sales Invoice": {
+		"on_submit": [
+			"koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.update_referral_on_invoice_paid",
+			"koraflow_core.koraflow_core.utils.xero_connector.sync_invoice"
+		],
+		"on_update_after_submit": [
+			"koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.update_referral_on_invoice_paid",
+			"koraflow_core.koraflow_core.hooks.commission_hooks.on_invoice_paid"
+		],
+		"on_update": "koraflow_core.koraflow_core.hooks.commission_hooks.on_invoice_paid"
+	}
 }
 
 # Overriding Methods
@@ -168,5 +173,23 @@ override_whitelisted_methods = {
 on_login = "koraflow_core.koraflow_core.utils.auth.on_login"
 
 # Before request hook - redirect Sales Agents from /app/build to dashboard
-before_request = "koraflow_core.koraflow_core.utils.auth.redirect_sales_agents"
+# Before request hook - redirect Sales Agents from /app/build to dashboard
+before_request = [
+	"koraflow_core.koraflow_core.utils.auth.redirect_sales_agents"
+]
 
+# User hooks
+
+
+# Custom Fields
+custom_fields = {
+	"Patient": [
+		{
+			"fieldname": "referred_by_sales_agent",
+			"label": "Referred By Sales Agent",
+			"fieldtype": "Link",
+			"options": "Sales Agent",
+			"insert_after": "customer"
+		}
+	]
+}

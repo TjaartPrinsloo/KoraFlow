@@ -1,0 +1,96 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "format:{sales_agent}-{invoice_reference}",
+    "creation": "2024-01-14 10:00:00.000000",
+    "default_view": "List",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "sales_agent",
+        "patient",
+        "invoice_reference",
+        "item_code",
+        "accrued_amount",
+        "status"
+    ],
+    "fields": [
+        {
+            "fieldname": "sales_agent",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Sales Agent",
+            "options": "Sales Agent",
+            "reqd": 1
+        },
+        {
+            "fieldname": "patient",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Patient",
+            "options": "Patient",
+            "reqd": 1
+        },
+        {
+            "fieldname": "invoice_reference",
+            "fieldtype": "Link",
+            "label": "Invoice Reference",
+            "options": "Sales Invoice",
+            "reqd": 1
+        },
+        {
+            "fieldname": "item_code",
+            "fieldtype": "Link",
+            "label": "Item",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fieldname": "accrued_amount",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Accrued Amount",
+            "reqd": 1
+        },
+        {
+            "default": "Accrued",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Accrued\nRequested\nPaid",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "is_submittable": 0,
+    "links": [],
+    "modified": "2024-01-14 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Koraflow Core",
+    "name": "Sales Agent Accrual",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Sales Agent Portal"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

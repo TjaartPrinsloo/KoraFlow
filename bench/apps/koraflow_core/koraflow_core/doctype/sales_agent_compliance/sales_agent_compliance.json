@@ -1,0 +1,190 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "field:sales_agent",
+    "creation": "2026-01-16 06:30:00.000000",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "sales_agent",
+        "compliance_status",
+        "column_break_1",
+        "last_audit_date",
+        "section_break_popia",
+        "popia_agreement_accepted",
+        "popia_agreement_version",
+        "popia_accepted_date",
+        "column_break_popia",
+        "popia_accepted_ip",
+        "section_break_sahpra",
+        "sahpra_guidelines_accepted",
+        "sahpra_guidelines_version",
+        "sahpra_accepted_date",
+        "column_break_sahpra",
+        "sahpra_accepted_ip",
+        "section_break_conduct",
+        "code_of_conduct_accepted",
+        "code_of_conduct_version",
+        "code_of_conduct_accepted_date",
+        "column_break_conduct",
+        "code_of_conduct_accepted_ip"
+    ],
+    "fields": [
+        {
+            "fieldname": "sales_agent",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Sales Agent",
+            "options": "User",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "compliance_status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Compliance Status",
+            "options": "Compliant\nPending\nExpired",
+            "default": "Pending"
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "last_audit_date",
+            "fieldtype": "Datetime",
+            "label": "Last Audit Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_popia",
+            "fieldtype": "Section Break",
+            "label": "POPIA Data Processing Agreement"
+        },
+        {
+            "fieldname": "popia_agreement_accepted",
+            "fieldtype": "Check",
+            "label": "POPIA Agreement Accepted"
+        },
+        {
+            "fieldname": "popia_agreement_version",
+            "fieldtype": "Data",
+            "label": "Version Accepted",
+            "read_only": 1
+        },
+        {
+            "fieldname": "popia_accepted_date",
+            "fieldtype": "Datetime",
+            "label": "Accepted Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_popia",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "popia_accepted_ip",
+            "fieldtype": "Data",
+            "label": "Accepted from IP",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_sahpra",
+            "fieldtype": "Section Break",
+            "label": "SAHPRA Marketing Guidelines"
+        },
+        {
+            "fieldname": "sahpra_guidelines_accepted",
+            "fieldtype": "Check",
+            "label": "SAHPRA Guidelines Accepted"
+        },
+        {
+            "fieldname": "sahpra_guidelines_version",
+            "fieldtype": "Data",
+            "label": "Version Accepted",
+            "read_only": 1
+        },
+        {
+            "fieldname": "sahpra_accepted_date",
+            "fieldtype": "Datetime",
+            "label": "Accepted Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_sahpra",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "sahpra_accepted_ip",
+            "fieldtype": "Data",
+            "label": "Accepted from IP",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_conduct",
+            "fieldtype": "Section Break",
+            "label": "Code of Conduct"
+        },
+        {
+            "fieldname": "code_of_conduct_accepted",
+            "fieldtype": "Check",
+            "label": "Code of Conduct Accepted"
+        },
+        {
+            "fieldname": "code_of_conduct_version",
+            "fieldtype": "Data",
+            "label": "Version Accepted",
+            "read_only": 1
+        },
+        {
+            "fieldname": "code_of_conduct_accepted_date",
+            "fieldtype": "Datetime",
+            "label": "Accepted Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_conduct",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "code_of_conduct_accepted_ip",
+            "fieldtype": "Data",
+            "label": "Accepted from IP",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-01-16 06:30:00.000000",
+    "modified_by": "Administrator",
+    "module": "Koraflow Core",
+    "name": "Sales Agent Compliance",
+    "naming_rule": "By fieldname",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "read": 1,
+            "role": "Sales Agent",
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

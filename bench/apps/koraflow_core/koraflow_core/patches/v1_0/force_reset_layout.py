@@ -9,9 +9,10 @@ def execute():
     })
     
      # Delete any user-specific customization for the User
-    frappe.db.delete("User Form Customization", {
-        "doctype": "Patient"
-    })
+    if frappe.db.exists("DocType", "User Form Customization"):
+        frappe.db.delete("User Form Customization", {
+            "doctype": "Patient"
+        })
 
     # Re-apply our layout logic strictly
     # Ensure Blood Group is moved to the right spot via Property Setter (re-create it)

@@ -24,5 +24,5 @@ def get_context(context):
 	# If patient exists and intake is completed, redirect
 	if context.patient_exists and context.intake_status.get("status") == "completed":
 		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = "/app/patient"
+		frappe.local.response["location"] = "/patient_dashboard"
 

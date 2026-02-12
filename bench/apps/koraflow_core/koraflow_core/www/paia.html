@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{{ _("PAIA Manual") }} | {{ _("Slim2Well") }}</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C1E12F",
+                        "charcoal": "#2D2D2D",
+                        "background-light": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        "display": ["Montserrat", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav {
+            background-color: #C1E12F;
+            color: #2D2D2D;
+            font-weight: 700;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light text-slate-800 min-h-screen">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="material-symbols-outlined text-primary text-2xl">gavel</span>
+                    <h1 class="font-display font-bold text-xl tracking-tight">{{ _("Legal Center") }}</h1>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">{{ _("LEGAL DOCUMENTS") }}</p>
+                <p class="text-xs text-slate-400">Version 1.0 • Updated Jan 2026</p>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="/terms"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="font-semibold text-sm">{{ _("Terms & Conditions") }}</span>
+                </a>
+                <a href="/privacy"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">shield</span>
+                    <span class="font-semibold text-sm">{{ _("Privacy Policy (POPIA)") }}</span>
+                </a>
+                <a href="/paia" class="flex items-center gap-3 px-4 py-3 rounded-xl active-nav">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <span class="font-semibold text-sm">{{ _("PAIA Manual") }}</span>
+                </a>
+                <a href="/sahpra"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">local_pharmacy</span>
+                    <span class="font-semibold text-sm">{{ _("SAHPRA Compliance") }}</span>
+                </a>
+                <a href="/cookies"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <span class="material-symbols-outlined">cookie</span>
+                    <span class="font-semibold text-sm">{{ _("Cookie Policy") }}</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">{{ _("Questions about our policies? Contact us at") }}</p>
+                <a href="mailto:legal@slim2well.com"
+                    class="text-sm font-bold text-primary hover:underline">legal@slim2well.com</a>
+
+                <a href="/portal_dashboard"
+                    class="mt-4 w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    {{ _("Exit Legal Center") }}
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <!-- Breadcrumb -->
+                <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+                    <a href="/legal" class="hover:text-primary">{{ _("LEGAL CENTER") }}</a>
+                    <span>›</span>
+                    <span class="text-charcoal font-bold">{{ _("PAIA MANUAL") }}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                            <span class="material-symbols-outlined text-purple-600 text-2xl">menu_book</span>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-black font-display text-charcoal">{{ _("PAIA Manual") }}</h1>
+                            <p class="text-sm text-purple-600 font-bold">{{ _("Promotion of Access to Information Act")
+                                }}</p>
+                        </div>
+                    </div>
+                    <p class="text-slate-500 mb-8">{{ _("This manual is published in terms of Section 51 of the
+                        Promotion of Access to Information Act, No. 2 of 2000 (PAIA), as amended.") }}</p>
+
+                    <!-- Introduction -->
+                    <div class="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-r-lg mb-8">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-purple-600">info</span>
+                            <div>
+                                <p class="text-sm font-bold text-purple-900 mb-1">{{ _("About PAIA") }}</p>
+                                <p class="text-sm text-purple-800">{{ _("The Promotion of Access to Information Act
+                                    gives effect to the constitutional right of access to any information held by the
+                                    State and any information held by another person that is required for the exercise
+                                    or protection of any rights.") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Company Details -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("1. Details of the Body") }}</h2>
+                    <div class="bg-slate-50 rounded-xl p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-slate-500">{{ _("Name of Private Body") }}</p>
+                                <p class="font-bold text-charcoal">Slim2Well (Pty) Ltd</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Registration Number") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("[Company Registration Number]") }}</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Physical Address") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("South Africa") }}</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Email") }}</p>
+                                <p class="font-bold text-primary">paia@slim2well.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Information Officer -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("2. Information Officer") }}</h2>
+                    <div class="bg-slate-50 rounded-xl p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-slate-500">{{ _("Information Officer") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("Slim2Well Information Officer") }}</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Deputy Information Officer") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("As appointed") }}</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Email") }}</p>
+                                <p class="font-bold text-primary">paia@slim2well.com</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">{{ _("Telephone") }}</p>
+                                <p class="font-bold text-charcoal">{{ _("[Contact Number]") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Guide -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("3. Guide in Terms of Section 10") }}
+                    </h2>
+                    <p class="text-slate-600 mb-4">{{ _("The South African Human Rights Commission (SAHRC) has compiled
+                        a guide containing information to assist persons wishing to exercise their rights in terms of
+                        PAIA. This guide is available from the SAHRC:") }}</p>
+                    <div class="bg-slate-50 rounded-xl p-6 mb-6">
+                        <p class="text-sm text-slate-600 mb-2"><strong>{{ _("Address:") }}</strong> Private Bag 2700,
+                            Houghton, 2041</p>
+                        <p class="text-sm text-slate-600 mb-2"><strong>{{ _("Telephone:") }}</strong> 011 877 3600</p>
+                        <p class="text-sm text-slate-600"><strong>{{ _("Website:") }}</strong> <a
+                                href="https://www.sahrc.org.za"
+                                class="text-primary hover:underline">www.sahrc.org.za</a></p>
+                    </div>
+
+                    <!-- Section 4: Records Held -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("4. Categories of Records Held") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("Slim2Well holds the following categories of records:") }}</p>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="p-4 border border-slate-200 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Company Records") }}</h3>
+                            <ul class="text-sm text-slate-600 list-disc list-inside space-y-1">
+                                <li>{{ _("Registration documents") }}</li>
+                                <li>{{ _("Memorandum of Incorporation") }}</li>
+                                <li>{{ _("Minutes of meetings") }}</li>
+                                <li>{{ _("Shareholder records") }}</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Financial Records") }}</h3>
+                            <ul class="text-sm text-slate-600 list-disc list-inside space-y-1">
+                                <li>{{ _("Annual financial statements") }}</li>
+                                <li>{{ _("Tax records") }}</li>
+                                <li>{{ _("Banking records") }}</li>
+                                <li>{{ _("Asset registers") }}</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Human Resources Records") }}</h3>
+                            <ul class="text-sm text-slate-600 list-disc list-inside space-y-1">
+                                <li>{{ _("Employment contracts") }}</li>
+                                <li>{{ _("Personnel files") }}</li>
+                                <li>{{ _("Payroll records") }}</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-xl">
+                            <h3 class="font-bold text-charcoal mb-2">{{ _("Patient/Client Records") }}</h3>
+                            <ul class="text-sm text-slate-600 list-disc list-inside space-y-1">
+                                <li>{{ _("Patient registration information") }}</li>
+                                <li>{{ _("Medical consultation records") }}</li>
+                                <li>{{ _("Prescription records") }}</li>
+                                <li>{{ _("Billing and payment records") }}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Request Procedure -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("5. How to Make a Request") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("To request access to records, please follow these steps:") }}
+                    </p>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-charcoal">1</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-charcoal">{{ _("Complete Request Form") }}</p>
+                                <p class="text-sm text-slate-600">{{ _("Complete Form C (prescribed in the regulations)
+                                    with all required information.") }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-charcoal">2</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-charcoal">{{ _("Submit Request") }}</p>
+                                <p class="text-sm text-slate-600">{{ _("Submit the completed form to the Information
+                                    Officer via email or post.") }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-charcoal">3</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-charcoal">{{ _("Pay Prescribed Fee") }}</p>
+                                <p class="text-sm text-slate-600">{{ _("Pay the applicable request and access fees as
+                                    prescribed.") }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-charcoal">4</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-charcoal">{{ _("Await Response") }}</p>
+                                <p class="text-sm text-slate-600">{{ _("The Information Officer will respond within 30
+                                    days of receipt.") }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Fees -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("6. Fees") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("The following fees apply to requests for access to records:")
+                        }}</p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-slate-50">
+                                    <th class="text-left p-3 font-bold">{{ _("Description") }}</th>
+                                    <th class="text-right p-3 font-bold">{{ _("Fee") }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t border-slate-100">
+                                    <td class="p-3">{{ _("Request fee (non-refundable)") }}</td>
+                                    <td class="p-3 text-right">R50.00</td>
+                                </tr>
+                                <tr class="border-t border-slate-100">
+                                    <td class="p-3">{{ _("Photocopy (per page)") }}</td>
+                                    <td class="p-3 text-right">R1.10</td>
+                                </tr>
+                                <tr class="border-t border-slate-100">
+                                    <td class="p-3">{{ _("Search and preparation (per hour)") }}</td>
+                                    <td class="p-3 text-right">R30.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Section 7: Grounds for Refusal -->
+                    <h2 class="text-xl font-bold text-charcoal mt-8 mb-4">{{ _("7. Grounds for Refusal") }}</h2>
+                    <p class="text-slate-600 mb-4">{{ _("Requests may be refused on the following grounds:") }}</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6">
+                        <li>{{ _("Protection of third-party personal information") }}</li>
+                        <li>{{ _("Protection of commercial information") }}</li>
+                        <li>{{ _("Protection of research information") }}</li>
+                        <li>{{ _("Mandatory protection of safety of individuals") }}</li>
+                        <li>{{ _("Legal professional privilege") }}</li>
+                    </ul>
+
+                    <!-- Contact -->
+                    <div class="mt-8 p-6 bg-slate-50 rounded-xl">
+                        <h3 class="font-bold text-charcoal mb-2">{{ _("Submit a PAIA Request") }}</h3>
+                        <p class="text-sm text-slate-600 mb-2">{{ _("For PAIA requests, please contact:") }}</p>
+                        <p class="text-sm font-bold text-primary">paia@slim2well.com</p>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-8 text-center">{{ _("Last updated: January 2026") }}</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

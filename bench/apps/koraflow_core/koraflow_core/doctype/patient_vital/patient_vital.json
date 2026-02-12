@@ -1,0 +1,112 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "format:PV-{patient}-{MM}-{DD}-{####}",
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "patient",
+        "date",
+        "time",
+        "section_measurements",
+        "weight_kg",
+        "height_cm",
+        "bmi",
+        "section_notes",
+        "notes"
+    ],
+    "fields": [
+        {
+            "fieldname": "patient",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Patient",
+            "options": "Patient",
+            "reqd": 1
+        },
+        {
+            "fieldname": "date",
+            "fieldtype": "Date",
+            "in_list_view": 1,
+            "label": "Date",
+            "reqd": 1,
+            "default": "Today"
+        },
+        {
+            "fieldname": "time",
+            "fieldtype": "Time",
+            "label": "Time",
+            "default": "Now"
+        },
+        {
+            "fieldname": "section_measurements",
+            "fieldtype": "Section Break",
+            "label": "Measurements"
+        },
+        {
+            "fieldname": "weight_kg",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Weight (kg)",
+            "reqd": 1
+        },
+        {
+            "fieldname": "height_cm",
+            "fieldtype": "Int",
+            "label": "Height (cm)"
+        },
+        {
+            "fieldname": "bmi",
+            "fieldtype": "Float",
+            "label": "BMI",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_notes",
+            "fieldtype": "Section Break",
+            "label": "Notes"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [],
+    "modified": "2025-01-20 12:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "KoraFlow Core",
+    "name": "Patient Vital",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "read": 1,
+            "role": "Patient",
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Healthcare Practitioner",
+            "write": 1
+        }
+    ],
+    "sort_field": "date",
+    "sort_order": "DESC",
+    "states": []
+}
