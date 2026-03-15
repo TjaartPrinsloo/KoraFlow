@@ -55,7 +55,7 @@ def cleanup_default_warehouses():
 				removed.append(wh_name)
 				frappe.msgprint(_("Removed warehouse: {0}").format(wh_name))
 			except Exception as e:
-				frappe.log_error(f"Could not remove warehouse {wh_name}: {str(e)}", "Warehouse Cleanup")
+				frappe.log_error(title="Warehouse Cleanup", message=f"Could not remove warehouse {wh_name}: {str(e)}")
 				skipped.append(f"{wh_name} (error: {str(e)})")
 		else:
 			# Has usage, skip

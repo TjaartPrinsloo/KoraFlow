@@ -1,6 +1,6 @@
 import frappe
-from frappe import _
-from frappe.utils import now_datetime, escape_html, random_string, cint, get_url, sha256_hash
+from frappe import _, DuplicateEntryError
+from frappe.utils import now_datetime, escape_html, random_string, cint, get_url, sha256_hash, flt, nowdate
 from frappe.utils.password import update_password
 from frappe.core.doctype.user.user import is_signup_disabled
 from koraflow_core.utils.security import mask_email
@@ -64,213 +64,321 @@ def get_intake_form_status(user_email=None):
 
 @frappe.whitelist()
 def create_patient_from_intake(intake_data, user_email=None):
-	"""Create Patient record and GLP-1 Intake Form from intake form data"""
-	if not user_email:
-		user_email = frappe.session.user
-	
-	# Get user details - handle case where user might not exist
-	if not frappe.db.exists("User", user_email):
-		frappe.log_error(f"User {mask_email(user_email)} not found when processing intake form", "GLP-1 Intake Submission Error")
-		# Try to get user from email field in intake data
-		email_from_data = intake_data.get('email') or intake_data.get('intake_email')
-		if email_from_data and frappe.db.exists("User", email_from_data):
-			user_email = email_from_data
-			frappe.logger().info(f"Using email from intake data: {mask_email(user_email)}")
-		else:
-			# If no user exists, we can't create the patient properly
-			# Log error but don't fail - allow submission to be saved
-			frappe.log_error(f"No user found for email {user_email}. Intake form saved but patient not created.", "GLP-1 Intake Submission Error")
-			return {
-				"success": False,
-				"message": f"No user account found for {user_email}. Please contact support.",
-				"error": "User not found"
-			}
-	
-	# Get user details
-	user = frappe.get_doc("User", user_email)
-	
-	# Check if Patient already exists
-	existing_patient = frappe.db.get_value("Patient", {"email": user_email}, "name")
-	
-	if existing_patient:
-		patient = frappe.get_doc("Patient", existing_patient)
-		# Update status to "Disabled" if it was "Active"
-		if patient.status == "Active":
-			patient.status = "Disabled"
-		# Ensure height_unit and weight_unit are set if missing (required fields)
-		if hasattr(patient, 'height_unit') and not patient.height_unit:
-			patient.height_unit = intake_data.get("height_unit") or intake_data.get("intake_height_unit") or "Feet/Inches"
-		if hasattr(patient, 'weight_unit') and not patient.weight_unit:
-			patient.weight_unit = intake_data.get("weight_unit") or intake_data.get("intake_weight_unit") or "Pounds"
-		# Ensure user_id is set to prevent user creation
-		if not patient.user_id:
-			patient.user_id = user_email
-		patient.flags.skip_user_creation = True  # Prevent user creation hook
-	else:
-		# Create new Patient record with "Disabled" status
-		# Handle both field name formats: web form (first_name/last_name) and intake form (legal_name)
-		first_name = intake_data.get("first_name") or (intake_data.get("legal_name", "").split()[0] if intake_data.get("legal_name") else user.first_name)
-		last_name = intake_data.get("last_name") or (" ".join(intake_data.get("legal_name", "").split()[1:]) if intake_data.get("legal_name") and len(intake_data.get("legal_name", "").split()) > 1 else user.last_name or "")
-		
-		# Handle sex/gender field - can be from sex (Link) or biological_sex (Select)
-		sex_value = intake_data.get("sex") or intake_data.get("biological_sex")
-		if isinstance(sex_value, str):
-			# If it's a string, try to get the Gender record
-			gender_name = frappe.db.get_value("Gender", {"name": sex_value}, "name") or sex_value
-		else:
-			gender_name = "Male"  # Default
-		
-		# Handle date of birth - can be dob or date_of_birth
-		dob_value = intake_data.get("dob") or intake_data.get("date_of_birth")
-		
-		# Get height_unit and weight_unit from intake data
-		height_unit = intake_data.get("height_unit") or intake_data.get("intake_height_unit") or "Feet/Inches"
-		weight_unit = intake_data.get("weight_unit") or intake_data.get("intake_weight_unit") or "Pounds"
-		
-		patient_data = {
-			"doctype": "Patient",
-			"first_name": first_name,
-			"last_name": last_name,
-			"sex": gender_name,
-			"dob": dob_value,
-			"email": user_email,
-			"mobile": intake_data.get("mobile") or user.mobile_no or "",
-			"status": "Disabled",  # Set to "Disabled" until staff activates
-			"invite_user": 0,  # Don't create user - already exists
-			"user_id": user_email,  # Link to existing user
-			"uid": intake_data.get("sa_id_number") or intake_data.get("passport_number") or intake_data.get("id_number") or intake_data.get("id_number__passport_number"),
-			"custom_referrer_name": intake_data.get("custom_referrer_name"),
-			"custom_address_line1": intake_data.get("address_line1"),
-			"custom_address_line2": intake_data.get("address_line2"),
-			"custom_city": intake_data.get("city"),
-			"custom_state": intake_data.get("state"),
-			"custom_pincode": intake_data.get("pincode"),
-			"custom_country": intake_data.get("country"),
-			"blood_group": intake_data.get("blood_group"),
-			"custom_height_cm": intake_data.get("intake_height_cm"),
-			"custom_target_weight": intake_data.get("intake_goal_weight"),
-			"custom_height_unit": height_unit,
-			"custom_weight_unit": weight_unit
-		}
-		
-		# Add height_unit and weight_unit if Patient DocType has these fields (legacy support)
-		patient_meta = frappe.get_meta("Patient")
-		if patient_meta.get_field("height_unit"):
-			patient_data["height_unit"] = height_unit
-		if patient_meta.get_field("weight_unit"):
-			patient_data["weight_unit"] = weight_unit
-		
-		# Set BMI if possible
-		if intake_data.get("intake_weight_kg") and intake_data.get("intake_height_cm"):
-			weight = flt(intake_data.get("intake_weight_kg"))
-			height = flt(intake_data.get("intake_height_cm")) / 100
-			if height > 0:
-				patient_data["custom_bmi"] = weight / (height * height)
+    """Creates or updates a Patient record and appends an intake submission."""
+    try:
+        # 1. Resolve email context
+        frappe.logger().info(f"DEBUG: Starting create_patient_from_intake for email={intake_data.get('email')}")
+        email = intake_data.get("email")
+        sa_id = intake_data.get("sa_id_number") or intake_data.get("id_number")
+        
+        if not user_email:
+            user_email = frappe.session.user if frappe.session.user != "Guest" else email
+            
+        if not user_email:
+            # Final fallback to email from data
+            user_email = email
+        
+        frappe.logger().info(f"DEBUG: Resolved user_email={user_email}, sa_id={sa_id}")
+            
+        # 2. Find or create patient
+        patient = None
+        if user_email:
+            patient_name = frappe.db.get_value("Patient", {"email": user_email}, "name")
+            if patient_name:
+                patient = frappe.get_doc("Patient", patient_name)
+                
+        if not patient and sa_id:
+            patient_name = frappe.db.get_value("Patient", {"uid": sa_id}, "name")
+            if patient_name:
+                patient = frappe.get_doc("Patient", patient_name)
+        
+        if not patient:
+            patient = frappe.new_doc("Patient")
+            patient.email = user_email
+            patient.status = "Under Review" # New patients start Under Review
+        else:
+            # If exists, preserve Under Review status or set if Active
+            if patient.status == "Active":
+                patient.status = "Under Review"
+            
+        # 3. Apply field mappings from intake
+        if intake_data.get("first_name"): patient.first_name = intake_data.get("first_name")
+        if intake_data.get("last_name"): patient.last_name = intake_data.get("last_name")
+        if intake_data.get("custom_referrer_name"): patient.custom_referrer_name = intake_data.get("custom_referrer_name")
+        
+        mobile_val = intake_data.get("mobile") or intake_data.get("intake_mobile")
+        if mobile_val: patient.mobile = mobile_val
+            
+        dob_val = intake_data.get("date_of_birth") or intake_data.get("dob")
+        if dob_val: patient.dob = dob_val
+            
+        sex_val = intake_data.get("biological_sex") or intake_data.get("sex")
+        if sex_val:
+            if sex_val.lower() == "male": patient.sex = "Male"
+            elif sex_val.lower() == "female": patient.sex = "Female"
+            else: patient.sex = sex_val
+            
+        if sa_id:
+            patient.custom_sa_id_number = sa_id
+            patient.uid = sa_id
 
-		patient = frappe.get_doc(patient_data)
-		patient.flags.skip_user_creation = True  # Prevent user creation hook
-		patient.insert(ignore_permissions=True)
-	
-	# Create GLP-1 Intake Submission child record by appending to patient
-	# Use the actual field names from GLP-1 Intake Submission DocType
-	# The intake_data already has the correct field names from the web form
-	# We just need to copy all fields that exist in GLP-1 Intake Submission
-	
-	# Get the meta for GLP-1 Intake Submission to know which fields to copy
-	submission_meta = frappe.get_meta("GLP-1 Intake Submission")
-	
-	# Get all valid field names (exclude layout fields)
-	valid_fieldnames = {
-		f.fieldname for f in submission_meta.fields 
-		if f.fieldtype not in ['Section Break', 'Column Break', 'Tab Break', 'HTML', 'Button']
-	}
-	
-	# Create child table data by copying all matching fields from intake_data
-	intake_submission_data = {}
-	for fieldname in valid_fieldnames:
-		# Get value from intake_data
-		value = intake_data.get(fieldname)
-		
-		# Include the value if it's not None
-		# For empty strings, only include if it's a critical field
-		if value is not None:
-			if value != "" or fieldname in ["email", "first_name", "last_name", "mobile"]:
-				intake_submission_data[fieldname] = value
-		# Also handle False for checkboxes (convert to 0)
-		elif value is False:
-			intake_submission_data[fieldname] = 0
-	
-	# Ensure required/critical fields are set
-	if "email" not in intake_submission_data or not intake_submission_data.get("email"):
-		intake_submission_data["email"] = user_email
-	if "first_name" not in intake_submission_data and intake_data.get("first_name"):
-		intake_submission_data["first_name"] = intake_data.get("first_name")
-	if "last_name" not in intake_submission_data and intake_data.get("last_name"):
-		intake_submission_data["last_name"] = intake_data.get("last_name")
-	
-	# Append intake submission to patient's child table
-	patient.append("glp1_intake_forms", intake_submission_data)
-	
-	# Ensure status is "Disabled"
-	if patient.status != "Disabled":
-		patient.status = "Disabled"
-	
-	# Save patient with intake form
-	# Set ignore_mandatory flag in case Patient has required fields we don't have data for
-	patient.flags.ignore_mandatory = True
-	patient.save(ignore_permissions=True)
-	
-	# Reload to get the created intake form name
-	patient.reload()
-	intake_form_name = patient.glp1_intake_forms[-1].name if patient.glp1_intake_forms else None
-	
-	# Log for debugging
-	frappe.logger().info(f"Created intake form for patient {patient.name}: {intake_form_name}, total forms: {len(patient.glp1_intake_forms)}")
-	
-	# Generate AI medical summary from intake form data
-	try:
-		from koraflow_core.api.medical_summary import generate_medical_summary
-		
-		medical_summary = generate_medical_summary(intake_data, patient_name=patient.name)
-		
-		if medical_summary:
-			# Check if Patient has ai_medical_summary field
-			patient_meta = frappe.get_meta("Patient")
-			if patient_meta.get_field("ai_medical_summary"):
-				patient.ai_medical_summary = medical_summary
-				patient.flags.ignore_mandatory = True
-				patient.save(ignore_permissions=True)
-				frappe.logger().info(f"Generated and saved AI medical summary for patient {patient.name}")
-			else:
-				frappe.logger().warning(f"Patient doctype does not have ai_medical_summary field. Run patch to add it.")
-		else:
-			frappe.logger().warning(f"Failed to generate medical summary for patient {patient.name}")
-	except Exception as e:
-		# Don't fail patient creation if medical summary generation fails
-		frappe.log_error(f"Error generating medical summary for patient {patient.name}: {str(e)}", "Medical Summary Generation Error")
-	
-	frappe.db.commit()
-	
-	# Set intake_completed = 1 for the user
-	user = frappe.get_doc("User", user_email)
-	user.db_set("intake_completed", 1)
-	
-	frappe.db.commit()
-	
-	# Send temporary password email
-	try:
-		from koraflow_core.api.send_password_email import send_temporary_password_email
-		send_temporary_password_email(user_email)
-	except Exception as e:
-		frappe.log_error(f"Failed to send temporary password email: {str(e)}", "Intake Submission Email Error")
+        # Blood Group Mapping
+        bg_val = intake_data.get("blood_group")
+        if bg_val:
+            bg_map = {
+                "A+": "A Positive", "A-": "A Negative",
+                "B+": "B Positive", "B-": "B Negative",
+                "AB+": "AB Positive", "AB-": "AB Negative",
+                "O+": "O Positive", "O-": "O Negative"
+            }
+            patient.blood_group = bg_map.get(bg_val, bg_val)
 
-	return {
-		"success": True,
-		"patient": patient.name,
-		"intake_form": intake_form_name,
-		"status": "Under Review",
-		"message": _("Your intake form has been submitted successfully. Your profile is under review.")
-	}
+        # Vitals and Weights
+        if intake_data.get("intake_height_cm"): 
+            val = flt(intake_data.get("intake_height_cm"))
+            patient.custom_height_cm = val
+            patient.intake_height_cm = val
+            
+        if intake_data.get("intake_weight_kg"):
+            frappe.logger().info("DEBUG: Setting intake_weight_kg")
+            val = flt(intake_data.get("intake_weight_kg"))
+            patient.intake_weight_kg = val
+            
+        if intake_data.get("intake_goal_weight") or intake_data.get("goal_weight"): 
+            gw = flt(intake_data.get("intake_goal_weight") or intake_data.get("goal_weight"))
+            patient.custom_target_weight = gw
+            patient.goal_weight = gw
+
+        # BMI
+        if intake_data.get("intake_weight_kg") and intake_data.get("intake_height_cm"):
+            w = flt(intake_data.get("intake_weight_kg"))
+            h = flt(intake_data.get("intake_height_cm")) / 100
+            if h > 0: 
+                bmi = w / (h * h)
+                patient.custom_bmi = bmi
+                patient.bmi = bmi
+
+        # Units
+        if hasattr(patient, 'custom_height_unit') and not patient.custom_height_unit:
+            patient.custom_height_unit = intake_data.get("intake_height_unit") or "Feet/Inches"
+        if hasattr(patient, 'custom_weight_unit') and not patient.custom_weight_unit:
+            patient.custom_weight_unit = intake_data.get("intake_weight_unit") or "Pounds"
+        
+        if not patient.user_id:
+            patient.user_id = user_email
+            
+        patient.flags.skip_user_creation = True
+        patient.flags.ignore_permissions = True
+        patient.flags.ignore_mandatory = True
+        
+
+        # 6. Create standalone submission document and link to Patient
+        submission_name = intake_data.get("name")
+        
+        if not submission_name:
+            # Create a brand new intake submission document
+            submission_meta = frappe.get_meta("GLP-1 Intake Submission")
+            valid_fieldnames = {
+                f.fieldname for f in submission_meta.fields 
+                if f.fieldtype not in ['Section Break', 'Column Break', 'Tab Break', 'HTML', 'Button']
+            }
+            
+            # Prepare data for the new document
+            doc_data = {
+                "doctype": "GLP-1 Intake Submission",
+                "patient": patient.name
+            }
+            
+            for fn in valid_fieldnames:
+                val = intake_data.get(fn)
+                if val is not None and fn != "medications":
+                    doc_data[fn] = val
+                    
+            if not doc_data.get("email"): doc_data["email"] = user_email
+            if not doc_data.get("first_name"): doc_data["first_name"] = patient.first_name
+            if sa_id and not doc_data.get("sa_id_number"): doc_data["sa_id_number"] = sa_id
+            if not doc_data.get("dob") and dob_val: doc_data["dob"] = dob_val
+            if not doc_data.get("sex") and sex_val: doc_data["sex"] = sex_val
+            if not doc_data.get("mobile") and mobile_val: doc_data["mobile"] = mobile_val
+            
+            new_submission = frappe.get_doc(doc_data)
+            new_submission.insert(ignore_permissions=True)
+            submission_name = new_submission.name
+            frappe.logger().info(f"KoraFlow: Created GLP-1 Intake Submission {submission_name} for Patient {patient.name}")
+        else:
+            # Just link the existing submission to the patient
+            frappe.db.set_value("GLP-1 Intake Submission", submission_name, "patient", patient.name)
+            frappe.logger().info(f"KoraFlow: Linked existing GLP-1 Intake Submission {submission_name} to Patient {patient.name}")
+            
+        # Handle nested medications table (manual persistence if frontend sent custom JSON)
+        medications_data = intake_data.get("medications")
+        if medications_data and isinstance(medications_data, str):
+            medications_data = frappe.parse_json(medications_data)
+            
+        if medications_data and submission_name:
+            # Clear existing meds on the submission just in case to prevent duplicates
+            frappe.db.delete("Patient Medication Entry", {
+                "parent": submission_name,
+                "parenttype": "GLP-1 Intake Submission"
+            })
+            
+            for med in medications_data:
+                med_fields = {
+                    "doctype": "Patient Medication Entry",
+                    "parent": submission_name,
+                    "parenttype": "GLP-1 Intake Submission",
+                    "parentfield": "medications",
+                    "medication": med.get("medication"),
+                    "dosage": med.get("dosage"),
+                    "frequency": med.get("frequency"),
+                    "status": med.get("status"),
+                    "stopped_date": med.get("stopped_date"),
+                    "reason_for_stopping": med.get("reason_for_stopping")
+                }
+                med_doc = frappe.get_doc(med_fields)
+                med_doc.insert(ignore_permissions=True)
+                    
+        # 7. Save Patient and trigger sync
+        patient.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Now trigger sync so patient profile fields get updated from this latest submission
+        patient.reload()
+        from koraflow_core.utils.patient_sync import sync_intake_to_patient
+        sync_intake_to_patient(patient, "signup_med_sync")
+        patient.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 5. Create Patient Vital record for dashboard
+        try:
+            if intake_data.get("intake_weight_kg"):
+                weight = flt(intake_data.get("intake_weight_kg"))
+                height = flt(intake_data.get("intake_height_cm")) if intake_data.get("intake_height_cm") else patient.custom_height_cm
+                
+                # Check if a vital entry for today already exists
+                today = frappe.utils.nowdate()
+                existing_vital = frappe.db.get_value("Patient Vital", 
+                    {"patient": patient.name, "date": today}, "name")
+                
+                vital_data = {
+                    "doctype": "Patient Vital",
+                    "patient": patient.name,
+                    "date": today,
+                    "weight_kg": weight,
+                    "height_cm": height
+                }
+                
+                if height and height > 0:
+                    h_m = height / 100
+                    vital_data["bmi"] = weight / (h_m * h_m)
+                
+                if existing_vital:
+                    vital_doc = frappe.get_doc("Patient Vital", existing_vital)
+                    vital_doc.update(vital_data)
+                    vital_doc.save(ignore_permissions=True)
+                else:
+                    vital_doc = frappe.get_doc(vital_data)
+                    vital_doc.insert(ignore_permissions=True)
+                
+                frappe.db.commit()
+                frappe.logger().info(f"Vital created for {patient.name}")
+        except Exception as vital_e:
+             frappe.logger().error(f"Vital creation error: {str(vital_e)}")
+        
+        # --- ADDRESS CREATION ---
+        try:
+            # Check if address data exists
+            if intake_data.get("address_line1") or intake_data.get("city"):
+                address_name = frappe.db.get_value("Address", 
+                    {"email_id": user_email, "address_type": "Personal"}, "name")
+                
+                address_doc = None
+                if address_name:
+                    address_doc = frappe.get_doc("Address", address_name)
+                else:
+                    address_doc = frappe.new_doc("Address")
+                    address_doc.country = "South Africa" # Default
+                    
+                address_doc.update({
+                    "address_title": patient.get_title(),
+                    "address_type": "Personal",
+                    "address_line1": intake_data.get("address_line1"),
+                    "address_line2": intake_data.get("address_line2"),
+                    "city": intake_data.get("city"),
+                    "state": intake_data.get("state"),
+                    "pincode": intake_data.get("pincode"),
+                    "email_id": user_email,
+                    "phone": patient.mobile
+                })
+                
+                # Link to Patient
+                has_link = False
+                for link in address_doc.links:
+                    if link.link_doctype == "Patient" and link.link_name == patient.name:
+                        has_link = True
+                        break
+                
+                if not has_link:
+                    address_doc.append("links", {
+                        "link_doctype": "Patient",
+                        "link_name": patient.name
+                    })
+                    
+                address_doc.flags.ignore_permissions = True
+                address_doc.save()
+                frappe.db.commit()
+                frappe.logger().info(f"Address created/updated for patient {patient.name}")
+
+        except Exception as addr_e:
+             frappe.logger().error(f"Address creation error: {str(addr_e)}")
+
+        # --- END ADDRESS CREATION ---
+
+        # Generate Summary
+        try:
+            from koraflow_core.api.medical_summary import generate_medical_summary
+            frappe.logger().info(f"Attempting summary generation for {patient.name}...")
+            
+            # DEBUG: Check blood group in intake data
+            bg_debug = intake_data.get("blood_group")
+            frappe.logger().info(f"DEBUG: Intake Blood Group: {bg_debug}")
+            
+            frappe.logger().info("DEBUG: Calling generate_medical_summary")
+            summary = generate_medical_summary(intake_data, patient_name=patient.name)
+            if summary:
+                patient.reload()
+                patient.ai_medical_summary = summary
+                patient.save()
+                frappe.db.commit()
+                frappe.logger().info(f"Summary saved for {patient.name}")
+            else:
+                frappe.logger().warning(f"Summary generation returned None for {patient.name}")
+                
+        except Exception as summary_e:
+            frappe.logger().error(f"Summary generation error for {patient.name}: {str(summary_e)}")
+            
+        # User update
+        if user_email and frappe.db.exists("User", user_email):
+            frappe.db.set_value("User", user_email, "intake_completed", 1)
+            frappe.db.commit()
+            
+        return {
+            "success": True, 
+            "patient": patient.name,
+            "message": _("Intake form submitted successfully.")
+        }
+        
+    except DuplicateEntryError as de:
+        frappe.db.rollback()
+        # Don't log as error since it's a common validation issue, but return branded message
+        return {"success": False, "message": get_branded_duplicate_error_message(de)}
+        
+    except Exception as e:
+        frappe.db.rollback()
+        import traceback
+        error_msg = f"Intake Submission Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+        frappe.log_error(title="Intake Submission Error", message=error_msg)
+        return {"success": False, "message": str(e)}
 
 
 @frappe.whitelist(allow_guest=True)
@@ -344,7 +452,7 @@ def create_patient_from_signup(email, full_name):
 			"message": _("Patient record created successfully")
 		}
 	except Exception as e:
-		frappe.log_error(f"Error creating patient from signup: {str(e)}")
+		frappe.log_error(title="Patient Signup Error", message=f"Error creating patient from signup: {str(e)}")
 		return {
 			"success": False,
 			"message": _("Error creating patient record: {0}").format(str(e))
@@ -356,6 +464,8 @@ from types import MethodType
 # Module level function to be picklable
 def bypass_notification_settings(self):
 	pass
+
+from koraflow_core.utils.password_utils import validate_password_strength
 
 @frappe.whitelist(allow_guest=True)
 def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to: str = None) -> tuple[int, str]:
@@ -376,7 +486,7 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 			frappe.db.sql("INSERT INTO `tabUser Type` (name, is_standard, creation, modified, modified_by, owner, docstatus) VALUES ('Website User', 0, NOW(), NOW(), 'Administrator', 'Administrator', 0)")
 			frappe.db.commit()
 		except Exception as e:
-			frappe.log_error(f"Failed to create Website User type: {str(e)}", "Signup Setup")
+			frappe.log_error(title="Signup Setup", message=f"Failed to create Website User type: {str(e)}")
 
 	user = frappe.db.get("User", {"email": email})
 	if user:
@@ -395,12 +505,17 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 			)
 			return
 		
+		# Validate Password Strength
+		if not password:
+			frappe.throw(_("Password is required"))
+			
+		validate_password_strength(password)
+
 		# Temporarily set user to Administrator to ensure user creation has proper permissions
 		original_user = frappe.session.user
 		try:
 			frappe.set_user("Administrator")
-			# Use provided password or generate one
-			user_password = password if password else random_string(10)
+			user_password = password
 			user = frappe.get_doc(
 				{
 					"doctype": "User",
@@ -452,12 +567,12 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 			create_patient_for_user(user)
 		except Exception as e:
 			# Log error but don't fail signup - user can complete intake form later
-			frappe.log_error(f"Error creating patient during signup: {str(e)}")
+			frappe.log_error(title="Patient Signup Error", message=f"Error creating patient during signup: {str(e)}")
 			# Don't raise - allow signup to complete even if Patient creation fails
 
 		# Set redirect to intake form wizard if not already set		
 		if not redirect_to:
-			redirect_to = "/glp1_intake_wizard"
+			redirect_to = "/intake"
 		
 		# Perform login immediately any pending database changes
 		frappe.db.commit()
@@ -477,7 +592,7 @@ def custom_sign_up(email: str, full_name: str, password: str = None, redirect_to
 			return
 		except Exception as e:
 			# If return fails for some reason, log and return basic success
-			frappe.log_error(f"Error returning signup response: {str(e)}", "Signup Response")
+			frappe.log_error(title="Signup Response", message=f"Error returning signup response: {str(e)}")
 			return 2, _("Account created successfully. Please log in to continue."), redirect_to
 
 
@@ -541,7 +656,7 @@ def create_patient_for_user(user_doc):
 		
 		return patient.name
 	except Exception as e:
-		frappe.log_error(f"Error creating patient for user {user_doc.email}: {str(e)}")
+		frappe.log_error(title="Patient Creation Error", message=f"Error creating patient for user {user_doc.email}: {str(e)}")
 		raise
 
 
@@ -598,19 +713,22 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 		
 		# Validate uniqueness before processing
 		# Check for duplicate ID Number (check across all child table entries)
-		if get_doc_value("id_number__passport_number"):
-			id_number = get_doc_value("id_number__passport_number")
+		doc_sa_id = get_doc_value("sa_id_number")
+		doc_passport = get_doc_value("passport_number")
+		doc_id = doc_sa_id or doc_passport or get_doc_value("id_number")
+		
+		if doc_id:
 			existing_id = frappe.db.sql("""
 				SELECT name
 				FROM `tabGLP-1 Intake Submission`
-				WHERE id_number__passport_number = %s
+				WHERE sa_id_number = %s OR passport_number = %s OR id_number = %s
 				LIMIT 1
-			""", (id_number,), as_dict=True)
+			""", (doc_id, doc_id, doc_id), as_dict=True)
 			
 			if existing_id:
 				frappe.throw(
 					_("ID Number / Passport Number {0} is already registered. Please use a different ID Number.").format(
-						frappe.bold(id_number)
+						frappe.bold(doc_id)
 					),
 					title=_("Duplicate ID Number")
 				)
@@ -686,10 +804,10 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 				"dob": get_doc_value('dob') or get_doc_value('date_of_birth'),
 				"email": user_email,
 				"mobile": patient_mobile,
-				"status": "Disabled",
+				"status": "Under Review",
 				"invite_user": 0,
 				"user_id": user_email,
-				"uid": get_doc_value('sa_id_number') or get_doc_value('passport_number') or get_doc_value('id_number') or get_doc_value('id_number__passport_number')
+				"uid": doc_id
 			})
 			
 			# Add height/weight units if present in doc
@@ -722,7 +840,7 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 					patient.sex = frappe.db.get_value("Gender", {"name": sex_val}, "name") or sex_val
 			
 			if patient.status == "Active":
-				patient.status = "Disabled"
+				patient.status = "Under Review"
 			if not patient.user_id:
 				patient.user_id = user_email
 			patient.flags.skip_user_creation = True
@@ -751,6 +869,15 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 			frappe.logger().info(f"[process_intake_submission_from_web_form] Doc dict has {len(doc_dict)} keys")
 		
 		# Build submission_data directly from doc using doc.get() - this is the most reliable
+		# Wait, let's also check original_data for medications
+		if original_data and original_data.get("medications"):
+			submission_data = {}
+			# ... (existing mapping logic)
+			# We need to make sure medications are included in the child table entry
+			pass
+
+		# Actually, let's keep it simple and just make sure the child table entry (item_data) 
+		# in patient_signup.py handles it, which I just updated.
 		
 		# Get the meta for GLP-1 Intake Submission to know which fields to copy
 		submission_meta = frappe.get_meta("GLP-1 Intake Submission")
@@ -994,7 +1121,7 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 				frappe.logger().warning(f"Failed to generate medical summary for patient {patient.name}")
 		except Exception as e:
 			# Don't fail intake submission if medical summary generation fails
-			frappe.log_error(f"Error generating medical summary for patient {patient.name}: {str(e)}", "Medical Summary Generation Error")
+			frappe.log_error(title="Medical Summary Generation Error", message=f"Error generating medical summary for patient {patient.name}: {str(e)}")
 		
 		# Set intake_completed = 1 for the user
 		frappe.logger().info(f"[process_intake_submission_from_web_form] Setting intake_completed=1 for user {user_email}")
@@ -1021,7 +1148,7 @@ def process_intake_submission_from_web_form(doc, user_email=None, original_data=
 	except Exception as e:
 		import traceback
 		error_traceback = traceback.format_exc()
-		frappe.log_error(f"Error processing intake form submission: {str(e)}\n\nTraceback:\n{error_traceback}", "GLP-1 Intake Submission Error")
+		frappe.log_error(title="GLP-1 Intake Submission Error", message=f"Error processing intake form submission: {str(e)}\n\nTraceback:\n{error_traceback}")
 		frappe.logger().error(f"[process_intake_submission_from_web_form] Exception: {str(e)}")
 		frappe.logger().error(f"[process_intake_submission_from_web_form] Traceback: {error_traceback}")
 		# Re-raise the exception so it can be caught by the web form handler
@@ -1042,7 +1169,7 @@ def process_intake_submission(doc, method=None):
 	frappe.logger().info(f"[process_intake_submission] Processing submission {doc.name} for {user_email}")
 	
 	if not user_email or user_email == "Guest":
-		frappe.log_error("No user email found for intake form submission", "GLP-1 Intake Submission Error")
+		frappe.log_error(title="GLP-1 Intake Submission Error", message="No user email found for intake form submission")
 		return
 	
 	# Convert submission data to intake_data format
@@ -1061,11 +1188,11 @@ def process_intake_submission(doc, method=None):
 			frappe.db.commit()
 		else:
 			error_msg = result.get('message') if isinstance(result, dict) else str(result)
-			frappe.log_error(f"Failed to create patient from intake: {error_msg}", "GLP-1 Intake Submission Error")
+			frappe.log_error(title="GLP-1 Intake Submission Error", message=f"Failed to create patient from intake: {error_msg}")
 	except Exception as e:
 		import traceback
 		error_traceback = traceback.format_exc()
-		frappe.log_error(f"Error processing intake form submission: {str(e)}\n\nTraceback:\n{error_traceback}", "GLP-1 Intake Submission Error")
+		frappe.log_error(title="GLP-1 Intake Submission Error", message=f"Error processing intake form submission: {str(e)}\n\nTraceback:\n{error_traceback}")
 		frappe.logger().error(f"[process_intake_submission_from_web_form] Exception: {str(e)}")
 		frappe.logger().error(f"[process_intake_submission_from_web_form] Traceback: {error_traceback}")
 		# Re-raise the exception so it can be caught by the web form handler
@@ -1265,7 +1392,7 @@ def patient_sign_up(email: str, full_name: str, redirect_to: str = None) -> tupl
 			except Exception as e:
 				# Log the error but don't fail signup - user can verify email later
 				error_msg = str(e)
-				frappe.log_error(f"Error sending verification email: {error_msg}", "Email Verification Error")
+				frappe.log_error(title="Email Verification Error", message=f"Error sending verification email: {error_msg}")
 			
 			frappe.db.commit()
 			
@@ -1372,7 +1499,7 @@ def verify_email(token: str, email: str = None):
 				indicator_color="green",
 			)
 		except Exception as e:
-			frappe.log_error(f"Error sending password setup email: {str(e)}", "Password Setup Error")
+			frappe.log_error(title="Password Setup Error", message=f"Error sending password setup email: {str(e)}")
 			frappe.respond_as_web_page(
 				_("Email Verified"),
 				_("Your email has been verified! However, we couldn't send the password setup email. Please contact support."),
@@ -1456,7 +1583,7 @@ def force_verify_email(user_email: str, reason: str = None):
 			user.reset_password(send_email=True)
 			frappe.msgprint(_("Email verified and password setup email sent to {0}").format(user_email))
 		except Exception as e:
-			frappe.log_error(f"Error sending password setup email: {str(e)}", "Password Setup Error")
+			frappe.log_error(title="Password Setup Error", message=f"Error sending password setup email: {str(e)}")
 			frappe.msgprint(_("Email verified, but password setup email could not be sent. Please send manually."), indicator="orange")
 	finally:
 		frappe.flags.ignore_permissions = False
@@ -1529,7 +1656,7 @@ def activate_patient_profile(patient_name):
 			now=True
 		)
 	except Exception as e:
-		frappe.log_error(f"Error sending activation email to {user.email}: {str(e)}")
+		frappe.log_error(title="Activation Email Error", message=f"Error sending activation email to {user.email}: {str(e)}")
 		# Don't fail the activation if email fails - staff can manually provide password
 	
 	return {
@@ -1539,3 +1666,22 @@ def activate_patient_profile(patient_name):
 		"temporary_password": temp_password,
 		"message": f"Patient profile activated. Temporary password sent to {user.email}"
 	}
+
+def get_branded_duplicate_error_message(e):
+    """Parses DuplicateEntryError and returns a branded message"""
+    err_msg = str(e)
+    
+    if "uid" in err_msg.lower() or "sa_id_number" in err_msg.lower() or "id_number" in err_msg.lower():
+        return _("This ID Number / Passport Number is already registered in our system. Please contact support if you believe this is an error.")
+        
+    if "mobile" in err_msg.lower():
+        return _("This Mobile Number is already registered in our system. Please use a different number or contact support.")
+        
+    if "email" in err_msg.lower():
+        return _("This Email Address is already registered. Please login to your account or use the 'Forgot Password' feature.")
+        
+    if "user_id" in err_msg.lower():
+        return _("A user with this ID already exists. Please login instead.")
+        
+    # Generic branded fallback
+    return _("A record with this information already exists in our system. Please double-check your entries or contact support.")

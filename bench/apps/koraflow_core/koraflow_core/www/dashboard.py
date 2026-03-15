@@ -39,8 +39,9 @@ def get_context(context):
 	
 	# 2. Alerts Logic
 	context.alerts = []
-	intake_forms = frappe.get_all("GLP-1 Intake Submission", filters={"parent": patient.name}, limit=1)
-	context.intake_completed = bool(intake_forms)
+	intake_forms = frappe.get_all("GLP-1 Intake Submission", filters={"patient": patient.name}, limit=1, ignore_permissions=True)
+	allow_retake = getattr(patient, 'custom_allow_intake_retake', 0)
+	context.intake_completed = bool(intake_forms) and not allow_retake
 	
 	if not context.intake_completed:
 		context.alerts.append({
@@ -61,23 +62,44 @@ def get_context(context):
 		})
 
 	# 3. Refill Info
-	# Fetch active prescription details
-	try:
-		active_rx = frappe.db.get_value("GLP-1 Patient Prescription", 
-			{"patient": patient.name, "docstatus": 1, "status": "Active"}, 
-			["name", "medication", "dosage"], as_dict=True)
-		
-		if active_rx:
-			context.refill_info = active_rx
-			# Safely check optional fields
-			context.refill_info['refill_due_date'] = active_rx.get('end_date')
-			context.refill_info['days_until_refill'] = date_diff(active_rx.end_date, getdate()) if active_rx.get('end_date') else 0
-			context.refill_info['has_repeats_remaining'] = True 
-			context.refill_info['status'] = "Active"
-		else:
-			context.refill_info = None
-	except Exception:
+	# Only show Active Plan if patient is Active AND intake is complete
+	if patient.status == "Disabled" or not context.intake_completed:
 		context.refill_info = None
+	else:
+		# Fetch active prescription details
+		try:
+			# Define active statuses (exclude Draft)
+			active_statuses = ["Dispensed", "Shipped", "Delivered", "Dispense Queued", "Active", "Quoted", "Doctor Approved"]
+			
+			active_rx = frappe.db.get_value("GLP-1 Patient Prescription", 
+				{"patient": patient.name, "status": ["in", active_statuses]}, 
+				["name", "medication", "dosage", "refill_due_date", "current_cycle", "number_of_repeats_allowed"], as_dict=True)
+			
+			if active_rx:
+				# Cycles logic: total = allowed repeats + 1 (the initial dispense)
+				total_cycles = (active_rx.get('number_of_repeats_allowed') or 0) + 1
+				current_cycle = active_rx.get('current_cycle') or 0
+				
+				# Refill logic
+				refill_due_date = active_rx.get('refill_due_date')
+				days_until_refill = None
+				if refill_due_date:
+					days_until_refill = date_diff(getdate(refill_due_date), getdate())
+				
+				context.refill_info = active_rx
+				context.refill_info['total_cycles'] = total_cycles
+				context.refill_info['current_cycle'] = current_cycle
+				context.refill_info['refill_due_date'] = refill_due_date
+				context.refill_info['days_until_refill'] = days_until_refill
+				
+				# Plan is "active" if there are repeats left OR it's a one-time dispense that hasn't finished yet
+				context.refill_info['has_repeats_remaining'] = current_cycle < total_cycles
+				context.refill_info['is_one_time_plan'] = total_cycles == 1
+				context.refill_info['status'] = "Active"
+			else:
+				context.refill_info = None
+		except Exception:
+			context.refill_info = None
 
 
 	# 4. Vitals Data
@@ -163,18 +185,26 @@ def submit_vital(weight, height=None):
 		"doctype": "Patient Vital",
 		"patient": patient_name,
 		"date": frappe.utils.nowdate(),
-		"weight_kg": weight,
-		"height_cm": height
+		"weight_kg": flt(weight),
+		"height_cm": flt(height)
 	})
 	
 	if not height:
 		try:
-			patient_height = frappe.db.get_value("Patient", patient_name, "custom_height_cm")
+			patient_height = frappe.db.get_value("Patient", patient_name, "custom_height_cm") or \
+							 frappe.db.get_value("Patient", patient_name, "intake_height_cm")
 			if patient_height:
-				doc.height_cm = patient_height
+				doc.height_cm = flt(patient_height)
+				height = doc.height_cm
 		except Exception:
 			pass
 			
+	# Calculate BMI if both height and weight are available
+	if flt(weight) > 0 and flt(height) > 0:
+		w = flt(weight)
+		h = flt(height) / 100
+		doc.bmi = w / (h * h)
+
 	doc.insert(ignore_permissions=True)
 	return True
 

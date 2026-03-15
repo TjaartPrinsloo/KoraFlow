@@ -62,7 +62,7 @@ class XeroConnector:
             f"client_id={self.client_id}",
             f"redirect_uri={self.redirect_uri}",
             f"scope={self.scope}",
-            f"state=123" # TODO: Generate random state
+            f"state={frappe.generate_hash()}"
         ]
         return f"{base_url}?{'&'.join(params)}"
     
@@ -90,7 +90,7 @@ class XeroConnector:
             
             if res.status_code != 200:
                 msg = f"Xero Token Exchange Failed: {res.text}"
-                frappe.log_error(msg)
+                frappe.log_error(title="Xero Connector", message=msg)
                 return False, msg
                 
             token = res.json()
@@ -99,7 +99,7 @@ class XeroConnector:
             return True, None
         except Exception as e:
             msg = f"Xero Callback Error: {str(e)}"
-            frappe.log_error(msg)
+            frappe.log_error(title="Xero Callback Error", message=msg)
             return False, msg
 
     def save_token(self, token):
@@ -172,7 +172,7 @@ class XeroConnector:
                 new_token = res.json()
                 self.save_token(new_token)
             except Exception as e:
-                frappe.log_error(f"Xero Token Refresh Failed: {str(e)}")
+                frappe.log_error(title="Xero Token Refresh", message=f"Xero Token Refresh Failed: {str(e)}")
                 self.settings.connection_status = "Disconnected (Refresh Failed)"
                 self.settings.save()
 
@@ -209,7 +209,7 @@ class XeroConnector:
                 "Quantity": item.qty,
                 "UnitAmount": item.rate,
                 "ItemCode": item.item_code,
-                # "AccountCode": "200" # TODO: Map from item group or default
+                "AccountCode": self.settings.default_sales_account or "200" # Default 200 (Sales)
             })
             
         quote_data = {
@@ -239,7 +239,7 @@ class XeroConnector:
                 "Quantity": item.qty,
                 "UnitAmount": item.rate,
                 "ItemCode": item.item_code,
-                # "AccountCode": "200" # Default Sales
+                "AccountCode": self.settings.default_sales_account or "200" 
             })
             
         invoice_data = {
@@ -274,10 +274,10 @@ class XeroConnector:
                  if payment.status == "AUTHORISED":
                      self.process_xero_payment(payment)
         except Exception as e:
-            frappe.log_error(f"Xero Payment Sync Error: {str(e)}")
+            frappe.log_error(title="Xero Payment Sync", message=f"Xero Payment Sync Error: {str(e)}")
 
     def process_xero_payment(self, payment):
-        # payment.invoice has properties. If it is linked to an Invoice.
+        # payment.invoice has properties. If it is linked to an Invoice. 
         # Note: Xero Payment can link to Invoice or CreditNote.
         if not payment.invoice: return
         
@@ -309,16 +309,19 @@ class XeroConnector:
     def create_payment_entry(self, invoice, amount, date):
         from frappe.utils import getdate
         
-        # Find a bank account. 
-        # TODO: Add setting for Default Payment Account. defaulting to Company default.
-        company_doc = frappe.get_doc("Company", invoice.company)
-        bank_account = company_doc.default_bank_account
+        if self.settings.default_payment_account:
+            bank_account = self.settings.default_payment_account
+        else:
+            # Fallback to Company default
+            company_doc = frappe.get_doc("Company", invoice.company)
+            bank_account = company_doc.default_bank_account
+            
         if not bank_account: # Fallback to first bank account
             accs = frappe.get_all("Account", filters={"account_type": "Bank", "company": invoice.company}, limit=1)
             if accs: bank_account = accs[0].name
             
         if not bank_account:
-            frappe.log_error(f"No Bank Account found for Company {invoice.company}. Cannot sync Xero Payment.")
+            frappe.log_error(title="Xero Payment Sync", message=f"No Bank Account found for Company {invoice.company}. Cannot sync Xero Payment.")
             return
 
         pe = frappe.new_doc("Payment Entry")
@@ -377,4 +380,4 @@ def sync_xero_payments():
         if connector.settings.enable_xero:
             connector.sync_xero_payments()
     except Exception as e:
-        frappe.log_error(f"Scheduled Xero Payment Sync Error: {str(e)}")
+        frappe.log_error(title="Xero Payment Sync", message=f"Scheduled Xero Payment Sync Error: {str(e)}")

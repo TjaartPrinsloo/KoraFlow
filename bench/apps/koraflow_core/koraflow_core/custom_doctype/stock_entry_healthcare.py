@@ -51,8 +51,9 @@ def validate_stock_entry_healthcare(doc, method):
 		return
 	
 	# Validation 1: Source warehouse must be PHARM-CENTRAL-COLD
+	valid_warehouses = ["PHARM-CENTRAL-COLD", "PHARM-CENTRAL-COLD - S2W"]
 	for s4_item in s4_items:
-		if s4_item["warehouse"] != "PHARM-CENTRAL-COLD":
+		if s4_item["warehouse"] not in valid_warehouses:
 			frappe.throw(_(
 				"S4 medication {0} can only be dispensed from PHARM-CENTRAL-COLD warehouse. "
 				"Current warehouse: {1}"
@@ -96,9 +97,9 @@ def validate_stock_entry_healthcare(doc, method):
 			prescription_name = dispense_confirmation
 	
 	# Check reference doctype
-	if not has_prescription and doc.reference_doctype == "GLP-1 Patient Prescription":
+	if not has_prescription and getattr(doc, 'reference_doctype', None) == "GLP-1 Patient Prescription":
 		has_prescription = True
-		prescription_name = doc.reference_name
+		prescription_name = getattr(doc, 'reference_name', None)
 	
 	if not has_prescription:
 		frappe.throw(_(

@@ -65,8 +65,8 @@ def create_renewal_quotation(prescription_name):
 		customer = frappe.db.get_value("Patient", prescription.patient, "customer")
 		if not customer:
 			frappe.log_error(
-				f"No customer linked to patient {prescription.patient} for renewal",
-				"Prescription Renewal"
+				title="Quotation Job", 
+				message=f"No customer for patient {prescription.patient}"
 			)
 			return None
 		
@@ -82,8 +82,8 @@ def create_renewal_quotation(prescription_name):
 		
 		if not item_code:
 			frappe.log_error(
-				f"No item linked to medication {prescription.medication} for renewal",
-				"Prescription Renewal"
+				title="Quotation Job", 
+				message=f"No item for medication {prescription.medication}"
 			)
 			return None
 		
@@ -133,8 +133,8 @@ def create_renewal_quotation(prescription_name):
 	
 	except Exception as e:
 		frappe.log_error(
-			f"Error creating renewal quotation for {prescription_name}: {str(e)}",
-			"Prescription Renewal"
+			title="Quotation Job", 
+			message=f"Error creating renewal quotation for {prescription_name}: {str(e)}"
 		)
 		return None
 
@@ -171,10 +171,7 @@ Slim2Well Care Team</p>
 		frappe.logger().info(f"Sent renewal notification to {patient.email} for quote {quotation_name}")
 	
 	except Exception as e:
-		frappe.log_error(
-			f"Error sending renewal notification to {patient_name}: {str(e)}",
-			"Prescription Renewal Notification"
-		)
+		frappe.log_error(title="Prescription Renewal Error", message=f"Error sending renewal notification to {patient_name}: {str(e)}")
 
 
 def generate_renewal_quotes():

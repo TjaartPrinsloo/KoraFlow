@@ -49,7 +49,7 @@ def fix_app_path():
 					return app_root
 			except Exception as e:
 				import frappe
-				frappe.log_error(f"Error in app_path_fix: {e}", "App Path Fix Error")
+				frappe.log_error(title="App Path Fix Error", message=f"Error in app_path_fix: {e}")
 				# Fallback: calculate from bench path
 				try:
 					bench_path = frappe.get_bench_path()

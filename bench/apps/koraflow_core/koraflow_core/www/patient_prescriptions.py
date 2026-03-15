@@ -40,7 +40,7 @@ def get_context(context):
 		from koraflow_core.api.patient_prescriptions import get_patient_prescriptions
 		prescriptions_data = get_patient_prescriptions(patient)
 	except Exception as e:
-		frappe.log_error(f"Error getting prescriptions: {str(e)}")
+		frappe.log_error(title="Web Prescription Fetch Error", message=f"Error getting prescriptions: {str(e)}")
 		prescriptions_data = {'prescriptions': [], 'count': 0}
 	context.prescriptions = prescriptions_data.get('prescriptions', [])
 	context.prescription_count = prescriptions_data.get('count', 0)

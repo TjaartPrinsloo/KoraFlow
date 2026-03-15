@@ -31,7 +31,7 @@ def create_quotation_from_prescription(prescription):
 		# Get medication item
 		medication = frappe.db.get_value("GLP-1 Patient Prescription", prescription.name, "medication")
 		if not medication:
-			frappe.log_error("No medication found in prescription", "Prescription Approval")
+			frappe.log_error(title="Prescription Approval", message="No medication found in prescription")
 			return
 		
 		# Get item from medication
@@ -42,7 +42,7 @@ def create_quotation_from_prescription(prescription):
 		)
 		
 		if not item_code:
-			frappe.log_error(f"No item found for medication {medication}", "Prescription Approval")
+			frappe.log_error(title="Prescription Approval", message=f"No item found for medication {medication}")
 			return
 		
 		# Get patient's customer
@@ -50,7 +50,7 @@ def create_quotation_from_prescription(prescription):
 		customer = frappe.db.get_value("Patient", patient, "customer")
 		
 		if not customer:
-			frappe.log_error(f"No customer found for patient {patient}", "Prescription Approval")
+			frappe.log_error(title="Prescription Approval", message=f"No customer found for patient {patient}")
 			return
 		
 		# Get item price
@@ -89,7 +89,7 @@ def create_quotation_from_prescription(prescription):
 		return quotation.name
 		
 	except Exception as e:
-		frappe.log_error(f"Error creating quotation from prescription: {str(e)}", "Prescription Approval")
+		frappe.log_error(title="Prescription Approval", message=f"Error creating quotation from prescription: {str(e)}")
 
 
 def handle_quotation_acceptance(doc, method=None):
@@ -144,7 +144,7 @@ def create_sales_chain_from_quotation(quotation):
 		))
 		
 	except Exception as e:
-		frappe.log_error(f"Error creating sales chain: {str(e)}", "Quotation Acceptance")
+		frappe.log_error(title="Quotation Acceptance", message=f"Error creating sales chain: {str(e)}")
 
 
 def handle_invoice_submission(doc, method=None):
@@ -206,7 +206,7 @@ def create_dispense_task_from_invoice(invoice):
 		frappe.msgprint(_("Dispense task created for invoice {0}").format(invoice.name))
 		
 	except Exception as e:
-		frappe.log_error(f"Error creating dispense task: {str(e)}", "Invoice Submission")
+		frappe.log_error(title="Invoice Submission", message=f"Error creating dispense task: {str(e)}")
 
 
 def handle_pharmacist_approval(doc, method=None):
@@ -238,7 +238,7 @@ def create_stock_entry_from_dispense_confirmation(confirmation):
 		)
 		
 		if not item_code:
-			frappe.log_error("No item found for medication", "Dispense Confirmation")
+			frappe.log_error(title="Dispense Confirmation", message="No item found for medication")
 			return
 		
 		# Create Stock Entry
@@ -257,7 +257,8 @@ def create_stock_entry_from_dispense_confirmation(confirmation):
 			"custom_prescription": prescription.name,
 			"custom_patient": prescription.patient,
 			"reference_doctype": "GLP-1 Patient Prescription",
-			"reference_name": prescription.name
+			"reference_name": prescription.name,
+			"custom_delivery_notes": frappe.db.get_value("Quotation", prescription.linked_quotation, "custom_delivery_notes") if hasattr(prescription, 'linked_quotation') and prescription.linked_quotation else None
 		})
 		
 		stock_entry.flags.from_dispense_confirmation = True
@@ -271,4 +272,4 @@ def create_stock_entry_from_dispense_confirmation(confirmation):
 		frappe.msgprint(_("Stock Entry {0} created for dispense").format(stock_entry.name))
 		
 	except Exception as e:
-		frappe.log_error(f"Error creating stock entry: {str(e)}", "Dispense Confirmation")
+		frappe.log_error(title="Dispense Confirmation", message=f"Error creating stock entry: {str(e)}")

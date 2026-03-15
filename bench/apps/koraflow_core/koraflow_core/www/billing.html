@@ -270,11 +270,7 @@
                 <span class="material-symbols-outlined">prescriptions</span>
                 <span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
-                href="/vitals">
-                <span class="material-symbols-outlined">monitoring</span>
-                <span class="font-semibold text-sm">{{ _("Vitals") }}</span>
-            </a>
+
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/billing">
                 <span class="material-symbols-outlined">receipt_long</span>
                 <span class="font-semibold text-sm">{{ _("Billing") }}</span>
@@ -292,7 +288,7 @@
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
             <!-- Logout Button -->
-            <a href="/?cmd=web_logout"
+            <a href="/api/method/koraflow_core.utils.auth.logout"
                 class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
                 <span class="material-symbols-outlined text-sm">logout</span>
                 {{ _("Log Out") }}
@@ -314,15 +310,15 @@
                 <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div class="flex items-center gap-3">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold leading-none">{{ patient.first_name if patient else "Guest" }} {{
-                            patient.last_name or "" if patient else "" }}
+                        <p class="text-sm font-bold leading-none">{{ patient.first_name }} {{ patient.last_name or "" }}
                         </p>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
-                            Member") }}</p>
                     </div>
-                    <div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 shadow-sm bg-cover bg-center"
-                        data-alt="Patient profile avatar circular image"
-                        style='background-image: url("{{ patient.image or "https://lh3.googleusercontent.com/aida-public/AB6AXuAL3hA5SD4KcL_OB0mXuu9sGKrcMcP5j_8ZlLJRX6j6Gqh_tySVYhVWjA4Xj5EKALG8M5qC3tqtyFxAvoqiUEXVatC6Fe6La800cTFqqxVTZo9D8jXsz00kcvJzEf6SWDx3mwglb60dmMGLL81KW1SLfVGpELoDvLE65mPUl3gxgLBXZICCxCN_agNqVqqY9-2H99y9zHbIzkb1WS4owE1bgx4VXk0VLkxqrA0Xmz18rBkCNDpi7IDrXrkmajNW_GMbyxpY9BLY8jwy" if patient else "" }}");'>
+                    <div
+                        class="size-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
+                        <span class="font-bold text-primary text-xs uppercase">
+                            {{ patient.first_name[0] if patient and patient.first_name else '' }}{{ patient.last_name[0]
+                            if patient and patient.last_name else '' }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -412,12 +408,8 @@
                                         <!-- Future: Add Pay Now Button -->
                                         {% if qt.status == "Open" %}
                                         <button onclick="acceptQuotation('{{ qt.name }}')"
-                                            class="inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-charcoal font-bold text-xs hover:bg-white hover:text-black border border-primary transition-all">
-                                            {{ _("Accept") }}
-                                        </button>
-                                        <button onclick="rejectQuotation('{{ qt.name }}')"
-                                            class="inline-flex items-center justify-center h-10 px-4 rounded-lg bg-red-50 text-red-600 font-bold text-xs hover:bg-red-100 border border-red-200 transition-all">
-                                            {{ _("Decline") }}
+                                            class="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-primary text-charcoal font-bold text-xs hover:bg-white hover:text-black border border-primary transition-all">
+                                            {{ _("Pay Now") }}
                                         </button>
                                         {% endif %}
                                     </div>
@@ -461,18 +453,14 @@
                             </button>
                             <a href="/api/method/koraflow_core.api.billing.download_quotation_pdf?quotation_name={{ qt.name }}"
                                 target="_blank"
-                                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                                <span class="material-symbols-outlined text-lg">download</span>
-                                {{ _("PDF") }}
+                                class="flex items-center justify-center size-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                title="{{ _(" Download PDF") }}">
+                                <span class="material-symbols-outlined text-xl">download</span>
                             </a>
                             {% if qt.status == "Open" %}
                             <button onclick="acceptQuotation('{{ qt.name }}')"
                                 class="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-charcoal font-bold text-sm hover:bg-white hover:text-black border border-primary transition-all shadow-sm">
-                                {{ _("Accept Quotation") }}
-                            </button>
-                            <button onclick="rejectQuotation('{{ qt.name }}')"
-                                class="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 border border-red-200 transition-all">
-                                {{ _("Decline") }}
+                                {{ _("Pay Now") }}
                             </button>
                             {% endif %}
                         </div>
@@ -681,7 +669,7 @@
 
                 function acceptQuotation(quotationName) {
                     frappe.confirm(
-                        '{{ _("Are you sure you want to accept this quotation? This will generate an invoice.") }}',
+                        '{{ _("Proceed to payment for this prescription? This will generate your invoice.") }}',
                         () => {
                             frappe.call({
                                 method: 'koraflow_core.api.billing.accept_quotation',
@@ -885,9 +873,9 @@
                     <div>
                         <a href="/api/method/koraflow_core.api.billing.download_invoice_pdf?invoice_name={{ inv.name }}"
                             target="_blank"
-                            class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                            <span class="material-symbols-outlined text-lg">print</span>
-                            {{ _("Print Invoice") }}
+                            class="size-11 flex items-center justify-center mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all"
+                            title="{{ _(" Print/Download Invoice") }}">
+                            <span class="material-symbols-outlined text-xl">print</span>
                         </a>
                     </div>
                 </div>

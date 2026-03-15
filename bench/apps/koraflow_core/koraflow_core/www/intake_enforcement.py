@@ -23,7 +23,7 @@ def check_intake_completion():
 	"""
 	# Debug logging
 	if frappe.session.user == "chris@koraflow.com":
-		frappe.log_error("Intake Check Start", f"User: {frappe.session.user}, Path: {frappe.request.path}")
+		frappe.log_error(title="Intake Check Start", message=f"User: {frappe.session.user}, Path: {frappe.request.path}")
 
 	# Skip for guest users, system users, and admin pages
 	if frappe.session.user == "Guest":
@@ -85,6 +85,6 @@ def check_intake_completion():
 	if not intake_completed:
 		# Redirect to intake form
 		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = "/glp1-intake"
+		frappe.local.response["location"] = "/intake"
 		return
 

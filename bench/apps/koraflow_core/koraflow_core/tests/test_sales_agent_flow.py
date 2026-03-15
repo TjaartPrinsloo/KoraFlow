@@ -7,7 +7,8 @@ def run_test():
     print("Starting Sales Agent Flow Test...")
     
     # 1. Setup Data
-    suffix = str(int(time.time()))
+    import uuid
+    suffix = str(uuid.uuid4())[:8]
     agent_email = f"agent_{suffix}@example.com"
     patient_email = f"patient_{suffix}@example.com"
     
@@ -17,7 +18,7 @@ def run_test():
         u.email = agent_email
         u.first_name = "Test Agent"
         u.last_name = suffix
-        u.roles = [{"role": "Sales Agent Portal"}]
+        u.append("roles", {"role": "Sales Agent Portal"})
         u.save(ignore_permissions=True)
         
     # Create Sales Agent
@@ -31,14 +32,30 @@ def run_test():
     frappe.db.commit()
     print(f"Created Sales Agent: {agent.name}")
     
-    # Create Patient
-    patient = frappe.new_doc("Patient")
-    patient.first_name = "Test Patient"
-    patient.email = patient_email
-    patient.referred_by_sales_agent = agent.name
-    patient.save(ignore_permissions=True)
     frappe.db.commit()
-    print(f"Created Patient: {patient.name} referred by {agent.name}")
+    print(f"Created Sales Agent: {agent.name}")
+    
+    # Create Patient using API
+    from koraflow_core.api.sales_agent_dashboard import create_referral
+    
+    # Mock session user as agent
+    frappe.session.user = agent_email
+    
+    result = create_referral(
+        first_name="Test Patient",
+        last_name=suffix,
+        email=patient_email,
+        mobile_no=f"082{str(uuid.uuid4().int)[:7]}", # Valid numeric phone
+        sex="Female",
+        dob="1990-01-01"
+    )
+    
+    referral_id = result.get("referral")
+    referral = frappe.get_doc("Patient Referral", referral_id)
+    patient_name = referral.patient
+    patient = frappe.get_doc("Patient", patient_name)
+    
+    print(f"Created Patient via API: {patient.name} referred by {agent.name}")
     
     # Create Item
     item_code = f"Test_Item_{suffix}"
@@ -133,7 +150,7 @@ def run_test():
     
     from koraflow_core.api.agent_portal import request_payout
     try:
-        res = request_payout()
+        res = request_payout(100.0)
         print(f"SUCCESS: Payout requested. Result: {res}")
         
         # Verify Purchase Invoice
@@ -151,4 +168,3 @@ def run_test():
         import traceback
         traceback.print_exc()
 
-run_test()

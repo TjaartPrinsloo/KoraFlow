@@ -458,7 +458,67 @@ koraflow.modules = {
 			}
 		});
 	}
-};
+};// ======================================================
+// S2W NAVBAR LOGO SIZING FIX
+// Frappe's SCSS sets .app-logo { width: 24px } with no height,
+// causing SVGs to render as 0x0. We fix this imperatively.
+// ======================================================
+(function () {
+	function fixLogoSize() {
+		// Inject a high-specificity style tag if not already present
+		if (!document.getElementById('s2w-logo-style')) {
+			const style = document.createElement('style');
+			style.id = 's2w-logo-style';
+			style.textContent = [
+				'.navbar-home .app-logo,',
+				'a.navbar-brand .app-logo,',
+				'img.app-logo {',
+				'    height: 32px !important;',
+				'    width: 32px !important;',
+				'    min-height: 32px !important;',
+				'    min-width: 32px !important;',
+				'    max-width: none !important;',
+				'    display: inline-block !important;',
+				'    border-radius: 50%;',
+				'    object-fit: contain;',
+				'}',
+			].join('\n');
+			document.head.appendChild(style);
+		}
+
+		// Also set inline style as fallback
+		const logoImgs = document.querySelectorAll('img.app-logo, .navbar-home img, a.navbar-brand img');
+		logoImgs.forEach(function (img) {
+			img.style.height = '32px';
+			img.style.width = '32px';
+			img.style.minHeight = '32px';
+			img.style.minWidth = '32px';
+			img.style.display = 'inline-block';
+			img.style.borderRadius = '50%';
+			img.style.objectFit = 'contain';
+		});
+	}
+
+	// Run at multiple intervals to catch the dynamically-loaded navbar
+	[0, 100, 300, 600, 1000, 2000].forEach(function (delay) {
+		setTimeout(fixLogoSize, delay);
+	});
+
+	// Also observe DOM for when the navbar is inserted
+	if (typeof MutationObserver !== 'undefined') {
+		const obs = new MutationObserver(function () { fixLogoSize(); });
+		if (document.body) {
+			obs.observe(document.body, { childList: true, subtree: true });
+			// Stop observing after 10 seconds to avoid overhead
+			setTimeout(function () { obs.disconnect(); }, 10000);
+		} else {
+			document.addEventListener('DOMContentLoaded', function () {
+				obs.observe(document.body, { childList: true, subtree: true });
+				setTimeout(function () { obs.disconnect(); }, 10000);
+			});
+		}
+	}
+})();
 
 
 

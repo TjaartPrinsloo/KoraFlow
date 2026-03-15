@@ -10,7 +10,7 @@ def send_temporary_password_email(user_email):
     """
     try:
         if not frappe.db.exists("User", user_email):
-            frappe.log_error(f"User {user_email} not found for password email", "Send Password Email")
+            frappe.log_error(title="Send Password Email", message=f"User {user_email} not found for password email")
             return
 
         # Generate random password
@@ -42,4 +42,4 @@ def send_temporary_password_email(user_email):
         frappe.logger().info(f"Temporary password email sent to {user_email}")
         
     except Exception as e:
-        frappe.log_error(f"Error sending temporary password to {user_email}: {str(e)}", "Send Password Email Error")
+        frappe.log_error(title="Send Password Email Error", message=f"Error sending temporary password to {user_email}: {str(e)}")

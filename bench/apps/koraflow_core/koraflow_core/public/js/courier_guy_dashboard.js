@@ -841,13 +841,12 @@
 				}
 
 				get_status_color(status) {
-					const colors = {
-						'Delivered': 'success',
-						'In Transit': 'primary',
-						'Pending': 'warning',
-						'Failed': 'danger'
-					};
-					return colors[status] || 'secondary';
+					const s = status ? status.toLowerCase() : '';
+					if (s.includes('delivered')) return 'success';
+					if (s.includes('transit') || s.includes('assigned') || s.includes('request') || s.includes('out for delivery')) return 'primary';
+					if (s.includes('pending') || s.includes('draft') || s.includes('created')) return 'warning';
+					if (s.includes('fail') || s.includes('cancel')) return 'danger';
+					return 'secondary';
 				}
 
 				show_api_warning(message) {

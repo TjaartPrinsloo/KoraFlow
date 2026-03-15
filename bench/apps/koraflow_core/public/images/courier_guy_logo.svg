@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Courier Guy Logo - Truck Icon -->
+  <defs>
+    <linearGradient id="truckGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F7931E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="45" fill="url(#truckGradient)" stroke="#fff" stroke-width="2"/>
+  
+  <!-- Truck Body -->
+  <rect x="20" y="45" width="35" height="20" fill="#fff" rx="2"/>
+  <rect x="25" y="50" width="25" height="10" fill="#FF6B35" rx="1"/>
+  
+  <!-- Truck Cab -->
+  <rect x="55" y="40" width="20" height="25" fill="#fff" rx="2"/>
+  <rect x="58" y="43" width="14" height="12" fill="#FF6B35" rx="1"/>
+  
+  <!-- Wheels -->
+  <circle cx="32" cy="70" r="6" fill="#333"/>
+  <circle cx="32" cy="70" r="3" fill="#666"/>
+  <circle cx="60" cy="70" r="6" fill="#333"/>
+  <circle cx="60" cy="70" r="3" fill="#666"/>
+  
+  <!-- Window -->
+  <rect x="58" y="43" width="14" height="8" fill="#4A90E2" rx="1"/>
+</svg>

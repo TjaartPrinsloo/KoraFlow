@@ -4,8 +4,78 @@ Fetches real-time dashboard data from Courier Guy API
 """
 import frappe
 from frappe import _
-from datetime import datetime, date, timedelta
+from datetime import datetime as dt, date, timedelta
 from koraflow_core.utils.courier_guy_api import CourierGuyAPI
+
+
+@frappe.whitelist()
+def get_historical_shipments(from_date=None, to_date=None, limit=1000):
+	"""
+	Fetch historical shipments from Courier Guy API
+	Used as a fallback when direct API metrics fail
+	"""
+	try:
+		api = CourierGuyAPI()
+		# Format dates for API if they are strings
+		from_date_str = from_date if isinstance(from_date, str) else (from_date.strftime("%Y-%m-%d") if from_date else None)
+		to_date_str = to_date if isinstance(to_date, str) else (to_date.strftime("%Y-%m-%d") if to_date else None)
+		
+		
+		res = api.get_shipments(from_date=from_date_str, to_date=to_date_str, limit=limit)
+		if res.get("success"):
+			raw_shipments = res.get("shipments", [])
+			formatted_shipments = []
+			for shipment in raw_shipments:
+				collection_addr = shipment.get("collection_address") or {}
+				delivery_addr = shipment.get("delivery_address") or {}
+				
+				if isinstance(collection_addr, dict):
+					collection_str = ", ".join(filter(None, [
+						collection_addr.get("street_address") or collection_addr.get("entered_address"),
+						collection_addr.get("local_area") or collection_addr.get("geo_local_area"),
+						collection_addr.get("city") or collection_addr.get("geo_city")
+					]))
+				else:
+					collection_str = str(collection_addr) if collection_addr else "N/A"
+				
+				if isinstance(delivery_addr, dict):
+					delivery_str = ", ".join(filter(None, [
+						delivery_addr.get("street_address") or delivery_addr.get("entered_address"),
+						delivery_addr.get("local_area") or delivery_addr.get("geo_local_area"),
+						delivery_addr.get("city") or delivery_addr.get("geo_city")
+					]))
+				else:
+					delivery_str = str(delivery_addr) if delivery_addr else "N/A"
+			
+				formatted_shipments.append({
+					"waybill_number": shipment.get("short_tracking_reference") or shipment.get("id") or "N/A",
+					"tracking_number": shipment.get("short_tracking_reference") or shipment.get("id") or "N/A",
+					"status": format_status(shipment.get("status")),
+					"service_type": shipment.get("service_level_name") or shipment.get("service_level_code") or "N/A",
+					"collection_address": collection_str or "N/A",
+					"delivery_address": delivery_str or "N/A",
+					"collection_contact_name": collection_addr.get("company") if isinstance(collection_addr, dict) else "N/A",
+					"collection_contact_number": collection_addr.get("contact_number") if isinstance(collection_addr, dict) else "N/A",
+					"delivery_contact_name": delivery_addr.get("company") if isinstance(delivery_addr, dict) else "N/A",
+					"delivery_contact_number": delivery_addr.get("contact_number") if isinstance(delivery_addr, dict) else "N/A",
+					"created_at": shipment.get("time_created") or shipment.get("time_modified") or None,
+					"collected_at": shipment.get("collected_date") or None,
+					"delivered_at": shipment.get("delivered_date") or None,
+					"total_value": float(shipment.get("rate") or shipment.get("original_rate") or shipment.get("total_value") or 0),
+					"total_weight": float(shipment.get("charged_weight") or shipment.get("actual_weight") or shipment.get("total_weight") or 0),
+					"parcel_count": shipment.get("total_pieces") or 1,
+					"reference": shipment.get("client_reference") or "",
+					"raw_data": shipment
+				})
+			return {
+				"success": True,
+				"shipments": formatted_shipments,
+				"source": "api_historical"
+			}
+		return res
+	except Exception as e:
+		frappe.logger().error(f"Error in get_historical_shipments: {str(e)}")
+		return {"success": False, "error": str(e)}
 
 
 @frappe.whitelist()
@@ -40,7 +110,7 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 				frappe.logger().info(f"Courier Guy Dashboard: [STEP 1] Starting API call with from_date={from_date}, to_date={to_date}")
 				# Format dates for client-side filtering
 				try:
-					if isinstance(from_date, (datetime, date)):
+					if isinstance(from_date, (dt, date)):
 						from_date_str = from_date.strftime("%Y-%m-%d")
 						from_date_obj = from_date
 					else:
@@ -52,7 +122,7 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 					raise
 				
 				try:
-					if isinstance(to_date, (datetime, date)):
+					if isinstance(to_date, (dt, date)):
 						to_date_str = to_date.strftime("%Y-%m-%d")
 						to_date_obj = to_date
 					else:
@@ -182,11 +252,17 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 								"service_type": shipment.get("service_level_name") or shipment.get("service_level_code") or "N/A",
 								"collection_address": collection_str or "N/A",
 								"delivery_address": delivery_str or "N/A",
+								"collection_contact_name": collection_addr.get("company") if isinstance(collection_addr, dict) else "N/A",
+								"collection_contact_number": collection_addr.get("contact_number") if isinstance(collection_addr, dict) else "N/A",
+								"delivery_contact_name": delivery_addr.get("company") if isinstance(delivery_addr, dict) else "N/A",
+								"delivery_contact_number": delivery_addr.get("contact_number") if isinstance(delivery_addr, dict) else "N/A",
 								"created_at": shipment.get("time_created") or shipment.get("time_modified") or None,
 								"collected_at": shipment.get("collected_date") or None,
 								"delivered_at": shipment.get("delivered_date") or None,
-								"total_value": float(shipment.get("rate") or shipment.get("original_rate") or 0),
-								"total_weight": float(shipment.get("charged_weight") or shipment.get("actual_weight") or 0),
+								"total_value": float(shipment.get("rate") or shipment.get("original_rate") or shipment.get("total_value") or 0),
+								"total_weight": float(shipment.get("charged_weight") or shipment.get("actual_weight") or shipment.get("total_weight") or 0),
+								"parcel_count": shipment.get("total_pieces") or 1,
+								"reference": shipment.get("client_reference") or "",
 								"raw_data": shipment
 							})
 						except Exception as format_shipment_error:
@@ -228,32 +304,7 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 					historical_shipments = []
 					historical_response = {"success": False, "source": "error"}
 			
-			# Try to fetch dashboard data from Courier Guy API for metrics
-			# This provides charts, KPIs, and additional statistics
-			# Note: get_dashboard_data may return empty dict if it can't process the raw API response
-			try:
-				dashboard_response = api.get_dashboard_data(from_date=from_date, to_date=to_date)
-			except Exception as dashboard_error:
-				# If get_dashboard_data fails, we'll calculate from historical_shipments
-				frappe.logger().debug(f"Courier Guy get_dashboard_data failed: {str(dashboard_error)[:100]}")
-				dashboard_response = {}
-			
-			# Use historical shipments as the primary source (they're already properly formatted)
-			# Historical shipments come from get_historical_shipments which handles field mapping correctly
 			merged_shipments = historical_shipments.copy() if historical_shipments else []
-			
-			# If dashboard_response has shipments, merge them (but historical is primary)
-			if dashboard_response and isinstance(dashboard_response, dict) and dashboard_response.get("shipments"):
-				dashboard_shipments = dashboard_response.get("shipments", [])
-				# Create a set of existing waybill numbers for quick lookup
-				existing_keys = {s.get("waybill_number") or s.get("tracking_number") or s.get("name") 
-				                for s in merged_shipments if s.get("waybill_number") or s.get("tracking_number") or s.get("name")}
-				
-				# Add dashboard shipments if not already present
-				for shipment in dashboard_shipments:
-					key = shipment.get("waybill_number") or shipment.get("tracking_number") or shipment.get("name")
-					if key and key not in existing_keys:
-						merged_shipments.append(shipment)
 			
 			# Sort by created date (newest first)
 			merged_shipments.sort(
@@ -262,35 +313,26 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 			)
 			
 			# Calculate summary statistics from merged shipments
-			# Ship Logic API uses different status values - map them correctly
 			created_count = len(merged_shipments)
-			# Ship Logic statuses: "cancelled", "collected", "in-transit", "out-for-delivery", "delivered", etc.
 			collected_count = len([s for s in merged_shipments if s.get("status") and s.get("status").lower() in [
-				"collected", "in-transit", "in transit", "out-for-delivery", "out for delivery", "delivered"
+				"collected", "in-transit", "in transit", "out-for-delivery", "out for delivery", "delivered", "collection request", "collection assigned"
 			]])
 			delivered_count = len([s for s in merged_shipments if s.get("status") and s.get("status").lower() == "delivered"])
 			
 			# Calculate stats from merged shipments
-			# Map Ship Logic statuses to standard statuses
 			stats = {
 				"total_shipments": created_count,
-				"in_transit": len([s for s in merged_shipments if s.get("status") and s.get("status").lower() in ["in-transit", "in transit"]]),
+				"in_transit": len([s for s in merged_shipments if s.get("status") and s.get("status").lower() in ["in-transit", "in transit", "collection request", "collection assigned", "out-for-delivery", "out for delivery"]]),
 				"delivered": delivered_count,
 				"pending": len([s for s in merged_shipments if s.get("status") and s.get("status").lower() in ["draft", "created", "pending", "pending pickup"]]),
-				"failed": len([s for s in merged_shipments if s.get("status") and s.get("status").lower() in ["failed", "cancelled"]])
+				"failed": len([s for s in merged_shipments if s.get("status") and s.get("status").lower() in ["failed", "cancelled", "collection failed attempt"]])
 			}
 			
-			# Use dashboard response for charts and KPIs if available, otherwise calculate from shipments
 			try:
-				if dashboard_response and isinstance(dashboard_response, dict) and len(dashboard_response) > 0:
-					chart_data = dashboard_response.get("chart_data", {})
-					service_levels = dashboard_response.get("service_levels", [])
-					kpis = dashboard_response.get("kpis", {})
-				else:
-					# Calculate from merged shipments if dashboard data not available
-					chart_data = calculate_chart_data(merged_shipments, from_date, to_date)
-					service_levels = calculate_service_levels(merged_shipments)
-					kpis = calculate_kpis(merged_shipments)
+				# Calculate from merged shipments
+				chart_data = calculate_chart_data(merged_shipments, from_date, to_date)
+				service_levels = calculate_service_levels(merged_shipments)
+				kpis = calculate_kpis(merged_shipments)
 			except Exception as calc_error:
 				import traceback
 				frappe.logger().error(f"Courier Guy Dashboard: Error calculating charts/KPIs: {str(calc_error)}\n{traceback.format_exc()[:500]}")
@@ -335,7 +377,7 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 			# Log to both logger and error log with full details
 			error_msg = f"Courier Guy API dashboard call failed: {error_summary}\n{error_trace}"
 			frappe.logger().error(error_msg)
-			frappe.log_error(error_msg, "Courier Guy Dashboard")
+			frappe.log_error(title="Courier Guy Dashboard", message=error_msg)
 			# Print to console for immediate debugging
 			print(f"\n{'='*60}")
 			print(f"DEBUG: Courier Guy Dashboard Exception Caught!")
@@ -366,7 +408,7 @@ def get_courier_guy_dashboard_data(from_date=None, to_date=None):
 		except Exception as local_error:
 			# If local data also fails, return error response
 			local_error_summary = str(local_error)[:100] if len(str(local_error)) > 100 else str(local_error)
-			frappe.log_error(f"Error getting local dashboard data: {local_error_summary}", "Courier Guy Dashboard")
+			frappe.log_error(title="Courier Guy Dashboard", message=f"Error getting local dashboard data: {local_error_summary}")
 			return {
 				"success": False,
 				"error": "Unable to load dashboard data. Please check error logs."
@@ -381,7 +423,7 @@ def get_local_dashboard_data(from_date=None, to_date=None):
 	try:
 		# Set default date range (last 30 days if not provided to capture more data)
 		if not to_date:
-			to_date = datetime.now().date()
+			to_date = dt.now().date()
 		else:
 			if isinstance(to_date, str):
 				to_date = frappe.utils.getdate(to_date)
@@ -549,7 +591,7 @@ def get_local_dashboard_data(from_date=None, to_date=None):
 		}
 
 	except Exception as e:
-		frappe.log_error(f"Error getting local dashboard data: {str(e)}", "Courier Guy Dashboard")
+		frappe.log_error(title="Courier Guy Dashboard", message=f"Error getting local dashboard data: {str(e)}")
 		return {
 			"success": False,
 			"error": str(e)
@@ -641,15 +683,15 @@ def calculate_kpis(shipments):
 		
 		if s_created and s_collected:
 			try:
-				created = datetime.strptime(s_created[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
-				collected = datetime.strptime(s_collected[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
+				created = dt.strptime(s_created[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
+				collected = dt.strptime(s_collected[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
 				collection_times.append((collected - created).days)
 			except:
 				pass
 		if s_collected and s_delivered:
 			try:
-				collected = datetime.strptime(s_collected[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
-				delivered = datetime.strptime(s_delivered[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
+				collected = dt.strptime(s_collected[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
+				delivered = dt.strptime(s_delivered[:19].replace('T', ' '), "%Y-%m-%d %H:%M:%S")
 				delivery_times.append((delivered - collected).days)
 			except:
 				pass
@@ -785,20 +827,21 @@ def extract_waybill_fields(wb_data):
 		"service_level": get("service_level_name") or get("service_level_code") or get("service_type"),
 		"collection_address": coll_addr,
 		"delivery_address": del_addr,
-		"collection_contact_name": collection_contact_name or get("collection_contact_name") or get("pickup_contact_name"),
-		"collection_contact_number": collection_contact_number or get("collection_contact_number") or get("pickup_contact_phone"),
-		"delivery_contact_name": delivery_contact_name or get("delivery_contact_name"),
-		"delivery_contact_number": delivery_contact_number or get("delivery_contact_number") or get("delivery_contact_phone"),
+		"collection_contact_name": collection_contact_name or get("collection_contact_name") or get("pickup_contact_name") or (coll_addr.get("company") if isinstance(coll_addr, dict) else None),
+		"collection_contact_number": collection_contact_number or get("collection_contact_number") or get("pickup_contact_phone") or (coll_addr.get("contact_number") if isinstance(coll_addr, dict) else None),
+		"delivery_contact_name": delivery_contact_name or get("delivery_contact_name") or (del_addr.get("company") if isinstance(del_addr, dict) else None),
+		"delivery_contact_number": delivery_contact_number or get("delivery_contact_number") or get("delivery_contact_phone") or (del_addr.get("contact_number") if isinstance(del_addr, dict) else None),
 		"delivery_email": delivery_email or get("delivery_contact_email") or get("delivery_email"),
 		"created_at": get("time_created") or get("shipment_time_created") or get("created_at") or get("creation"),
 		"collected_at": get("collected_date") or get("shipment_collected_date") or get("collected_at"),
 		"delivered_at": get("delivered_date") or get("shipment_delivered_date") or get("delivered_at"),
 		"estimated_delivery_at": get("estimated_delivery_from") or get("estimated_delivery_to") or get("estimated_delivery_date") or get("estimated_delivery_at"),
+		"total_value": get("rate") or get("original_rate") or get("total_value"),
 		"rate": get("rate") or get("original_rate") or get("total_value"),
 		"charged_weight": get("charged_weight") or get("actual_weight") or get("total_weight"),
 		"actual_weight": get("actual_weight"),
 		"volumetric_weight": get("volumetric_weight"),
-		"customer_reference": get("customer_reference") or get("custom_tracking_reference") or get("reference"),
+		"customer_reference": get("customer_reference") or get("custom_tracking_reference") or get("reference") or get("client_reference"),
 		"parcel_count": parcel_count,
 		# Ship Logic /shipments uses collection_branch_name/delivery_branch_name for hub codes
 		# /tracking endpoint uses collection_hub/delivery_hub
@@ -898,7 +941,7 @@ def sync_courier_guy_data():
 				waybill_doc.update_tracking()
 				updated += 1
 			except Exception as e:
-				frappe.log_error(f"Error updating waybill {waybill.name}: {str(e)}", "Courier Guy Sync")
+				frappe.log_error(title="Courier Guy Sync", message=f"Error updating waybill {waybill.name}: {str(e)}")
 
 		return {
 			"success": True,
@@ -907,7 +950,7 @@ def sync_courier_guy_data():
 		}
 
 	except Exception as e:
-		frappe.log_error(f"Error syncing Courier Guy data: {str(e)}", "Courier Guy Sync")
+		frappe.log_error(title="Courier Guy Sync", message=f"Error syncing Courier Guy data: {str(e)}")
 		return {
 			"success": False,
 			"error": str(e)
@@ -968,7 +1011,7 @@ def get_waybill_details(waybill_number):
 		return {"success": True, "data": data}
 
 	except Exception as e:
-		frappe.log_error(f"Error fetching waybill details: {str(e)}", "Courier Guy Dashboard")
+		frappe.log_error(title="Courier Guy Dashboard", message=f"Error fetching waybill details: {str(e)}")
 		# Fallback to local
 		return get_local_waybill_details(waybill_number)
 

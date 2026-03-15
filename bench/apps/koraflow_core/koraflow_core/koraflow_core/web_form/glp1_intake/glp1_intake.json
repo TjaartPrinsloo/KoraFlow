@@ -1,0 +1,938 @@
+{
+    "accept_payment": 0,
+    "allow_comments": 0,
+    "allow_delete": 0,
+    "allow_edit": 1,
+    "allow_incomplete": 0,
+    "allow_multiple": 0,
+    "allow_print": 0,
+    "amount": 0.0,
+    "amount_based_on_field": 0,
+    "button_label": "Submit Intake Form",
+    "creation": "2025-01-23 00:00:00.000000",
+    "currency": "USD",
+    "doc_type": "GLP-1 Intake Submission",
+    "docstatus": 0,
+    "doctype": "Web Form",
+    "idx": 0,
+    "introduction_text": "<h3>Clinical Intake & Metabolic Screening Protocol</h3><p>Subject: GLP-1/GIP Agonist Eligibility and Safety Assessment</p><p>Please complete all sections of this intake form. This information is required to assess your eligibility for GLP-1/GIP agonist medications.</p>",
+    "is_standard": 0,
+    "login_required": 1,
+    "max_attachment_size": 0,
+    "modified": "2025-01-23 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "KoraFlow Core",
+    "name": "glp1-intake",
+    "owner": "Administrator",
+    "payment_button_label": "Buy Now",
+    "published": 1,
+    "route": "glp1-intake",
+    "route_to_success_link": 0,
+    "show_attachments": 0,
+    "show_in_grid": 0,
+    "show_sidebar": 1,
+    "sidebar_items": [],
+    "success_message": "Thank you for completing the intake form. Your patient profile has been created.",
+    "success_url": "/me",
+    "title": "GLP-1 Intake Form",
+    "web_form_fields": [
+        {
+            "fieldname": "section_1_personal_vitals",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Section 1: Personal Identification and Vital Metrics",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "first_name",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "First Name",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "last_name",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Last Name",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "dob",
+            "fieldtype": "Date",
+            "hidden": 0,
+            "label": "Date of Birth",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "sex",
+            "fieldtype": "Link",
+            "hidden": 0,
+            "label": "Gender",
+            "options": "Gender",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break",
+            "hidden": 0,
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "email",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Email",
+            "options": "Email",
+            "read_only": 0,
+            "reqd": 1,
+            "default": ""
+        },
+        {
+            "fieldname": "mobile",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Mobile",
+            "options": "Phone",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "blood_group",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Blood Group",
+            "options": "\nA+\nA-\nB+\nB-\nAB+\nAB-\nO+\nO-",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "sa_id_number",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "South African ID Number",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "passport_number",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Passport Number",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "passport_country",
+            "fieldtype": "Link",
+            "hidden": 0,
+            "label": "Passport Country",
+            "options": "Country",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "custom_referrer_name",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Referrer Name",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_address",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Address Details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "address_line1",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Address Line 1",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "address_line2",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Address Line 2",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "city",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "City",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "state",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "State/Province",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "pincode",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Postal Code",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "country",
+            "fieldtype": "Link",
+            "hidden": 0,
+            "label": "Country",
+            "options": "Country",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_intake_vitals",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Vital Metrics",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_height_unit",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Height Unit",
+            "options": "\nFeet/Inches\nCentimeters",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "intake_height_feet",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "Height (Feet)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_height_inches",
+            "fieldtype": "Float",
+            "hidden": 0,
+            "label": "Height (Inches)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_height_cm",
+            "fieldtype": "Float",
+            "hidden": 0,
+            "label": "Height (cm)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "column_break_intake_1",
+            "fieldtype": "Column Break",
+            "hidden": 0,
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_unit",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Weight Unit",
+            "options": "\nPounds\nKilograms",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "intake_weight_pounds",
+            "fieldtype": "Float",
+            "hidden": 0,
+            "label": "Weight (lbs)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_kg",
+            "fieldtype": "Float",
+            "hidden": 0,
+            "label": "Weight (kg)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_bp_systolic",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "Blood Pressure (Systolic) mmHg",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_bp_diastolic",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "Blood Pressure (Diastolic) mmHg",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_heart_rate",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "Resting Heart Rate (BPM)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_endocrine",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Endocrine/Metabolic",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_diabetes_type_1",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Type 1 Diabetes - insulin dependant",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_underactive_thyroid",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Underactive thyroid",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_thyroid_ca",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Thyroid carcinoma/cancer",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_family_thyroid_ca",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Family history of thyroid carcinoma/cancer",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_diabetic_retinopathy",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Diabetic retinopathy (eye condition related to diabetes)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_hypoglycaemia",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Hypoglycaemia (Low blood sugar)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_men2",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "MEN 2 (Multiple endocrine neoplasia type 2)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_endocrine",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Any other endocrine/metabolic condition",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_endocrine_none",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "None of the above",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_endocrine_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Additional details (If necessary)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_lkd",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Liver/Kidney/Digestive",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_pancreatitis",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Pancreatitis (Inflammation of the pancreas)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_kidney_disease",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Kidney disease",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_gastro_disease",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Gastrointestinal disease",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_gastroparesis",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Gastroparesis (Delayed stomach emptying)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_gallbladder_disease",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Gallbladder disease (Includes gallstones or gallbladder inflammation)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_lkd",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Any other Liver/Kidney/Digestive condition",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_constipation",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Constipation",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_lkd_none",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "None of the above",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_lkd_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Additional details (If necessary)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_neurological",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Neurological/Mental Health",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_neurological_disorder",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Neurological (nerve) disorders",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_depression",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Depression",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_mental",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Any other mental health condition",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_mental_none",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "None of the above",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_mental_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Additional details (If necessary)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_allergies",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Allergies",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_severe_allergies",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Severe allergic reactions",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_carnitine_allergy",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Allergen to L-Carnitine",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_med_hypersensitivity",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Hypersensitivity to medication",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_skin_sensitivity",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Skin sensitivities",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_allergies",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Any other allergies",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_allergies_none",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "None of the above",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_allergies_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Additional details (If necessary)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_general",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "General health conditions",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_dehydration",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Dehydration",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_abnormal_labs",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Any abnormal blood results",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_pregnant",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Pregnancy",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_breastfeeding",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Breastfeeding",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_general",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "Any other general health issues",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_general_none",
+            "fieldtype": "Check",
+            "hidden": 0,
+            "label": "None of the above",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_general_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Additional details (If necessary)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_weight_mgmt",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Other weight management protocols",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_injectables",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Weight management injectables",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_date_started",
+            "fieldtype": "Date",
+            "hidden": 0,
+            "label": "Date started",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_date_stopped",
+            "fieldtype": "Date",
+            "hidden": 0,
+            "label": "Date stopped",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_period",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Time period used",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_highest_dose",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Highest dosage reached",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_loss_kg",
+            "fieldtype": "Float",
+            "hidden": 0,
+            "label": "Weight loss on product(kg)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_weight_stop_reason",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Reason treatment was stopped",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_other_med_info",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Other medical information",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_medical_issues",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Are there any other medical issues we should be made aware of?",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_exercise",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Exercise",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_exercise_frequency",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "How many times do you exercise per week?",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_exercise_aerobic",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "Aerobic - how many times?",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_exercise_strength",
+            "fieldtype": "Int",
+            "hidden": 0,
+            "label": "Strength/weight - how many times?",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_surgical_med",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Surgical/medical history & medication",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_recent_gp_visit",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Have you seen a GP recently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_abnormal_labs_recent",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Have you had any abnormal blood results or anything we should be aware of?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_abnormal_labs_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please provide details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_recent_op",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Did you have any operations in the past 6 weeks?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_recent_op_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please provide details on recent operation(s)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_planned_op",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you plan any operations in the next 6 weeks?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_planned_op_details",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please provide details on planned operation(s)",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "section_medications_detailed",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Medications",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_uses_diabetes_meds",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you use any Diabetes medications currently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_diabetes_meds_list",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please list the Diabetes medications you are using and provide details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_uses_vitamins",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you use any vitamins and supplements currently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_vitamins_list",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please list vitamins and supplements you are using and provide details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_uses_birth_control",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you use any birth control medicines currently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_birth_control_list",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please list the birth control medicines you are using and provide details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_uses_otc",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you use any OTC (Over-the-counter) medicines currently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_otc_list",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please list the OTC (Over-the-counter) medicines you are using and provide details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_uses_chronic",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you use any chronic medicines currently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_chronic_list",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please list the chronic medications you are using and provide details",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_uses_other_meds",
+            "fieldtype": "Select",
+            "hidden": 0,
+            "label": "Do you use any other medications currently?",
+            "options": "\nYes\nNo",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "intake_other_meds_list",
+            "fieldtype": "Small Text",
+            "hidden": 0,
+            "label": "Please list the other medications you are using and provide details",
+            "read_only": 0,
+            "reqd": 0
+        }
+    ]
+}

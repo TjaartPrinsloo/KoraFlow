@@ -652,7 +652,7 @@ def setup_healthcare_dispensing_system():
 		from koraflow_core.setup_custom_fields import setup_custom_fields
 		setup_custom_fields()
 	except Exception as e:
-		frappe.log_error(f"Error setting up custom fields: {str(e)}", "Setup")
+		frappe.log_error(title="Setup Error", message=f"Error setting up custom fields: {str(e)}")
 	
 	frappe.msgprint(_("Healthcare dispensing system setup completed successfully!"))
 

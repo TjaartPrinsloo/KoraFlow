@@ -72,182 +72,159 @@ def generate_medical_summary(intake_data, patient_name=None):
 			frappe.logger().info(f"Generated medical summary for patient {patient_name or 'Unknown'}")
 			return summary
 		else:
-			frappe.log_error("Empty response from Ollama medical model", "Medical Summary Generation")
+			frappe.log_error(title="Medical Summary Generation", message="Empty response from Ollama medical model")
 			return None
 			
 	except requests.exceptions.RequestException as e:
-		frappe.log_error(f"Ollama API error: {str(e)}", "Medical Summary Generation")
+		frappe.log_error(title="Medical Summary Generation", message=f"Ollama API error: {str(e)}")
 		return None
 	except Exception as e:
-		frappe.log_error(f"Error generating medical summary: {str(e)}", "Medical Summary Generation")
+		frappe.log_error(title="Medical Summary Generation", message=f"Error generating medical summary: {str(e)}")
 		return None
 
 
 def format_intake_data_for_llm(intake_data, patient_name=None):
 	"""
 	Format intake form data into a structured text format for LLM processing
-	
-	Args:
-		intake_data: Dictionary containing intake form data
-		patient_name: Optional patient name
-		
-	Returns:
-		str: Formatted text representation of intake data
 	"""
 	lines = []
 	
 	if patient_name:
 		lines.append(f"Patient: {patient_name}")
 	
-	# Demographics
+	# Demographics & Vitals
+	demo = []
 	if intake_data.get('first_name') or intake_data.get('last_name'):
-		name = f"{intake_data.get('first_name', '')} {intake_data.get('last_name', '')}".strip()
-		if name:
-			lines.append(f"Name: {name}")
-	
-	if intake_data.get('dob'):
-		lines.append(f"Date of Birth: {intake_data.get('dob')}")
-	
+		demo.append(f"Name: {intake_data.get('first_name', '')} {intake_data.get('last_name', '')}".strip())
+	if intake_data.get('dob') or intake_data.get('date_of_birth'):
+		demo.append(f"DOB: {intake_data.get('dob') or intake_data.get('date_of_birth')}")
 	if intake_data.get('sex') or intake_data.get('biological_sex'):
-		sex = intake_data.get('sex') or intake_data.get('biological_sex')
-		lines.append(f"Gender: {sex}")
+		demo.append(f"Gender: {intake_data.get('sex') or intake_data.get('biological_sex')}")
 	
-	# Vital Signs
 	vitals = []
-	if intake_data.get('intake_height_feet') and intake_data.get('intake_height_inches'):
-		vitals.append(f"Height: {intake_data.get('intake_height_feet')}'{intake_data.get('intake_height_inches')}\"")
-	elif intake_data.get('intake_height_cm'):
-		vitals.append(f"Height: {intake_data.get('intake_height_cm')} cm")
+	if intake_data.get('intake_height_cm'): vitals.append(f"Height: {intake_data.get('intake_height_cm')}cm")
+	if intake_data.get('intake_weight_kg'): vitals.append(f"Weight: {intake_data.get('intake_weight_kg')}kg")
+	if intake_data.get('intake_bp_systolic'): vitals.append(f"BP: {intake_data.get('intake_bp_systolic')}/{intake_data.get('intake_bp_diastolic')}")
+	if intake_data.get('intake_heart_rate'): vitals.append(f"HR: {intake_data.get('intake_heart_rate')}bpm")
 	
-	if intake_data.get('intake_weight_pounds'):
-		vitals.append(f"Weight: {intake_data.get('intake_weight_pounds')} lbs")
-	elif intake_data.get('intake_weight_kg'):
-		vitals.append(f"Weight: {intake_data.get('intake_weight_kg')} kg")
+	if demo: lines.append("Demographics: " + ", ".join(demo))
+	if vitals: lines.append("Vitals: " + ", ".join(vitals))
+
+	# Section 1: Endocrine/Metabolic
+	endocrine = []
+	endo_map = {
+		"intake_diabetes_type_1": "Type 1 Diabetes (Insulin Dependent)",
+		"intake_underactive_thyroid": "Underactive Thyroid",
+		"intake_thyroid_ca": "Thyroid Carcinoma/Cancer",
+		"intake_family_thyroid_ca": "Family History of Thyroid Carcinoma",
+		"intake_diabetic_retinopathy": "Diabetic Retinopathy",
+		"intake_hypoglycaemia": "Hypoglycaemia",
+		"intake_men2": "MEN 2",
+		"intake_other_endocrine": "Other Endocrine Condition"
+	}
+	for key, label in endo_map.items():
+		if intake_data.get(key) == "1" or intake_data.get(key) is True:
+			endocrine.append(label)
+	if intake_data.get("intake_endocrine_details"):
+		endocrine.append(f"Details: {intake_data.get('intake_endocrine_details')}")
+	if endocrine: lines.append("Endocrine/Metabolic: " + ", ".join(endocrine))
+
+	# Section 2: Liver/Kidney/Digestive
+	lkd = []
+	lkd_map = {
+		"intake_pancreatitis": "Pancreatitis",
+		"intake_kidney_disease": "Kidney Disease",
+		"intake_gastro_disease": "Gastrointestinal Disease",
+		"intake_gastroparesis": "Gastroparesis",
+		"intake_gallbladder_disease": "Gallbladder Disease",
+		"intake_other_lkd": "Other LKD Condition",
+		"intake_constipation": "Constipation"
+	}
+	for key, label in lkd_map.items():
+		if intake_data.get(key) == "1" or intake_data.get(key) is True:
+			lkd.append(label)
+	if intake_data.get("intake_lkd_details"):
+		lkd.append(f"Details: {intake_data.get('intake_lkd_details')}")
+	if lkd: lines.append("Liver/Kidney/Digestive: " + ", ".join(lkd))
+
+	# Section 3: Mental Health
+	mental = []
+	mental_map = {
+		"intake_depression": "Depression",
+		"intake_anxiety": "Anxiety",
+		"intake_eating_disorder": "Eating Disorder",
+		"intake_other_mental": "Other Mental Health Condition"
+	}
+	for key, label in mental_map.items():
+		if intake_data.get(key) == "1" or intake_data.get(key) is True:
+			mental.append(label)
+	if intake_data.get("intake_mental_details"):
+		mental.append(f"Details: {intake_data.get('intake_mental_details')}")
+	if mental: lines.append("Mental Health: " + ", ".join(mental))
+
+	# Section 4: General Medical
+	general = []
+	gen_map = {
+		"intake_heart_disease": "Heart Disease",
+		"intake_high_bp": "High Blood Pressure",
+		"intake_med_allergies": "Medication Allergies",
+		"intake_other_allergy": "Other Allergy"
+	}
+	for key, label in gen_map.items():
+		if intake_data.get(key) == "1" or intake_data.get(key) is True:
+			general.append(label)
+	if intake_data.get("intake_general_details"):
+		general.append(f"Details: {intake_data.get('intake_general_details')}")
+	if general: lines.append("General Medical: " + ", ".join(general))
+
+	# Section 5: Weight History
+	weight_hist = []
+	if intake_data.get("intake_weight_injectables") == "Yes":
+		weight_hist.append("Prior Weight Injectables Used")
+		if intake_data.get("intake_weight_date_started"): weight_hist.append(f"Started: {intake_data.get('intake_weight_date_started')}")
+		if intake_data.get("intake_weight_date_stopped"): weight_hist.append(f"Stopped: {intake_data.get('intake_weight_date_stopped')}")
+		if intake_data.get("intake_weight_period"): weight_hist.append(f"Period: {intake_data.get('intake_weight_period')}")
+		if intake_data.get("intake_weight_highest_dose"): weight_hist.append(f"Max Dose: {intake_data.get('intake_weight_highest_dose')}")
+		if intake_data.get("intake_weight_loss_kg"): weight_hist.append(f"Weight Loss: {intake_data.get('intake_weight_loss_kg')}kg")
+		if intake_data.get("intake_weight_stop_reason"): weight_hist.append(f"Stop Reason: {intake_data.get('intake_weight_stop_reason')}")
+	if weight_hist: lines.append("Weight Management History: " + ", ".join(weight_hist))
+
+	# Section 6: Exercise & Other
+	exercise = []
+	if intake_data.get("intake_exercise_frequency"): exercise.append(f"Frequency: {intake_data.get('intake_exercise_frequency')}x/week")
+	if intake_data.get("intake_exercise_aerobic"): exercise.append(f"Aerobic: {intake_data.get('intake_exercise_aerobic')}x/week")
+	if intake_data.get("intake_exercise_strength"): exercise.append(f"Strength: {intake_data.get('intake_exercise_strength')}x/week")
+	if exercise: lines.append("Exercise Habits: " + ", ".join(exercise))
 	
-	if intake_data.get('intake_bp_systolic') and intake_data.get('intake_bp_diastolic'):
-		vitals.append(f"Blood Pressure: {intake_data.get('intake_bp_systolic')}/{intake_data.get('intake_bp_diastolic')}")
-	
-	if intake_data.get('intake_heart_rate'):
-		vitals.append(f"Heart Rate: {intake_data.get('intake_heart_rate')} bpm")
-	
-	if vitals:
-		lines.append("Vital Signs: " + ", ".join(vitals))
-	
-	# High Risk Conditions
-	high_risk = []
-	if intake_data.get('intake_mtc'):
-		high_risk.append("Multiple Endocrine Neoplasia Type 2 (MEN2)")
-	if intake_data.get('intake_pancreatitis'):
-		high_risk.append("History of Pancreatitis")
-	if intake_data.get('intake_gallstones'):
-		high_risk.append("Gallstones")
-	if intake_data.get('intake_gallbladder_removal'):
-		high_risk.append("Gallbladder Removal")
-	if intake_data.get('intake_gastroparesis'):
-		high_risk.append("Gastroparesis")
-	if intake_data.get('intake_frequent_nausea'):
-		high_risk.append("Frequent Nausea")
-	if intake_data.get('intake_early_fullness'):
-		high_risk.append("Early Fullness")
-	if intake_data.get('intake_diabetes_type') and intake_data.get('intake_diabetes_type') != "No Diabetes":
-		high_risk.append(f"Diabetes: {intake_data.get('intake_diabetes_type')}")
-	if intake_data.get('intake_upcoming_surgery'):
-		surgery_info = "Upcoming Surgery"
-		if intake_data.get('intake_surgery_details'):
-			surgery_info += f" ({intake_data.get('intake_surgery_details')})"
-		high_risk.append(surgery_info)
-	
-	if high_risk:
-		lines.append("High Risk Conditions: " + ", ".join(high_risk))
-	
-	# Organ Systems
-	organ_issues = []
-	if intake_data.get('intake_kidney_disease'):
-		organ_issues.append("Kidney Disease")
-		if intake_data.get('intake_egfr'):
-			organ_issues.append(f"eGFR: {intake_data.get('intake_egfr')}")
-		if intake_data.get('intake_creatinine'):
-			organ_issues.append(f"Creatinine: {intake_data.get('intake_creatinine')}")
-	if intake_data.get('intake_diabetic_retinopathy'):
-		organ_issues.append("Diabetic Retinopathy")
-	if intake_data.get('intake_heart_attack'):
-		organ_issues.append("History of Heart Attack")
-	if intake_data.get('intake_stroke'):
-		organ_issues.append("History of Stroke")
-	if intake_data.get('intake_heart_failure'):
-		organ_issues.append("Heart Failure")
-	
-	if organ_issues:
-		lines.append("Organ System Issues: " + ", ".join(organ_issues))
-	
-	# Medications
-	medications = []
-	if intake_data.get('intake_taking_insulin'):
-		medications.append("Insulin")
-		if intake_data.get('intake_insulin_dose'):
-			medications.append(f"Insulin Dose: {intake_data.get('intake_insulin_dose')}")
-	if intake_data.get('intake_taking_sulfonylureas'):
-		medications.append("Sulfonylureas")
-	if intake_data.get('intake_narrow_window_drugs'):
-		medications.append("Narrow Therapeutic Window Drugs")
-	
-	if intake_data.get('intake_known_allergies'):
-		medications.append(f"Allergies: {intake_data.get('intake_known_allergies')}")
-	
-	if intake_data.get('intake_alcohol_frequency'):
-		medications.append(f"Alcohol: {intake_data.get('intake_alcohol_frequency')}")
-	
-	if medications:
-		lines.append("Current Medications: " + ", ".join(medications))
-	
-	# GLP-1 History
-	glp1_history = []
-	if intake_data.get('intake_med_ozempic'):
-		glp1_history.append("Ozempic")
-	if intake_data.get('intake_med_wegovy'):
-		glp1_history.append("Wegovy")
-	if intake_data.get('intake_med_mounjaro'):
-		glp1_history.append("Mounjaro")
-	if intake_data.get('intake_med_zepbound'):
-		glp1_history.append("Zepbound")
-	if intake_data.get('intake_highest_dose'):
-		glp1_history.append(f"Highest Dose: {intake_data.get('intake_highest_dose')}")
-	if intake_data.get('intake_last_dose_date'):
-		glp1_history.append(f"Last Dose Date: {intake_data.get('intake_last_dose_date')}")
-	
-	if glp1_history:
-		lines.append("GLP-1 Medication History: " + ", ".join(glp1_history))
-	
-	# Side Effects
-	side_effects = []
-	if intake_data.get('intake_se_nausea'):
-		side_effects.append("Nausea")
-	if intake_data.get('intake_se_vomiting'):
-		side_effects.append("Vomiting")
-	if intake_data.get('intake_se_diarrhea'):
-		side_effects.append("Diarrhea")
-	if intake_data.get('intake_se_constipation'):
-		side_effects.append("Constipation")
-	if intake_data.get('intake_se_reflux'):
-		side_effects.append("Reflux")
-	if intake_data.get('intake_se_severity'):
-		side_effects.append(f"Severity: {intake_data.get('intake_se_severity')}")
-	
-	if side_effects:
-		lines.append("Reported Side Effects: " + ", ".join(side_effects))
-	
-	# Reproductive Health
-	reproductive = []
-	if intake_data.get('intake_pregnant'):
-		reproductive.append("Currently Pregnant")
-	if intake_data.get('intake_breastfeeding'):
-		reproductive.append("Currently Breastfeeding")
-	if intake_data.get('intake_planning_conceive'):
-		reproductive.append("Planning to Conceive")
-	
-	if reproductive:
-		lines.append("Reproductive Health: " + ", ".join(reproductive))
-	
+	if intake_data.get("intake_other_medical_issues"):
+		lines.append(f"Other Health Concerns: {intake_data.get('intake_other_medical_issues')}")
+
+	# Section 7: Surgical History
+	surgical = []
+	if intake_data.get("intake_recent_gp_visit") == "Yes": surgical.append("Visited GP Recently")
+	if intake_data.get("intake_abnormal_labs_recent") == "Yes": 
+		surgical.append(f"Abnormal Labs: {intake_data.get('intake_abnormal_labs_details')}")
+	if intake_data.get("intake_recent_op") == "Yes":
+		surgical.append(f"Recent Operations: {intake_data.get('intake_recent_op_details')}")
+	if intake_data.get("intake_planned_op") == "Yes":
+		surgical.append(f"Planned Operations: {intake_data.get('intake_planned_op_details')}")
+	if surgical: lines.append("Surgical/Clinical History: " + ", ".join(surgical))
+
+	# Section 8: Detailed Medications
+	detailed_meds = []
+	med_cats = {
+		"intake_diabetes_meds_list": "Diabetes Meds",
+		"intake_vitamins_list": "Vitamins/Supps",
+		"intake_birth_control_list": "Birth Control",
+		"intake_otc_list": "OTC Meds",
+		"intake_chronic_list": "Chronic Meds",
+		"intake_other_meds_list": "Other Meds"
+	}
+	for key, label in med_cats.items():
+		if intake_data.get(key):
+			detailed_meds.append(f"{label}: {intake_data.get(key)}")
+	if detailed_meds: lines.append("Detailed Medications: " + " | ".join(detailed_meds))
+
 	return "\n".join(lines)
 
 
@@ -352,7 +329,7 @@ def classify_bmi_rag(weight_kg, height_cm, age, sex):
 			res = response.json()
 			return json.loads(res.get('response', '{}'))
 	except Exception as e:
-		frappe.log_error(f"BMI RAG Error: {str(e)}")
+		frappe.log_error(title="BMI RAG Error", message=f"BMI RAG Error: {str(e)}")
 		# Fallback to standard calculation if RAG fails
 		return None
 

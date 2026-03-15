@@ -16,7 +16,50 @@
             user: "{{ frappe.session.user }}",
             csrf_token: "{{ frappe.session.csrf_token }}"
         };
+
+        // Alerts Helper
+        frappe.show_alert = function (opts) {
+            const indicator = opts.indicator || 'blue';
+            const msg = opts.message || opts;
+            const toast = document.createElement('div');
+            // Using Tailwind classes for styling - bg-primary is #C1E12F (lime), bg-red-500 for error
+            // Text color needs to be legible. Primary is light, so text-charcoal. Red is dark, so text-white.
+            let bgClass = 'bg-charcoal text-white';
+            if (indicator === 'green') bgClass = 'bg-primary text-charcoal font-bold';
+            if (indicator === 'red') bgClass = 'bg-red-500 text-white';
+
+            toast.className = `fixed top-20 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-y-0 opacity-0 ${bgClass}`;
+            toast.style.animation = 'slideIn 0.3s forwards';
+
+            toast.innerHTML = `
+                <span class="material-symbols-outlined text-xl">${indicator === 'green' ? 'check_circle' : 'info'}</span>
+                <span>${msg}</span>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => toast.classList.remove('opacity-0'));
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
     </script>
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
@@ -172,12 +215,11 @@
                 <span class="material-symbols-outlined">settings_suggest</span>
                 <span class="font-semibold text-sm">{{ _("Profile") }}</span>
             </a>
-            </a>
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
             <!-- Logout Button -->
-            <a href="/?cmd=web_logout"
-                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+            <a href="/api/method/koraflow_core.utils.auth.logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all mb-4">
                 <span class="material-symbols-outlined text-sm">logout</span>
                 {{ _("Log Out") }}
             </a>
@@ -200,27 +242,17 @@
                     <div class="text-right hidden sm:block">
                         <p class="text-sm font-bold leading-none">{{ patient.first_name }} {{ patient.last_name or "" }}
                         </p>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
-                            Member") }}</p>
                     </div>
                     <div class="relative group cursor-pointer"
                         onclick="document.getElementById('profile-upload').click()">
                         <div
                             class="size-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
-                            {% if patient.image %}
-                            <img src="{{ patient.image }}" alt="Profile" class="w-full h-full object-cover">
-                            {% else %}
-                            <span class="font-bold text-primary text-sm uppercase">
+                            <span class="font-bold text-primary text-xs uppercase">
                                 {{ patient.first_name[0] if patient.first_name else '' }}{{ patient.last_name[0] if
                                 patient.last_name else '' }}
                             </span>
-                            {% endif %}
                         </div>
-                        <!-- Edit Overlay -->
-                        <div
-                            class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="material-symbols-outlined text-white text-[10px]">edit</span>
-                        </div>
+                        <!-- Edit Overlay Removed for now as we use initials -->
                     </div>
                     <input type="file" id="profile-upload" class="hidden" accept="image/*"
                         onchange="uploadProfileImage(this)">
@@ -369,8 +401,29 @@
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{ _("New
                                 Password")
                                 }}</label>
-                            <input type="password" name="new_password" required
+                            <input type="password" name="new_password" id="new_password" required
                                 class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
+
+                            <!-- Password Strength Indicators -->
+                            <div class="mt-2 space-y-1 pl-1" id="password-requirements">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Password
+                                    Requirements:</p>
+                                <ul class="text-xs text-slate-500 space-y-0.5" id="req-list">
+                                    <li id="req-length" class="flex items-center gap-1 transition-colors"><span
+                                            class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 8+ characters</li>
+                                    <li id="req-upper" class="flex items-center gap-1 transition-colors"><span
+                                            class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 uppercase letter
+                                    </li>
+                                    <li id="req-lower" class="flex items-center gap-1 transition-colors"><span
+                                            class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 lowercase letter
+                                    </li>
+                                    <li id="req-number" class="flex items-center gap-1 transition-colors"><span
+                                            class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 number</li>
+                                    <li id="req-special" class="flex items-center gap-1 transition-colors"><span
+                                            class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 special char
+                                        (!@#$%...)</li>
+                                </ul>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
@@ -421,8 +474,8 @@
         const data = Object.fromEntries(formData.entries());
         // Simple loading state
         const btn = e.target.querySelector('button[type="submit"]');
-        const originalText = btn.innerText;
-        btn.innerText = 'Saving...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span> Saving...';
         btn.disabled = true;
 
         try {
@@ -436,21 +489,82 @@
             });
 
             if (response.ok) {
-                // Success Toast or Alert would be better, but sticking to basic alert for now
-                alert('Profile updated successfully');
-                window.location.reload();
+                frappe.show_alert({ message: 'Profile updated successfully', indicator: 'green' });
+                // Slight delay to let user see success message before reload
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 const err = await response.json();
-                alert('Error: ' + (err.message || 'Update failed'));
+                frappe.show_alert({ message: 'Error: ' + (err.message || 'Update failed'), indicator: 'red' });
             }
         } catch (error) {
             console.error(error);
-            alert('An error occurred');
+            frappe.show_alert({ message: 'An error occurred while saving', indicator: 'red' });
         } finally {
-            btn.innerText = originalText;
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
+
+    // Bio Sex
+    // ...
+
+    // Password Validation Logic
+    const passwordInput = document.getElementById('new_password');
+    // Re-select elements scoped to this page if needed, but since IDs are unique per page, this works
+    // However, make sure IDs in HTML match what we use here. 
+    // I used req-length etc in HTML replacement above.
+
+    // We can reuse the same logic
+    const reqList = {
+        length: { regex: /.{8,}/, el: document.getElementById('req-length') },
+        upper: { regex: /[A-Z]/, el: document.getElementById('req-upper') },
+        lower: { regex: /[a-z]/, el: document.getElementById('req-lower') },
+        number: { regex: /[0-9]/, el: document.getElementById('req-number') },
+        special: { regex: /[!@#$%^&*(),.?":{}|<>]/, el: document.getElementById('req-special') }
+    };
+
+    function validatePassword(e) {
+        const val = e.target.value;
+        let allValid = true;
+
+        // Need to re-fetch elements here if they were not in DOM when script loaded? 
+        // No, script is at bottom of body, elements are above.
+        // But let's be safe and select them inside function or ensure reqList is populated correctly.
+        // ACTUALLY, I need to make sure I don't reference null elements if this script runs on page load and elements are dynamically added? 
+        // No, this is a standard page load.
+
+        // Re-populate reqList elements to be sure
+        const currentReqList = {
+            length: { regex: /.{8,}/, el: document.getElementById('req-length') },
+            upper: { regex: /[A-Z]/, el: document.getElementById('req-upper') },
+            lower: { regex: /[a-z]/, el: document.getElementById('req-lower') },
+            number: { regex: /[0-9]/, el: document.getElementById('req-number') },
+            special: { regex: /[!@#$%^&*(),.?":{}|<>]/, el: document.getElementById('req-special') }
+        };
+
+        for (const [key, req] of Object.entries(currentReqList)) {
+            if (!req.el) continue;
+            const isValid = req.regex.test(val);
+            const icon = req.el.querySelector('span');
+
+            if (isValid) {
+                req.el.classList.remove('text-slate-500');
+                req.el.classList.add('text-green-600', 'font-medium');
+                icon.classList.remove('bg-slate-300');
+                icon.classList.add('bg-green-500');
+            } else {
+                req.el.classList.add('text-slate-500');
+                req.el.classList.remove('text-green-600', 'font-medium');
+                icon.classList.add('bg-slate-300');
+                icon.classList.remove('bg-green-500');
+                allValid = false;
+            }
+        }
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener('input', validatePassword);
+    }
 
     document.getElementById('password-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -458,13 +572,13 @@
         const data = Object.fromEntries(formData.entries());
 
         if (data.new_password !== data.confirm_password) {
-            alert('Passwords do not match');
+            frappe.show_alert({ message: 'Passwords do not match', indicator: 'red' });
             return;
         }
 
         const btn = e.target.querySelector('button[type="submit"]');
-        const originalText = btn.innerText;
-        btn.innerText = 'Updating...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span> Updating...';
         btn.disabled = true;
 
         try {
@@ -478,17 +592,17 @@
             });
 
             if (response.ok) {
-                alert('Password updated successfully');
+                frappe.show_alert({ message: 'Password updated successfully', indicator: 'green' });
                 e.target.reset();
             } else {
                 const err = await response.json();
-                alert('Error: ' + (err.message || 'Update failed'));
+                frappe.show_alert({ message: 'Error: ' + (err.message || 'Update failed'), indicator: 'red' });
             }
         } catch (error) {
             console.error(error);
-            alert('An error occurred');
+            frappe.show_alert({ message: 'An error occurred', indicator: 'red' });
         } finally {
-            btn.innerText = originalText;
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
@@ -506,7 +620,7 @@
 
             try {
                 // Show loading state (optimistic)
-                frappe.show_alert?.({ message: 'Uploading...', indicator: 'blue' }) || alert('Uploading...');
+                frappe.show_alert({ message: 'Uploading profile picture...', indicator: 'blue' });
 
                 const response = await fetch('/api/method/upload_file', {
                     method: 'POST',
@@ -519,15 +633,15 @@
                 if (response.ok) {
                     const data = await response.json();
                     // Success
-                    alert('Profile picture updated!');
-                    window.location.reload();
+                    frappe.show_alert({ message: 'Profile picture updated!', indicator: 'green' });
+                    setTimeout(() => window.location.reload(), 1000);
                 } else {
                     const err = await response.json();
                     throw new Error(err.message);
                 }
             } catch (error) {
                 console.error(error);
-                alert('Upload failed: ' + error.message);
+                frappe.show_alert({ message: 'Upload failed: ' + error.message, indicator: 'red' });
             }
         }
     }

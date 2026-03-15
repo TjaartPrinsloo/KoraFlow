@@ -50,9 +50,9 @@ The Courier Guy integration has been successfully implemented. Here's what to te
   - Links to waybill details
 
 ### 6. **API Endpoints**
-- **Public Tracking**: `/api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_tracking_by_number`
-- **Patient Tracking**: `/api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_patient_tracking`
-- **Dashboard Data**: `/api/method/koraflow_core.koraflow_core.api.courier_guy_dashboard.get_courier_guy_dashboard_data`
+- **Public Tracking**: `/api/method/koraflow_core.api.courier_guy_tracking.get_tracking_by_number`
+- **Patient Tracking**: `/api/method/koraflow_core.api.courier_guy_tracking.get_patient_tracking`
+- **Dashboard Data**: `/api/method/koraflow_core.api.courier_guy_dashboard.get_courier_guy_dashboard_data`
 
 ## 🧪 Testing Checklist
 

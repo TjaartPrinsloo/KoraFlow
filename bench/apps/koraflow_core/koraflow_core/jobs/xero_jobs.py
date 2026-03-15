@@ -29,12 +29,12 @@ def xero_webhook():
     try:
         payload = json.loads(frappe.request.data)
     except json.JSONDecodeError:
-        frappe.log_error("Invalid JSON in Xero webhook", "Xero Webhook")
+        frappe.log_error(title="Xero Webhook", message="Invalid JSON in Xero webhook")
         return {"status": "error", "message": "Invalid JSON"}
     
     # Xero sends validation requests - respond immediately
     if payload.get("firstEventSequence") == 0:
-        frappe.log_error("Xero webhook validation request received", "Xero Webhook")
+        frappe.log_error(title="Xero Webhook", message="Xero webhook validation request received")
         return {"status": "ok"}
     
     events = payload.get("events", [])
@@ -85,12 +85,11 @@ def process_xero_invoice_update(xero_invoice_id, tenant_id=None):
         try:
             xero_invoice = api.get_invoice(tenant, xero_invoice_id)
         except Exception as api_error:
-            frappe.log_error(f"Error fetching Xero invoice {xero_invoice_id}: {str(api_error)}", 
-                           "Xero Webhook")
+            frappe.log_error(title="Xero Invoice Error", message=f"Error fetching Xero invoice {xero_invoice_id}: {str(api_error)}")
             return
         
         if not xero_invoice or not xero_invoice.invoices:
-            frappe.log_error(f"Xero invoice {xero_invoice_id} not found", "Xero Webhook")
+            frappe.log_error(title="Xero Webhook", message=f"Xero invoice {xero_invoice_id} not found")
             return
         
         invoice = xero_invoice.invoices[0]
@@ -111,7 +110,7 @@ def process_xero_invoice_update(xero_invoice_id, tenant_id=None):
             )
         
         if not frappe_invoice:
-            frappe.log_error(f"No matching Frappe invoice for Xero {xero_invoice_id}", "Xero Webhook")
+            frappe.log_error(title="Xero Webhook", message=f"No matching Frappe invoice for Xero {xero_invoice_id}")
             return
         
         # Handle status
@@ -121,7 +120,7 @@ def process_xero_invoice_update(xero_invoice_id, tenant_id=None):
             handle_xero_void(frappe_invoice)
         
     except Exception as e:
-        frappe.log_error(f"Error processing Xero webhook: {str(e)}", "Xero Webhook")
+        frappe.log_error(title="Xero Webhook", message=f"Error processing Xero webhook: {str(e)}")
 
 
 def process_xero_payment_created(payment_id, tenant_id=None):
@@ -141,8 +140,7 @@ def process_xero_payment_created(payment_id, tenant_id=None):
         try:
             xero_payment = api.get_payment(tenant, payment_id)
         except Exception as api_error:
-            frappe.log_error(f"Error fetching Xero payment {payment_id}: {str(api_error)}", 
-                           "Xero Webhook")
+            frappe.log_error(title="Xero Payment Error", message=f"Error fetching Xero payment {payment_id}: {str(api_error)}")
             return
         
         if not xero_payment or not xero_payment.payments:
@@ -155,7 +153,7 @@ def process_xero_payment_created(payment_id, tenant_id=None):
             process_xero_invoice_update(payment.invoice.invoice_id, tenant_id)
         
     except Exception as e:
-        frappe.log_error(f"Error processing Xero payment webhook: {str(e)}", "Xero Webhook")
+        frappe.log_error(title="Xero Webhook", message=f"Error processing Xero payment webhook: {str(e)}")
 
 
 def handle_xero_payment(frappe_invoice_name, xero_invoice):
@@ -197,7 +195,7 @@ def handle_xero_payment(frappe_invoice_name, xero_invoice):
         frappe.logger().info(f"Created payment {payment.name} from Xero for invoice {frappe_invoice_name}")
         
     except Exception as e:
-        frappe.log_error(f"Error handling Xero payment: {str(e)}", "Xero Payment")
+        frappe.log_error(title="Xero Payment", message=f"Error handling Xero payment: {str(e)}")
 
 
 def handle_xero_void(frappe_invoice_name):
@@ -216,7 +214,7 @@ def handle_xero_void(frappe_invoice_name):
         frappe.logger().info(f"Invoice {frappe_invoice_name} marked as voided from Xero")
         
     except Exception as e:
-        frappe.log_error(f"Error handling Xero void: {str(e)}", "Xero Void")
+        frappe.log_error(title="Xero Void", message=f"Error handling Xero void: {str(e)}")
 
 
 def poll_xero_statuses():
@@ -233,7 +231,7 @@ def poll_xero_statuses():
         connector.sync_xero_payments()
         
     except Exception as e:
-        frappe.log_error(f"Error polling Xero statuses: {str(e)}", "Xero Poll")
+        frappe.log_error(title="Xero Poll", message=f"Error polling Xero statuses: {str(e)}")
 
 
 # ====================
@@ -259,4 +257,4 @@ def log_audit(event_type, ref_doctype, ref_name, patient, details=None):
             details=details or {}
         )
     except Exception as e:
-        frappe.log_error(f"Failed to create audit log: {str(e)}", "Xero Jobs Audit Log")
+        frappe.log_error(title="Xero Jobs Audit Log", message=f"Failed to create audit log: {str(e)}")

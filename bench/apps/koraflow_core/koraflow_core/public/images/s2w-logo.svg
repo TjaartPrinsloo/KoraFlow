@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Dark circle background -->
+  <circle cx="100" cy="100" r="100" fill="#282828"/>
+
+  <!-- S letter (white) -->
+  <!-- Upper half of S -->
+  <path d="M38,58 C38,48 46,40 62,40 L92,40 C100,40 106,46 106,54 L106,64 C106,72 100,78 92,78 L62,78 C58,78 56,80 56,84 L56,88 C56,92 58,94 62,94 L92,94 C108,94 118,104 118,118 L118,130 C118,144 108,154 92,154 L62,154 C46,154 36,144 36,130 L36,118 L56,118 C56,126 58,130 62,130 L92,130 C96,130 98,128 98,124 L98,120 C98,116 96,114 92,114 L62,114 C46,114 36,104 36,90 L36,78 C36,64 46,58 62,58 L92,58 C96,58 98,62 98,66 L78,66 C78,62 76,58 62,58 Z" fill="none"/>
+
+  <!-- Use <text> with proper embedded workaround for img tag support -->
+  <!-- The trick: add a <style> with generic system font that works cross-platform -->
+  <defs>
+    <style>
+      .s2w-text {
+        font-family: Impact, "Arial Black", "Franklin Gothic Heavy", sans-serif;
+        font-weight: 900;
+        font-style: italic;
+      }
+    </style>
+  </defs>
+
+  <!-- S - white -->
+  <text class="s2w-text" x="14" y="130" font-size="105" fill="white"
+        font-family="Impact, 'Arial Black', sans-serif" font-weight="900">S</text>
+  <!-- 2 - lime green -->
+  <text class="s2w-text" x="62" y="130" font-size="105" fill="#C1E12F"
+        font-family="Impact, 'Arial Black', sans-serif" font-weight="900">2</text>
+  <!-- W - white -->
+  <text class="s2w-text" x="110" y="130" font-size="105" fill="white"
+        font-family="Impact, 'Arial Black', sans-serif" font-weight="900">W</text>
+
+  <!-- Lime green underline bar -->
+  <rect x="14" y="145" width="172" height="12" rx="4" fill="#C1E12F"/>
+</svg>

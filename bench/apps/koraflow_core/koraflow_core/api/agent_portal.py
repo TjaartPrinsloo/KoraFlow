@@ -96,8 +96,9 @@ def request_payout(amount):
 	# My PayoutRequest logic creates Invoice on Submit.
 	# Let's Submit it.
 	pr.submit()
+	pr.reload()
 
-	return {"message": "Payout Request Created", "name": pr.name}
+	return {"message": "Payout Request Created", "name": pr.name, "invoice": pr.generated_invoice}
 
 @frappe.whitelist()
 def update_banking_details(bank_name, account_holder, account_number, branch_code, account_type):

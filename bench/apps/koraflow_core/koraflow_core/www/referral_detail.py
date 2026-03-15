@@ -66,10 +66,7 @@ def get_context(context):
 		)
 		
 		if not referral_exists:
-			frappe.log_error(
-				f"Permission violation: User {user_email} tried to access referral {referral_name}",
-				"Sales Partner Permission Violation"
-			)
+			frappe.log_error(title="Referral Detail Error", message=f"Permission violation: User {user_email} tried to access referral {referral_name}")
 			frappe.throw("Access Denied", frappe.PermissionError)
 		
 		referral = frappe.get_doc("Sales Partner Referral", referral_name)
@@ -77,8 +74,8 @@ def get_context(context):
 		# Double-check this referral belongs to the sales partner
 		if referral.sales_partner != sales_partner_name:
 			frappe.log_error(
-				f"Permission violation: User {user_email} tried to access referral {referral_name} belonging to {referral.sales_partner}",
-				"Sales Partner Permission Violation"
+				title="Referral Detail Error",
+				message=f"Permission violation: User {user_email} tried to access referral {referral_name} belonging to {referral.sales_partner}"
 			)
 			frappe.throw("Access Denied", frappe.PermissionError)
 		
@@ -113,7 +110,7 @@ def get_context(context):
 			except Exception as e:
 				# If query fails (likely due to permissions), commission_data remains None
 				# User can still access commission via report link
-				frappe.log_error(f"Could not fetch commission data: {str(e)}", "Sales Partner Commission")
+				frappe.log_error(title="Referral Detail Error", message=f"Could not fetch commission data for referral {referral_name}: {str(e)}")
 				commission_data = None
 		
 		# Get queries/comments for this referral

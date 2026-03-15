@@ -324,7 +324,7 @@ def generate_pdf_from_template(encounter_doc, practitioner_doc):
 		# If pypdf/reportlab not available, fall back to print format
 		raise Exception(f"PDF template filling requires pypdf and reportlab libraries. Install with: pip install pypdf reportlab. Error: {ie}")
 	except Exception as e:
-		frappe.log_error(f"Error filling PDF template: {str(e)}", "Prescription PDF Fill Error")
+		frappe.log_error(title="Prescription PDF Fill Error", message=f"Error filling PDF template: {str(e)}")
 		# Don't raise - fall back to print format instead
 		frappe.logger().warning(f"PDF template overlay failed, will use print format: {e}")
 		raise

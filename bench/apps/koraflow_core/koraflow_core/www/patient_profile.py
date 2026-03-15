@@ -57,6 +57,9 @@ def update_password(new_password):
     if frappe.session.user == "Guest":
         frappe.throw(_("Please login to change password"))
         
+    from koraflow_core.utils.password_utils import validate_password_strength
+    validate_password_strength(new_password)
+        
     from frappe.utils.password import update_password as _update_password
     _update_password(frappe.session.user, new_password)
     return True

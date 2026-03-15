@@ -142,7 +142,7 @@
 				Required") }}</h2>
 			<p class="text-slate-500 mb-8 max-w-md mx-auto">{{ _("Please log in to your patient portal account to
 				complete your clinical intake assessment.") }}</p>
-			<a href="/login?redirect-to=/glp1-intake-wizard"
+			<a href="/login?redirect-to=/intake"
 				class="inline-block bg-primary text-charcoal font-bold px-8 py-4 rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
 				{{ _("Log In to Continue") }}
 			</a>
@@ -206,13 +206,13 @@
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("First
 							Name") }}</label>
 						<input type="text" name="first_name" required
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 					</div>
 					<div>
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Last
 							Name") }}</label>
 						<input type="text" name="last_name" required
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 					</div>
 				</div>
 
@@ -221,13 +221,13 @@
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
 							_("Mobile Number") }}</label>
 						<input type="tel" name="mobile" required placeholder="+27..."
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 					</div>
 					<div>
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Date
 							of Birth") }}</label>
 						<input type="date" name="date_of_birth" required
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 					</div>
 				</div>
 
@@ -236,7 +236,7 @@
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
 							_("Biological Sex") }}</label>
 						<select name="biological_sex" required
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 							<option value="">{{ _("Select...") }}</option>
 							<option value="Male">{{ _("Male") }}</option>
 							<option value="Female">{{ _("Female") }}</option>
@@ -247,7 +247,7 @@
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Blood
 							Group") }}</label>
 						<select name="blood_group"
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 							<option value="">{{ _("Unknown/Select...") }}</option>
 							<option value="A+">A+</option>
 							<option value="A-">A-</option>
@@ -261,11 +261,21 @@
 					</div>
 				</div>
 
+				<div class="grid grid-cols-1 gap-6">
+					<div>
+						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Who
+							referred you to Slim2Well?") }}</label>
+						<input type="text" name="custom_referrer_name"
+							placeholder="{{ _('Referrer name or source...') }}"
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
+					</div>
+				</div>
+
 				<div class="border-t border-slate-100 dark:border-slate-800 my-4 pt-4">
 					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
 						_("Identification") }}</label>
 					<select name="id_type" id="id_type" required
-						class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary mb-4">
+						class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary mb-4">
 						<option value="">{{ _("Select ID Type...") }}</option>
 						<option value="sa_id">{{ _("South African ID") }}</option>
 						<option value="passport">{{ _("Passport") }}</option>
@@ -274,13 +284,13 @@
 					<div id="sa-id-group" class="hidden">
 						<input type="text" name="sa_id_number" id="sa_id_number" placeholder="13-digit SA ID Number"
 							pattern="[0-9]{13}" maxlength="13"
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 					</div>
 					<div id="passport-group" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
 						<input type="text" name="passport_number" id="passport_number" placeholder="Passport Number"
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 						<select name="passport_country" id="passport_country"
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 							<option value="">{{ _("Issuing Country...") }}</option>
 							<option value="South Africa">South Africa</option>
 							<option value="Zimbabwe">Zimbabwe</option>
@@ -291,327 +301,392 @@
 					</div>
 				</div>
 
-				<div class="grid grid-cols-2 gap-6">
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 					<div>
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
 							_("Height (cm)") }}</label>
 						<input type="number" name="intake_height_cm" required min="0" step="0.1"
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 						<input type="hidden" name="intake_height_unit" value="Centimeters">
 					</div>
 					<div>
 						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
 							_("Weight (kg)") }}</label>
 						<input type="number" name="intake_weight_kg" required min="0" step="0.1"
-							class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 						<input type="hidden" name="intake_weight_unit" value="Kilograms">
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+							_("Goal Weight (kg)") }}</label>
+						<input type="number" name="intake_goal_weight" required min="0" step="0.1"
+							class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-black p-3 focus:ring-primary focus:border-primary">
 					</div>
 				</div>
 
-				<div class="bg-primary/5 p-4 rounded-xl border border-primary/10">
+				<div class="bg-primary/5 p-4 rounded-xl border border-primary/20">
 					<h5 class="font-bold text-sm mb-3">{{ _("Vitals (Optional)") }}</h5>
 					<div class="grid grid-cols-3 gap-4">
 						<div>
 							<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">BP Systolic</label>
 							<input type="number" name="intake_bp_systolic"
-								class="w-full rounded-lg border-slate-200 text-sm p-2">
+								class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
 						</div>
 						<div>
 							<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">BP
 								Diastolic</label>
 							<input type="number" name="intake_bp_diastolic"
-								class="w-full rounded-lg border-slate-200 text-sm p-2">
+								class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
 						</div>
 						<div>
 							<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">Heart Rate</label>
 							<input type="number" name="intake_heart_rate"
-								class="w-full rounded-lg border-slate-200 text-sm p-2">
+								class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- STEP 2 -->
-			<div class="wizard-step hidden space-y-4" data-step="2">
-				<p
-					class="text-sm font-semibold text-slate-600 mb-4 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-					{{ _("Please indicate if you have or have had any of the following conditions:") }}</p>
+			<!-- STEP 2: Endocrine & Liver/Kidney/Digestive -->
+			<div class="wizard-step hidden space-y-8" data-step="2">
+				<div class="bg-primary/5 p-6 rounded-3xl border border-primary/20">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-2">{{ _("Endocrine/Metabolic") }}</h3>
+					<p class="text-xs text-slate-500 mb-6 uppercase tracking-wider font-semibold">{{ _("Select all
+						conditions currently experienced or in the past") }}</p>
 
-				{% set risks = [
-				("intake_mtc", "Personal or family history of Thyroid Cancer"),
-				("intake_men2", "Multiple Endocrine Neoplasia Type 2 (MEN2)"),
-				("intake_pancreatitis", "History of Pancreatitis"),
-				("intake_gallstones", "History of Gallstones"),
-				("intake_gallbladder_removal", "Gallbladder has been removed"),
-				("intake_gastroparesis", "Diagnosed with Gastroparesis"),
-				("intake_frequent_nausea", "Frequent Nausea"),
-				("intake_early_fullness", "Feel full very quickly when eating")
-				] %}
-
-				<div class="space-y-3">
-					{% for name, label in risks %}
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-primary/50 bg-slate-50 cursor-pointer transition-all">
-						<input type="checkbox" name="{{ name }}" value="1"
-							class="w-5 h-5 text-primary focus:ring-primary rounded">
-						<span class="text-sm font-medium">{{ _(label) }}</span>
-					</label>
-					{% endfor %}
-				</div>
-
-				<div class="pt-4 border-t border-slate-100">
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer mb-3">
-						<input type="checkbox" name="intake_upcoming_surgery" id="intake_upcoming_surgery" value="1"
-							class="w-5 h-5 text-primary focus:ring-primary rounded">
-						<span class="text-sm font-medium">{{ _("Surgery planned in the next 8 weeks?") }}</span>
-					</label>
-					<div id="surgery_details_group" class="hidden pl-8">
-						<textarea name="intake_surgery_details" rows="2"
-							placeholder="Please describe the planned surgery..."
-							class="w-full rounded-xl border-slate-200 bg-white p-3 text-sm focus:ring-primary"></textarea>
-					</div>
-				</div>
-			</div>
-
-			<!-- STEP 3 -->
-			<div class="wizard-step hidden space-y-6" data-step="3">
-				<div>
-					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Diabetes
-						Status") }}</label>
-					<select name="intake_diabetes_type" id="intake_diabetes_type" required
-						class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary focus:border-primary">
-						<option value="">Select...</option>
-						<option value="No Diabetes">No Diabetes</option>
-						<option value="Type 2 Diabetes">Type 2 Diabetes</option>
-						<option value="Type 1 Diabetes">Type 1 Diabetes</option>
-						<option value="Pre-diabetes">Pre-diabetes</option>
-						<option value="Gestational Diabetes (History)">History of Gestational Diabetes</option>
-					</select>
-				</div>
-
-				<div id="retinopathy_group" class="hidden bg-primary/5 p-4 rounded-xl space-y-4">
-					<label class="flex items-center gap-3">
-						<input type="checkbox" name="intake_diabetic_retinopathy" value="1"
-							class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">Diagnosed with Diabetic Retinopathy?</span>
-					</label>
-					<div>
-						<label class="block text-xs font-bold text-slate-500 mb-1">Date of Last Dilated Eye Exam</label>
-						<input type="date" name="intake_last_eye_exam" class="w-full rounded-lg border-slate-200">
-					</div>
-				</div>
-
-				<label
-					class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-					<input type="checkbox" name="intake_kidney_disease" value="1" class="w-5 h-5 text-primary rounded">
-					<span class="text-sm font-medium">History of Kidney Disease</span>
-				</label>
-
-				<!-- Hidden values -->
-				<input type="hidden" name="intake_egfr">
-				<input type="hidden" name="intake_creatinine">
-
-				<div class="space-y-3">
-					<p class="text-xs font-bold text-slate-400 uppercase">Cardiovascular History</p>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_heart_attack" value="1"
-							class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">History of Heart Attack</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_stroke" value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">History of Stroke</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_heart_failure" value="1"
-							class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">History of Heart Failure</span>
-					</label>
-				</div>
-			</div>
-
-			<!-- STEP 4 -->
-			<div class="wizard-step hidden space-y-6" data-step="4">
-				<div class="space-y-4">
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_taking_insulin" id="intake_taking_insulin" value="1"
-							class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">Currently Taking Insulin</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_taking_sulfonylureas" id="intake_taking_sulfonylureas"
-							value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">Taking Sulfonylureas (e.g., Gliclazide)</span>
-					</label>
-
-					<div id="insulin_dose_group" class="hidden pl-4 border-l-2 border-primary">
-						<label class="block text-xs font-bold text-slate-500 mb-2">Current Dose</label>
-						<input type="text" name="intake_insulin_dose" placeholder="e.g. 20 units daily"
-							class="w-full rounded-xl border-slate-200">
-					</div>
-
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_narrow_window_drugs" value="1"
-							class="w-5 h-5 text-primary rounded">
-						<span class="text-sm font-medium">Taking Narrow Therapeutic Drugs (Warfarin, Lithium,
-							etc.)</span>
-					</label>
-				</div>
-
-				<div>
-					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Known
-						Allergies") }}</label>
-					<textarea name="intake_known_allergies" rows="2" placeholder="List meds or foods, or 'None'"
-						class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary"></textarea>
-				</div>
-
-				<div>
-					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Alcohol
-						Frequency") }}</label>
-					<select name="intake_alcohol_frequency" required
-						class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black p-3 focus:ring-primary">
-						<option value="">Select...</option>
-						<option value="None">None</option>
-						<option value="Occasional (1-2/month)">Occasional (1-2/month)</option>
-						<option value="Moderate (1-2/week)">Moderate (1-2/week)</option>
-						<option value="Frequent (3+/week)">Frequent (3+/week)</option>
-					</select>
-				</div>
-			</div>
-
-			<!-- STEP 5 -->
-			<div class="wizard-step hidden space-y-6" data-step="5">
-				<div>
-					<p class="text-sm font-semibold mb-3">Previous GLP-1 Usage:</p>
-					<div class="grid grid-cols-2 gap-3">
-						<label class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg"><input type="checkbox"
-								name="intake_med_ozempic" value="1" class="rounded text-primary"> Ozempic</label>
-						<label class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg"><input type="checkbox"
-								name="intake_med_wegovy" value="1" class="rounded text-primary"> Wegovy</label>
-						<label class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg"><input type="checkbox"
-								name="intake_med_mounjaro" value="1" class="rounded text-primary"> Mounjaro</label>
-						<label class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg"><input type="checkbox"
-								name="intake_med_zepbound" value="1" class="rounded text-primary"> Zepbound</label>
-					</div>
-				</div>
-				<div class="grid grid-cols-2 gap-6">
-					<div>
-						<label class="block text-xs font-bold text-slate-500 mb-1">Highest Dose</label>
-						<input type="text" name="intake_highest_dose" class="w-full rounded-xl border-slate-200">
-					</div>
-					<div>
-						<label class="block text-xs font-bold text-slate-500 mb-1">Last Dose Date</label>
-						<input type="date" name="intake_last_dose_date" class="w-full rounded-xl border-slate-200">
-					</div>
-				</div>
-				<div>
-					<p class="text-sm font-semibold mb-3">Side Effects Experienced:</p>
-					<div class="flex flex-wrap gap-2 mb-4">
-						<label class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg text-sm"><input
-								type="checkbox" name="intake_se_nausea" value="1" class="rounded text-primary">
-							Nausea</label>
-						<label class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg text-sm"><input
-								type="checkbox" name="intake_se_vomiting" value="1" class="rounded text-primary">
-							Vomiting</label>
-						<label class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg text-sm"><input
-								type="checkbox" name="intake_se_diarrhea" value="1" class="rounded text-primary">
-							Diarrhea</label>
-						<label class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg text-sm"><input
-								type="checkbox" name="intake_se_constipation" value="1" class="rounded text-primary">
-							Constipation</label>
-						<label class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg text-sm"><input
-								type="checkbox" name="intake_se_reflux" value="1" class="rounded text-primary">
-							Reflux</label>
-					</div>
-					<select name="intake_se_severity" class="w-full rounded-xl border-slate-200">
-						<option value="">Severity Level...</option>
-						<option value="Mild">Mild</option>
-						<option value="Moderate">Moderate</option>
-						<option value="Severe">Severe</option>
-					</select>
-				</div>
-			</div>
-
-			<!-- STEP 6 -->
-			<div class="wizard-step hidden space-y-6" data-step="6">
-				<p class="text-sm text-slate-500">Please answer honestly. SCOFF Questionnaire:</p>
-				<div class="space-y-3">
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_scoff_1" value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm">Do you make yourself Sick because you feel uncomfortably full?</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_scoff_2" value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm">Do you worry you have lost Control over how much you eat?</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_scoff_3" value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm">Have you recently lost more than 6.4kg (14 lbs) in a 3 month
-							period?</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_scoff_4" value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm">Do you believe yourself to be Fat when others say you are too thin?</span>
-					</label>
-					<label
-						class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-pointer">
-						<input type="checkbox" name="intake_scoff_5" value="1" class="w-5 h-5 text-primary rounded">
-						<span class="text-sm">Would you say that Food dominates your life?</span>
-					</label>
-				</div>
-				<div>
-					<p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Motivation</p>
-					<div class="flex gap-4">
-						<label class="flex items-center gap-2"><input type="checkbox" name="intake_motivation_health"
-								value="1" class="rounded text-primary"> Health</label>
-						<label class="flex items-center gap-2"><input type="checkbox"
-								name="intake_motivation_appearance" value="1" class="rounded text-primary">
-							Appearance</label>
-						<label class="flex items-center gap-2"><input type="checkbox" name="intake_motivation_mobility"
-								value="1" class="rounded text-primary"> Mobility</label>
-					</div>
-				</div>
-				<div>
-					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Goal
-						Weight (kg)") }}</label>
-					<input type="number" name="intake_goal_weight" class="w-full rounded-xl border-slate-200 p-3">
-				</div>
-			</div>
-
-			<!-- STEP 7 -->
-			<div class="wizard-step hidden space-y-6" data-step="7">
-				<div class="bg-primary/5 p-6 rounded-2xl border border-primary/20">
-					<h3 class="font-display font-bold text-lg mb-4">Reproductive Health</h3>
-					<div class="space-y-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						{% set endocrine_risks = [
+						("intake_diabetes_type_1", "Type 1 Diabetes - insulin dependant"),
+						("intake_underactive_thyroid", "Underactive thyroid"),
+						("intake_thyroid_ca", "Thyroid carcinoma/cancer"),
+						("intake_family_thyroid_ca", "Family history of thyroid carcinoma/cancer"),
+						("intake_diabetic_retinopathy", "Diabetic retinopathy (eye condition related to diabetes)"),
+						("intake_hypoglycaemia", "Hypoglycaemia (Low blood sugar)"),
+						("intake_men2", "MEN 2 (Multiple endocrine neoplasia type 2)"),
+						("intake_other_endocrine", "Any other endocrine/metabolic condition"),
+						("intake_endocrine_none", "None of the above")
+						] %}
+						{% for name, label in endocrine_risks %}
 						<label
-							class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 cursor-pointer">
-							<input type="checkbox" name="intake_pregnant" value="1"
-								class="w-5 h-5 text-primary rounded">
-							<span class="text-sm font-bold">Currently Pregnant</span>
+							class="flex items-center gap-3 p-4 rounded-2xl border border-slate-100 bg-slate-50 hover:border-primary/50 cursor-pointer transition-all group">
+							<input type="checkbox" name="{{ name }}" value="1"
+								class="w-5 h-5 text-primary focus:ring-primary rounded">
+							<span class="text-sm font-medium group-hover:text-charcoal transition-colors">{{ _(label)
+								}}</span>
 						</label>
+						{% endfor %}
+					</div>
+					<div class="mt-6">
+						<label class="block text-[10px] uppercase text-slate-500 font-bold mb-2">{{ _("Additional
+							details (If necessary)") }}</label>
+						<textarea name="intake_endocrine_details" rows="2"
+							class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary"></textarea>
+					</div>
+				</div>
+
+				<div class="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-2">{{ _("Liver/Kidney/Digestive") }}</h3>
+					<p class="text-xs text-slate-500 mb-6 uppercase tracking-wider font-semibold">{{ _("Select all
+						conditions currently experienced or in the past") }}</p>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						{% set lkd_risks = [
+						("intake_pancreatitis", "Pancreatitis (Inflammation of the pancreas)"),
+						("intake_kidney_disease", "Kidney disease"),
+						("intake_gastro_disease", "Gastrointestinal disease"),
+						("intake_gastroparesis", "Gastroparesis (Delayed stomach emptying)"),
+						("intake_gallbladder_disease", "Gallbladder disease (Includes gallstones or gallbladder
+						inflammation)"),
+						("intake_other_lkd", "Any other Liver/Kidney/Digestive condition"),
+						("intake_constipation", "Constipation"),
+						("intake_lkd_none", "None of the above")
+						] %}
+						{% for name, label in lkd_risks %}
 						<label
-							class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 cursor-pointer">
-							<input type="checkbox" name="intake_breastfeeding" value="1"
-								class="w-5 h-5 text-primary rounded">
-							<span class="text-sm font-bold">Currently Breastfeeding</span>
+							class="flex items-center gap-3 p-4 rounded-2xl border border-slate-100 bg-white hover:border-primary/50 cursor-pointer transition-all group">
+							<input type="checkbox" name="{{ name }}" value="1"
+								class="w-5 h-5 text-primary focus:ring-primary rounded">
+							<span class="text-sm font-medium group-hover:text-charcoal transition-colors">{{ _(label)
+								}}</span>
 						</label>
+						{% endfor %}
+					</div>
+					<div class="mt-6">
+						<label class="block text-[10px] uppercase text-slate-500 font-bold mb-2">{{ _("Additional
+							details (If necessary)") }}</label>
+						<textarea name="intake_lkd_details" rows="2"
+							class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary"></textarea>
+					</div>
+				</div>
+			</div>
+
+			<!-- STEP 3: Mental Health & General -->
+			<div class="wizard-step hidden space-y-8" data-step="3">
+				<div class="bg-primary/5 p-6 rounded-3xl border border-primary/20">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-2">{{ _("Mental Health") }}</h3>
+					<p class="text-xs text-slate-500 mb-6 uppercase tracking-wider font-semibold">{{ _("Select all
+						conditions currently experienced or in the past") }}</p>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						{% set mental_risks = [
+						("intake_depression", "Depression"),
+						("intake_anxiety", "Anxiety"),
+						("intake_eating_disorder", "Eating disorder (Anorexia or Bulimia)"),
+						("intake_other_mental", "Any other mental health condition"),
+						("intake_mental_none", "None of the above")
+						] %}
+						{% for name, label in mental_risks %}
 						<label
-							class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 cursor-pointer">
-							<input type="checkbox" name="intake_planning_conceive" value="1"
-								class="w-5 h-5 text-primary rounded">
-							<span class="text-sm font-bold">Planning to conceive (next 12 months)</span>
+							class="flex items-center gap-3 p-4 rounded-2xl border border-slate-100 bg-slate-50 hover:border-primary/50 cursor-pointer transition-all group">
+							<input type="checkbox" name="{{ name }}" value="1"
+								class="w-5 h-5 text-primary focus:ring-primary rounded">
+							<span class="text-sm font-medium group-hover:text-charcoal transition-colors">{{ _(label)
+								}}</span>
 						</label>
+						{% endfor %}
+					</div>
+				</div>
+
+				<div class="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-2">{{ _("General Medical") }}</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						{% set general_risks = [
+						("intake_heart_disease", "Heart disease"),
+						("intake_high_bp", "High blood pressure"),
+						("intake_med_allergies", "Medication allergies"),
+						("intake_other_allergy", "Any other allergy"),
+						("intake_none_general", "None of the above")
+						] %}
+						{% for name, label in general_risks %}
+						<label
+							class="flex items-center gap-3 p-4 rounded-2xl border border-slate-100 bg-white hover:border-primary/50 cursor-pointer transition-all group">
+							<input type="checkbox" name="{{ name }}" value="1"
+								class="w-5 h-5 text-primary focus:ring-primary rounded">
+							<span class="text-sm font-medium group-hover:text-charcoal transition-colors">{{ _(label)
+								}}</span>
+						</label>
+						{% endfor %}
+					</div>
+					<div class="mt-6">
+						<label class="block text-[10px] uppercase text-slate-500 font-bold mb-2">{{ _("Additional
+							details (If necessary)") }}</label>
+						<textarea name="intake_general_details" rows="2"
+							class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary"></textarea>
+					</div>
+				</div>
+			</div>
+
+			<!-- STEP 4: Weight History -->
+			<div class="wizard-step hidden space-y-8" data-step="4">
+				<div class="bg-primary/5 p-6 rounded-3xl border border-primary/20">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-4">{{ _("Other Weight Management
+						Protocols") }}</h3>
+
+					<div class="space-y-6">
+						<div>
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+								_("Have you used Weight management injectables before?") }}</label>
+							<select name="intake_weight_injectables"
+								class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+								<option value="No">No</option>
+								<option value="Yes">Yes</option>
+							</select>
+						</div>
+
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+									_("Date started") }}</label>
+								<input type="date" name="intake_weight_date_started"
+									class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+							</div>
+							<div>
+								<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+									_("Date stopped") }}</label>
+								<input type="date" name="intake_weight_date_stopped"
+									class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+							</div>
+						</div>
+
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+							<div>
+								<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+									_("Time period used") }}</label>
+								<input type="text" name="intake_weight_period" placeholder="e.g. 6 months"
+									class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+							</div>
+							<div>
+								<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+									_("Highest dosage reached") }}</label>
+								<input type="text" name="intake_weight_highest_dose" placeholder="e.g. 1.0mg"
+									class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+							</div>
+							<div>
+								<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+									_("Weight loss (kg)") }}</label>
+								<input type="number" step="0.1" name="intake_weight_loss_kg"
+									class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+							</div>
+						</div>
+
+						<div>
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+								_("Reason treatment was stopped") }}</label>
+							<textarea name="intake_weight_stop_reason" rows="2"
+								class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- STEP 5: Exercise & Other Info -->
+			<div class="wizard-step hidden space-y-8" data-step="5">
+				<div class="bg-primary/5 p-6 rounded-3xl border border-primary/20">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-6">{{ _("Other Medical Information") }}
+					</h3>
+					<div>
+						<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ _("Are
+							there any other medical issues we should be aware of?") }}</label>
+						<textarea name="intake_other_medical_issues" rows="4"
+							placeholder="{{ _('Please describe any other health concerns...') }}"
+							class="w-full rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary"></textarea>
+					</div>
+				</div>
+
+				<div class="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-6">{{ _("Exercise Habits") }}</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{
+								_("How many times do you exercise per week?") }}</label>
+							<div class="flex items-center gap-4">
+								<input type="number" name="intake_exercise_frequency" min="0" value="0"
+									class="w-24 rounded-2xl border-slate-200 p-4 text-center font-bold text-lg focus:ring-primary">
+								<span class="text-slate-500 font-medium">{{ _("times per week") }}</span>
+							</div>
+						</div>
+						<div class="space-y-4">
+							<div
+								class="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100">
+								<span class="text-sm font-medium text-slate-600">{{ _("Aerobic exercise") }}</span>
+								<input type="number" name="intake_exercise_aerobic" min="0" value="0"
+									class="w-16 rounded-xl border-slate-200 p-2 text-center text-sm focus:ring-primary">
+							</div>
+							<div
+								class="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100">
+								<span class="text-sm font-medium text-slate-600">{{ _("Strength/weight training")
+									}}</span>
+								<input type="number" name="intake_exercise_strength" min="0" value="0"
+									class="w-16 rounded-xl border-slate-200 p-2 text-center text-sm focus:ring-primary">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- STEP 6: Surgical -->
+			<div class="wizard-step hidden space-y-8" data-step="6">
+				<div class="bg-primary/5 p-6 rounded-3xl border border-primary/20">
+					<h3 class="font-display font-bold text-lg text-charcoal mb-6">{{ _("Surgical & Medical History") }}
+					</h3>
+
+					<div class="space-y-6">
+						<div>
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
+								_("Have you seen a GP recently?") }}</label>
+							<select name="intake_recent_gp_visit"
+								class="w-full md:w-1/3 rounded-2xl border-slate-200 bg-white p-4 text-sm focus:ring-primary">
+								<option value="No">No</option>
+								<option value="Yes">Yes</option>
+							</select>
+						</div>
+
+						<div class="p-6 bg-white rounded-3xl border border-slate-100 space-y-4">
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">{{ _("Have
+								you had any abnormal blood results or anything we should be aware of?") }}</label>
+							<select name="intake_abnormal_labs_recent"
+								class="w-full md:w-1/4 rounded-2xl border-slate-200 bg-slate-50 p-4 text-sm focus:ring-primary mb-2">
+								<option value="No">No</option>
+								<option value="Yes">Yes</option>
+							</select>
+							<textarea name="intake_abnormal_labs_details" rows="2"
+								placeholder="{{ _('Please provide details...') }}"
+								class="w-full rounded-2xl border-slate-200 bg-slate-50 p-4 text-sm focus:ring-primary"></textarea>
+						</div>
+
+						<div class="p-6 bg-white rounded-3xl border border-slate-100 space-y-4">
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">{{ _("Did
+								you have any operations in the past 6 weeks?") }}</label>
+							<select name="intake_recent_op"
+								class="w-full md:w-1/4 rounded-2xl border-slate-200 bg-slate-50 p-4 text-sm focus:ring-primary mb-2">
+								<option value="No">No</option>
+								<option value="Yes">Yes</option>
+							</select>
+							<textarea name="intake_recent_op_details" rows="2"
+								placeholder="{{ _('Please provide details...') }}"
+								class="w-full rounded-2xl border-slate-200 bg-slate-50 p-4 text-sm focus:ring-primary"></textarea>
+						</div>
+
+						<div class="p-6 bg-white rounded-3xl border border-slate-100 space-y-4">
+							<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">{{ _("Do you
+								plan any operations in the next 6 weeks?") }}</label>
+							<select name="intake_planned_op"
+								class="w-full md:w-1/4 rounded-2xl border-slate-200 bg-slate-50 p-4 text-sm focus:ring-primary mb-2">
+								<option value="No">No</option>
+								<option value="Yes">Yes</option>
+							</select>
+							<textarea name="intake_planned_op_details" rows="2"
+								placeholder="{{ _('Please provide details...') }}"
+								class="w-full rounded-2xl border-slate-200 bg-slate-50 p-4 text-sm focus:ring-primary"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- STEP 7: Medications Detail -->
+			<div class="wizard-step hidden space-y-8" data-step="7">
+				<div class="bg-primary/10 p-8 rounded-3xl border-2 border-primary/20 shadow-inner">
+					<div class="flex items-center gap-3 mb-6">
+						<span class="material-symbols-outlined text-primary text-3xl">prescriptions</span>
+						<h3 class="font-display font-bold text-xl text-charcoal tracking-tight">{{ _("Detailed
+							Medications") }}</h3>
+					</div>
+					<p class="text-sm text-slate-600 mb-8 font-medium leading-relaxed">{{ _("Please provide details for
+						each category of medication you currently use. This is critical for clinical safety review.") }}
+					</p>
+
+					<div class="grid grid-cols-1 gap-4">
+						{% set detailed_meds = [
+						("intake_uses_diabetes_meds", "intake_diabetes_meds_list", "Diabetes medications"),
+						("intake_uses_vitamins", "intake_vitamins_list", "Vitamins and supplements"),
+						("intake_uses_birth_control", "intake_birth_control_list", "Birth control medicines"),
+						("intake_uses_otc", "intake_otc_list", "OTC (Over-the-counter) medicines"),
+						("intake_uses_chronic", "intake_chronic_list", "Chronic medicines"),
+						("intake_uses_other_meds", "intake_other_meds_list", "Other medications")
+						] %}
+
+						{% for toggle, list, label in detailed_meds %}
+						<div
+							class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+							<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+								<h4 class="font-bold text-slate-700 group-hover:text-charcoal transition-colors">{{
+									_(label) }}</h4>
+								<div
+									class="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+									<span
+										class="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-2">Using?</span>
+									<select name="{{ toggle }}"
+										class="rounded-xl border-none bg-white text-xs font-bold py-2 focus:ring-0">
+										<option value="No">No</option>
+										<option value="Yes">Yes</option>
+									</select>
+								</div>
+							</div>
+							<textarea name="{{ list }}" rows="2"
+								placeholder="{{ _('List medications, dosages, and frequency...') }}"
+								class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 text-sm focus:ring-primary focus:border-primary focus:bg-white transition-all"></textarea>
+						</div>
+						{% endfor %}
 					</div>
 				</div>
 			</div>
@@ -649,12 +724,12 @@
 
 			const stepTitles = {
 				1: "Personal Information",
-				2: "Medical Screening",
-				3: "Organ Systems",
-				4: "Medications",
-				5: "GLP-1 History",
-				6: "Psychological",
-				7: "Reproductive Health"
+				2: "Endocrine & Digestive",
+				3: "Mental & General",
+				4: "Weight History",
+				5: "Other Medical & Exercise",
+				6: "Surgical History",
+				7: "Detailed Medications"
 			};
 
 			function showStep(step) {
@@ -679,11 +754,11 @@
 					} else if (dotStep === step) {
 						dot.classList.add('bg-primary', 'text-charcoal');
 						dot.classList.remove('bg-slate-200', 'text-slate-500');
-						dot.innerHTML = step;
+						dot.innerHTML = dotStep;
 					} else {
 						dot.classList.remove('bg-primary', 'text-charcoal');
 						dot.classList.add('bg-slate-200', 'text-slate-500');
-						dot.innerHTML = step;
+						dot.innerHTML = dotStep;
 					}
 				});
 
@@ -753,36 +828,75 @@
 					}
 				});
 
+				// Collect structured medications
+				const medications = [];
+
+				const collectRows = (containerId, status) => {
+					const container = document.getElementById(containerId);
+					if (!container) return;
+
+					container.querySelectorAll('.med-row').forEach(row => {
+						const med = row.querySelector('[name="med_name"]')?.value;
+						const dose = row.querySelector('[name="med_dose"]')?.value;
+						const freq = row.querySelector('[name="med_freq"]')?.value;
+
+						if (med) {
+							const entry = {
+								medication: med,
+								dosage: dose,
+								frequency: freq,
+								status: status
+							};
+
+							if (status === 'Stopped') {
+								entry.stopped_date = row.querySelector('[name="med_stopped_date"]')?.value;
+								entry.reason_for_stopping = row.querySelector('[name="med_reason"]')?.value;
+							}
+
+							medications.push(entry);
+						}
+					});
+				};
+
+				collectRows('current_meds_container', 'Current');
+				collectRows('stopped_meds_container', 'Stopped');
+
+				if (medications.length > 0) {
+					data.medications = medications;
+				}
+
 				frappe.call({
 					method: 'koraflow_core.api.intake_review.create_intake_submission',
 					args: { intake_data: data },
 					callback: function (r) {
-						if (r.message) {
-							frappe.show_alert({ message: "Intake Submitted Successfully!", indicator: 'green' });
-							setTimeout(() => window.location.href = '/dashboard', 2000);
+						if (r.message && r.message.success) {
+							frappe.show_alert({ message: __("Intake Submitted Successfully!"), indicator: 'green' });
+							setTimeout(() => window.location.href = '/patient_dashboard', 2000);
+						} else {
+							const msg = (r.message && r.message.message) || __("Failed to submit intake form.");
+							frappe.show_alert({ message: msg, indicator: 'red' });
 						}
 					},
-					error: (r) => frappe.show_alert({ message: "Error submitting form.", indicator: 'red' })
+					error: (r) => {
+						const msg = (r.responseJSON && r.responseJSON.message) || __("Error submitting form.");
+						frappe.show_alert({ message: msg, indicator: 'red' });
+					}
 				});
 			});
 
 
 			// === CONDITIONAL LOGIC ===
 
-			// 1. Biological Sex -> Step 7
+			// 1. Biological Sex -> Pregnancy/Breastfeeding checks
 			const sexSelect = document.querySelector('select[name="biological_sex"]');
 			if (sexSelect) {
 				sexSelect.addEventListener('change', function () {
-					const isFemale = this.value === 'Female';
-					const reproStep = document.querySelector('.step-dot[data-step="7"]');
-					if (isFemale) {
-						totalSteps = 7;
-						if (reproStep) reproStep.style.display = 'flex';
-					} else {
-						totalSteps = 6;
-						if (reproStep) reproStep.style.display = 'none';
-					}
-					showStep(currentStep); // Update buttons
+					const isMale = this.value === 'Male';
+					// In the new structure, we don't necessarily hide steps based on sex, 
+					// but we could hide specific questions if we wanted. 
+					// For now, let's keep all 7 steps as they are comprehensive.
+					totalSteps = 7;
+					showStep(currentStep);
 				});
 				sexSelect.dispatchEvent(new Event('change'));
 			}
@@ -796,23 +910,27 @@
 				if (!idType) return;
 				const val = idType.value;
 				if (val === 'sa_id') {
-					saGroup.classList.remove('hidden');
-					passportGroup.classList.add('hidden');
-					document.getElementById('sa_id_number').required = true;
-					document.getElementById('passport_number').required = false;
+					saGroup?.classList.remove('hidden');
+					passportGroup?.classList.add('hidden');
+					const saInp = document.getElementById('sa_id_number');
+					if (saInp) saInp.required = true;
+					const passInp = document.getElementById('passport_number');
+					if (passInp) passInp.required = false;
 				} else if (val === 'passport') {
-					saGroup.classList.add('hidden');
-					passportGroup.classList.remove('hidden');
-					document.getElementById('sa_id_number').required = false;
-					document.getElementById('passport_number').required = true;
+					saGroup?.classList.add('hidden');
+					passportGroup?.classList.remove('hidden');
+					const saInp = document.getElementById('sa_id_number');
+					if (saInp) saInp.required = false;
+					const passInp = document.getElementById('passport_number');
+					if (passInp) passInp.required = true;
 				} else {
-					saGroup.classList.add('hidden');
-					passportGroup.classList.add('hidden');
+					saGroup?.classList.add('hidden');
+					passportGroup?.classList.add('hidden');
 				}
 			}
 			if (idType) {
 				idType.addEventListener('change', toggleId);
-				toggleId(); // init
+				toggleId();
 			}
 
 			// 3. Surgery
@@ -861,6 +979,54 @@
 			document.getElementById('intake_taking_insulin')?.addEventListener('change', toggleInsulin);
 			document.getElementById('intake_taking_sulfonylureas')?.addEventListener('change', toggleInsulin);
 
+
+			// Medication Row Management
+			window.addMedicationRow = function (type) {
+				const containerId = type === 'current' ? 'current_meds_container' : 'stopped_meds_container';
+				const container = document.getElementById(containerId);
+				if (!container) return;
+
+				const row = document.createElement('div');
+				row.className = 'med-row bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative space-y-3';
+
+				let innerHTML = `
+					<button type="button" onclick="this.closest('.med-row').remove()" class="absolute top-2 right-2 text-slate-400 hover:text-red-500">
+						<span class="material-symbols-outlined text-sm">close</span>
+					</button>
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+						<div>
+							<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Medication Name</label>
+							<input type="text" name="med_name" required placeholder="e.g. Metformin" class="w-full text-sm rounded-lg border-slate-300 focus:ring-primary focus:border-primary">
+						</div>
+						<div>
+							<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dosage</label>
+							<input type="text" name="med_dose" placeholder="e.g. 500mg" class="w-full text-sm rounded-lg border-slate-300 focus:ring-primary focus:border-primary">
+						</div>
+						<div>
+							<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Frequency</label>
+							<input type="text" name="med_freq" placeholder="e.g. Twice daily" class="w-full text-sm rounded-lg border-slate-300 focus:ring-primary focus:border-primary">
+						</div>
+					</div>
+				`;
+
+				if (type === 'stopped') {
+					innerHTML += `
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+							<div>
+								<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Date Stopped</label>
+								<input type="date" name="med_stopped_date" class="w-full text-sm rounded-lg border-slate-300 focus:ring-primary focus:border-primary">
+							</div>
+							<div>
+								<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Reason for Stopping</label>
+								<input type="text" name="med_reason" placeholder="e.g. Side effects" class="w-full text-sm rounded-lg border-slate-300 focus:ring-primary focus:border-primary">
+							</div>
+						</div>
+					`;
+				}
+
+				row.innerHTML = innerHTML;
+				container.appendChild(row);
+			};
 
 			// Init
 			showStep(1);

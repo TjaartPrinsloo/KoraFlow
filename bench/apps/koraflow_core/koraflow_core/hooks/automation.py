@@ -49,7 +49,7 @@ def on_prescription_status_change(doc, method):
 
 def on_quotation_update(doc, method):
     """Handle quotation status changes (patient acceptance)"""
-    if doc.status == "Ordered" and hasattr(doc, 'glp1_prescription') and doc.glp1_prescription:
+    if doc.status == "Ordered" and hasattr(doc, 'custom_prescription') and doc.custom_prescription:
         # Check if sales chain already exists
         existing_so = frappe.db.exists("Sales Order", {"quotation": doc.name})
         if existing_so:
@@ -63,7 +63,7 @@ def on_quotation_update(doc, method):
         )
         # Update prescription status
         frappe.db.set_value("GLP-1 Patient Prescription", 
-                          doc.glp1_prescription, "status", "Quoted")
+                          doc.custom_prescription, "status", "Quoted")
         # Log acceptance
         create_audit_log(
             "Quote Accepted", 
@@ -206,7 +206,7 @@ def create_audit_log(event_type, ref_doctype, ref_name, patient, details=None):
         )
     except Exception as e:
         # Log error but don't fail the main operation
-        frappe.log_error(f"Failed to create audit log: {str(e)}", "Automation Audit Log")
+        frappe.log_error(title="Automation Audit Log", message=f"Failed to create audit log: {str(e)}")
 
 
 def is_glp1_dispense(stock_entry):

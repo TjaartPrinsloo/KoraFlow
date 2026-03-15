@@ -45,14 +45,14 @@ def create_quotation_job(prescription_name):
             medication_item = prescription.medication
         
         if not medication_item:
-            frappe.log_error(f"No item for medication {prescription.medication}", "Quotation Job")
+            frappe.log_error(title="Quotation Job", message=f"No item for medication {prescription.medication}")
             return
             return
         
         # Get customer from patient
         customer = frappe.db.get_value("Patient", prescription.patient, "customer")
         if not customer:
-            frappe.log_error(f"No customer for patient {prescription.patient}", "Quotation Job")
+            frappe.log_error(title="Quotation Job", message=f"No customer for patient {prescription.patient}")
             return
         
         # Get pricing
@@ -122,7 +122,7 @@ def create_quotation_job(prescription_name):
         return quotation.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating quotation: {str(e)}", "Quotation Job")
+        frappe.log_error(title="Quotation Job", message=f"Error creating quotation: {str(e)}")
         raise
 
 
@@ -164,6 +164,10 @@ def create_sales_chain_job(quotation_name):
             if not item.warehouse:
                 item.warehouse = default_warehouse
         
+        # Copy delivery notes
+        if hasattr(quotation, 'custom_delivery_notes'):
+            sales_order.custom_delivery_notes = quotation.custom_delivery_notes
+        
         sales_order.insert(ignore_permissions=True)
         sales_order.submit()
         frappe.db.commit()
@@ -184,6 +188,9 @@ def create_sales_chain_job(quotation_name):
         if hasattr(sales_order, 'custom_prescription') and sales_order.custom_prescription:
             if hasattr(sales_invoice, 'custom_prescription'):
                 sales_invoice.custom_prescription = sales_order.custom_prescription
+        
+        if hasattr(sales_order, 'custom_delivery_notes'):
+            sales_invoice.custom_delivery_notes = sales_order.custom_delivery_notes
                 
         sales_invoice.insert(ignore_permissions=True)
         sales_invoice.submit()
@@ -193,7 +200,7 @@ def create_sales_chain_job(quotation_name):
         return sales_invoice.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating sales chain: {str(e)}", "Sales Chain Job")
+        frappe.log_error(title="Sales Chain Job", message=f"Error creating sales chain: {str(e)}")
         raise
 
 
@@ -238,7 +245,7 @@ def create_picking_list(sales_order_name, patient=None):
         return pick_list.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating picking list: {str(e)}", "Picking List Job")
+        frappe.log_error(title="Picking List Job", message=f"Error creating picking list: {str(e)}")
         return None
 
 
@@ -277,7 +284,7 @@ def create_dispense_task_job(invoice_name, prescription_name):
         return task.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating dispense task: {str(e)}", "Dispense Task Job")
+        frappe.log_error(title="Dispense Task Job", message=f"Error creating dispense task: {str(e)}")
         raise
 
 
@@ -308,7 +315,7 @@ def create_shipment_job(stock_entry_name):
             )
         
         if not prescription:
-            frappe.log_error(f"No prescription found for stock entry {stock_entry_name}", "Shipment Job")
+            frappe.log_error(title="Shipment Job", message=f"No prescription found for stock entry {stock_entry_name}")
             return None
         
         # Create shipment
@@ -318,7 +325,8 @@ def create_shipment_job(stock_entry_name):
             "patient": patient,
             "stock_entry": stock_entry_name,
             "status": "Created",
-            "cold_chain_status": "Valid"
+            "cold_chain_status": "Valid",
+            "delivery_note": getattr(stock_entry, 'custom_delivery_notes', None)
         })
         shipment.insert(ignore_permissions=True)
         frappe.db.commit()
@@ -337,7 +345,7 @@ def create_shipment_job(stock_entry_name):
         return shipment.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating shipment: {str(e)}", "Shipment Job")
+        frappe.log_error(title="Shipment Job", message=f"Error creating shipment: {str(e)}")
         raise
 
 
@@ -349,14 +357,14 @@ def book_courier_job(shipment_name):
     Calls: Courier Guy API, updates shipment with waybill
     """
     try:
-        from koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import create_waybill_from_shipment
+        from koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import create_waybill_from_shipment
         
         shipment = frappe.get_doc("GLP-1 Shipment", shipment_name)
         
         # Get patient address for delivery
         patient = frappe.get_doc("Patient", shipment.patient) if shipment.patient else None
         if not patient:
-            frappe.log_error(f"No patient found for shipment {shipment_name}", "Courier Booking")
+            frappe.log_error(title="Courier Booking", message=f"No patient found for shipment {shipment_name}")
             return
         
         # Call Courier Guy API to create waybill
@@ -380,14 +388,14 @@ def book_courier_job(shipment_name):
                 
         except Exception as courier_error:
             # Log courier error but don't fail the shipment
-            frappe.log_error(f"Courier API error for shipment {shipment_name}: {str(courier_error)}", "Courier Booking")
+            frappe.log_error(title="Courier Booking", message=f"Courier API error for shipment {shipment_name}: {str(courier_error)}")
             shipment.status = "Created"  # Retry later
             shipment.cold_chain_notes = f"Courier booking failed: {str(courier_error)}"
             shipment.save()
             frappe.db.commit()
         
     except Exception as e:
-        frappe.log_error(f"Error booking courier: {str(e)}", "Courier Booking")
+        frappe.log_error(title="Courier Booking", message=f"Error booking courier: {str(e)}")
         raise
 
 
@@ -404,7 +412,7 @@ def sync_xero_after_invoice(invoice_name):
         doc = frappe.get_doc("Sales Invoice", invoice_name)
         sync_invoice(doc)
     except Exception as e:
-        frappe.log_error(f"Error syncing invoice to Xero: {str(e)}", "Xero Sync")
+        frappe.log_error(title="Xero Sync", message=f"Error syncing invoice to Xero: {str(e)}")
 
 
 # ====================
@@ -440,7 +448,7 @@ def cleanup_expired_quotes():
         frappe.logger().info(f"Cleaned up {len(expired_quotes)} expired GLP-1 quotes")
         
     except Exception as e:
-        frappe.log_error(f"Error cleaning up expired quotes: {str(e)}", "Quote Cleanup")
+        frappe.log_error(title="Quote Cleanup", message=f"Error cleaning up expired quotes: {str(e)}")
 
 
 # ====================
@@ -460,7 +468,7 @@ def log_audit(event_type, ref_doctype, ref_name, patient, details=None):
             details=details or {}
         )
     except Exception as e:
-        frappe.log_error(f"Failed to create audit log: {str(e)}", "Jobs Audit Log")
+        frappe.log_error(title="Jobs Audit Log", message=f"Failed to create audit log: {str(e)}")
 
 
 def get_patient_from_quotation(doc):

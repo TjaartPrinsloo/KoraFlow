@@ -129,6 +129,49 @@ function updateDashboardUI(data) {
     } else if (tbody) {
         tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 font-medium bg-slate-50/50">No referrals found yet.</td></tr>`;
     }
+
+    // Render Commission History
+    const historyContainer = document.getElementById('commission-history');
+    if (historyContainer && data.commission_history && data.commission_history.length > 0) {
+        historyContainer.innerHTML = data.commission_history.map(comm => `
+            <div class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                        <span class="material-symbols-outlined text-sm">payments</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-charcoal dark:text-white">${comm.invoice_reference}</p>
+                        <p class="text-xs text-slate-400">${formatDate(comm.creation)}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-bold text-primary filter brightness-90">${formatCurrency(comm.accrued_amount)}</p>
+                    <span class="text-[10px] font-bold uppercase tracking-wider ${comm.status === 'Paid' ? 'text-green-600' : 'text-slate-400'}">${comm.status}</span>
+                </div>
+            </div>
+        `).join('');
+    } else if (historyContainer) {
+        historyContainer.innerHTML = `<div class="text-center text-slate-400 font-medium py-8">No commission history yet.</div>`;
+    }
+
+    // Update KPI Stats
+    if (data.kpi_stats) {
+        setText('stat-referrals', data.kpi_stats.total_referrals);
+        setText('stat-conversion', data.kpi_stats.conversion_rate + '%');
+        setText('stat-patients', data.kpi_stats.total_patients);
+        setText('stat-ticket', formatCurrency(data.kpi_stats.avg_ticket));
+    }
+
+    // Hide Compliance Status Card
+    const complianceCard = document.getElementById('compliance-status-card');
+    if (complianceCard) {
+        complianceCard.classList.add('hidden');
+    }
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
 }
 
 function getInitials(name) {
@@ -369,3 +412,89 @@ async function submitNewReferral() {
 window.openNewReferralModal = openNewReferralModal;
 window.closeNewReferralModal = closeNewReferralModal;
 window.submitNewReferral = submitNewReferral;
+window.openSupportModal = openSupportModal;
+window.closeSupportModal = closeSupportModal;
+window.submitSupportTicket = submitSupportTicket;
+
+// Support Ticket Functions
+function openSupportModal() {
+    console.log('Opening Support Modal');
+    const modal = document.getElementById('support-ticket-modal');
+    if (modal) {
+        modal.classList.add('active');
+        setTimeout(() => document.getElementById('ticket-subject')?.focus(), 100);
+    } else {
+        console.error('Support modal element not found!');
+    }
+}
+
+function closeSupportModal() {
+    const modal = document.getElementById('support-ticket-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.getElementById('ticket-subject').value = '';
+        document.getElementById('ticket-description').value = '';
+    }
+}
+
+async function submitSupportTicket() {
+    const btn = document.querySelector('#support-ticket-modal button[onclick="submitSupportTicket()"]');
+    const originalText = btn.innerHTML;
+
+    const subject = document.getElementById('ticket-subject').value;
+    const description = document.getElementById('ticket-description').value;
+
+    if (!subject || !description) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    try {
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">refresh</span> Submitting...';
+        btn.disabled = true;
+
+        const response = await fetch('/api/method/koraflow_core.api.sales_agent_dashboard.create_support_ticket', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Frappe-CSRF-Token': window.csrf_token
+            },
+            body: JSON.stringify({
+                subject: subject,
+                description: description
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            closeSupportModal();
+
+            // Reuse Success Modal
+            const successModal = document.getElementById('success-modal');
+            if (successModal) {
+                successModal.classList.add('active');
+
+                // Customize content
+                const title = document.querySelector('#success-modal h2');
+                const msg = document.querySelector('#success-modal p');
+                const detailsBox = document.querySelector('#success-modal .bg-slate-50');
+
+                if (title) title.innerText = 'Ticket Submitted!';
+                if (msg) msg.innerText = 'Your support ticket has been created. Our team will contact you shortly.';
+                if (detailsBox) detailsBox.classList.add('hidden');
+
+            } else {
+                alert('Support ticket created successfully!');
+            }
+        } else {
+            alert('Failed to submit ticket: ' + (result.exc || result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error creating ticket:', error);
+        alert('Connection error. Please try again.');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}

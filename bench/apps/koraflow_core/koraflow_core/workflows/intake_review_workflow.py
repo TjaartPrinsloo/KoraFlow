@@ -24,7 +24,7 @@ def on_intake_form_update(doc, method):
 			# Get user linked to patient
 			user_email = patient.user_id or patient.email
 			if not user_email:
-				frappe.log_error(f"No user found for patient {patient_name}", "Intake Review Workflow")
+				frappe.log_error(title="Intake Review Workflow", message=f"No user found for patient {patient_name}")
 				return
 			
 			# Activate the user
@@ -48,10 +48,10 @@ def on_intake_form_update(doc, method):
 				try:
 					send_activation_email(user, patient)
 				except Exception as e:
-					frappe.log_error(f"Error sending activation email: {str(e)}", "Intake Review Workflow")
+					frappe.log_error(title="Intake Review Workflow", message=f"Error sending activation email: {str(e)}")
 		
 		except Exception as e:
-			frappe.log_error(f"Error activating user for intake form {doc.name}: {str(e)}", "Intake Review Workflow")
+			frappe.log_error(title="Intake Review Workflow", message=f"Error activating user for intake form {doc.name}: {str(e)}")
 
 
 def send_activation_email(user, patient):

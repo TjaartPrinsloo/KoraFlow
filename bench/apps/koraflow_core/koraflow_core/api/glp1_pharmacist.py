@@ -120,5 +120,5 @@ def create_dispense(task, batch, quantity, patient_acknowledged, counseling_note
 		
 		return {"success": True, "stock_entry": stock_entry.name, "confirmation": confirmation.name}
 	except Exception as e:
-		frappe.log_error(f"Error creating dispense: {str(e)}", "GLP-1 Pharmacist API")
+		frappe.log_error(title="GLP-1 Pharmacist API", message=f"Error creating dispense: {str(e)}")
 		return {"success": False, "message": str(e)}

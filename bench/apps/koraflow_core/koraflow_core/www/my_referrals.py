@@ -84,22 +84,16 @@ def get_context(context):
 				verified_referrals.append(referral)
 			else:
 				frappe.log_error(
-					f"Permission violation: User {user_email} tried to access referral {referral.name} belonging to {referral_doc.sales_partner}",
-					"Sales Partner Permission Violation"
+					title="Sales Partner Permission Violation",
+					message=f"Permission violation: User {user_email} tried to access referral {referral.name} belonging to {referral_doc.sales_partner}"
 				)
 		except frappe.PermissionError:
 			# Permission denied - log and skip
-			frappe.log_error(
-				f"Permission denied: User {user_email} tried to access referral {referral.name}",
-				"Sales Partner Permission Violation"
-			)
+			frappe.log_error(title="Referral Permission Error", message=f"User {user_email} (Partner: {sales_partner_name}) tried to access unauthorized referral {referral.name}")
 			continue
 		except Exception as e:
 			# Other error - log and skip
-			frappe.log_error(
-				f"Error verifying referral {referral.name}: {str(e)}",
-				"Sales Partner Referral Verification"
-			)
+			frappe.log_error(title="Referral Update Error", message=f"Partner check failed for referral {referral.name}: {str(e)}")
 			continue
 	
 	referrals = verified_referrals
@@ -133,7 +127,7 @@ def get_context(context):
 	except Exception as e:
 		# If query fails (likely due to permissions), commission_summary remains None
 		# User can still access commission via report link
-		frappe.log_error(f"Could not fetch commission summary: {str(e)}", "Sales Partner Commission")
+		frappe.log_error(title="Sales Partner Commission", message=f"Could not fetch commission summary: {str(e)}")
 		commission_summary = None
 	
 	context.update({

@@ -45,3 +45,21 @@
 	cursor: pointer;
 }
 
+/* ========================================
+   S2W NAVBAR LOGO SIZING
+   Frappe's navbar injects the logo as an <img>
+   via frappe.boot.app_logo_url — size it here.
+   ======================================== */
+.navbar-brand .app-logo,
+.navbar .app-logo,
+header .app-logo,
+img.app-logo,
+.navbar-brand img[src*="s2w-logo"],
+.navbar img[src*="koraflow_core/images"] {
+    height: 32px !important;
+    width: auto !important;
+    max-width: 120px !important;
+    display: inline-block !important;
+    object-fit: contain;
+    border-radius: 50%;
+}

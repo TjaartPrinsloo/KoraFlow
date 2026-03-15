@@ -48,6 +48,6 @@ def get_context(context):
 		context.patient = patient
 	except Exception as e:
 		# If there's an error, just use default context
-		frappe.log_error(f"Error in get_context for glp1_intake_wizard: {e}", "Intake Wizard Context Error")
+		frappe.log_error(title="Intake Wizard Context Error", message=f"Error in get_context for glp1_intake_wizard: {e}")
 	
 	return context

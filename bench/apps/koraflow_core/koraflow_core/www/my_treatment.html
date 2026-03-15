@@ -92,7 +92,93 @@
             border-color: #C1E12F;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+
+        /* Google Maps Autocomplete dropdown - must sit above <dialog> */
+        .pac-container {
+            z-index: 10000 !important;
+        }
     </style>
+
+    {% if enable_google_maps and google_maps_api_key %}
+    <script>
+        // Global function to init autocomplete on specific inputs
+        function initAutocomplete() {
+            console.log("Google Maps: initAutocomplete called");
+
+            // Find the input inside the modal and attach autocomplete
+            const addressInput = document.getElementById('modal-address');
+            if (!addressInput) {
+                console.error("Google Maps: #modal-address input NOT found");
+                return;
+            }
+
+            // Prevent multiple attachments
+            if (addressInput.dataset.autocompleteAttached) {
+                console.log("Google Maps: Autocomplete already attached");
+                return;
+            }
+
+            if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                console.error("Google Maps: google.maps.places library NOT loaded yet");
+                return;
+            }
+
+            try {
+                const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                    types: ['address'],
+                    componentRestrictions: { country: 'za' }
+                });
+                console.log("Google Maps: Autocomplete instance created");
+
+                autocomplete.addListener('place_changed', function () {
+                    console.log("Google Maps: place_changed fired");
+                    const place = autocomplete.getPlace();
+                    if (!place.address_components) {
+                        console.warn("Google Maps: No address components");
+                        return;
+                    }
+
+                    let address = '';
+                    let city = '';
+                    let zip = '';
+
+                    for (const component of place.address_components) {
+                        const type = component.types[0];
+                        if (type === 'street_number') {
+                            address = component.long_name + ' ' + address;
+                        } else if (type === 'route') {
+                            address += component.long_name;
+                        } else if (type === 'locality') {
+                            city = component.long_name;
+                        } else if (type === 'postal_code') {
+                            zip = component.long_name;
+                        }
+                    }
+
+                    console.log("Google Maps: Updating fields", { address, city, zip });
+
+                    // Update fields
+                    document.getElementById('modal-address').value = address;
+                    document.getElementById('modal-city').value = city;
+                    document.getElementById('modal-zip').value = zip;
+                });
+
+                addressInput.dataset.autocompleteAttached = "true";
+            } catch (e) {
+                console.error("Google Maps: Exception initializing autocomplete", e);
+            }
+        }
+    </script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initAutocomplete"
+        async defer></script>
+    {% else %}
+    <script>
+        console.warn("Google Maps: Backend flags disabled or key missing.");
+        console.log("enable_google_maps: {{ enable_google_maps }}");
+        console.log("google_maps_api_key: {{ google_maps_api_key|default('')|length }} chars");
+    </script>
+    {% endif %}
 </head>
 
 <body
@@ -121,11 +207,7 @@
                 <span class="material-symbols-outlined">prescriptions</span>
                 <span class="font-semibold text-sm">{{ _("My Treatment") }}</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
-                href="#">
-                <span class="material-symbols-outlined">monitoring</span>
-                <span class="font-semibold text-sm">{{ _("Vitals") }}</span>
-            </a>
+
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
                 href="/billing">
                 <span class="material-symbols-outlined">receipt_long</span>
@@ -144,11 +226,12 @@
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
             <!-- Logout Button -->
-            <a href="/?cmd=web_logout"
-                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all">
+            <a href="/api/method/koraflow_core.utils.auth.logout"
+                class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-all mb-4">
                 <span class="material-symbols-outlined text-sm">logout</span>
                 {{ _("Log Out") }}
             </a>
+            {% if refill_info %}
             <div class="bg-primary/10 p-4 rounded-xl border border-primary/20">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="bg-primary size-8 rounded-full flex items-center justify-center text-charcoal">
@@ -156,9 +239,15 @@
                     </div>
                     <p class="text-xs font-bold text-primary uppercase tracking-wider">{{ _("Active Plan") }}</p>
                 </div>
-                <p class="text-sm font-bold text-charcoal dark:text-white">{{ patient.status or "Active Patient" }}</p>
-                <p class="text-xs text-slate-500">{{ _("Cycle 3 of 6") }}</p>
+                <p class="text-sm font-bold text-charcoal dark:text-white">{{ refill_info.medication or "Active" }}</p>
+                {% if refill_info.total_cycles > 1 %}
+                <p class="text-xs text-slate-500">{{ _("Cycle {0} of {1}").format(refill_info.current_cycle,
+                    refill_info.total_cycles) }}</p>
+                {% elif refill_info.is_one_time_plan %}
+                <p class="text-xs text-slate-500">{{ _("One-time supply") }}</p>
+                {% endif %}
             </div>
+            {% endif %}
         </div>
     </aside>
     <!-- Main Content Area -->
@@ -179,12 +268,13 @@
                     <div class="text-right hidden sm:block">
                         <p class="text-sm font-bold leading-none">{{ patient.first_name }} {{ patient.last_name or "" }}
                         </p>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{{ _("Premium
-                            Member") }}</p>
                     </div>
-                    <div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 shadow-sm bg-cover bg-center"
-                        data-alt="Patient profile avatar circular image"
-                        style='background-image: url("{{ patient.image or "https://lh3.googleusercontent.com/aida-public/AB6AXuAL3hA5SD4KcL_OB0mXuu9sGKrcMcP5j_8ZlLJRX6j6Gqh_tySVYhVWjA4Xj5EKALG8M5qC3tqtyFxAvoqiUEXVatC6Fe6La800cTFqqxVTZo9D8jXsz00kcvJzEf6SWDx3mwglb60dmMGLL81KW1SLfVGpELoDvLE65mPUl3gxgLBXZICCxCN_agNqVqqY9-2H99y9zHbIzkb1WS4owE1bgx4VXk0VLkxqrA0Xmz18rBkCNDpi7IDrXrkmajNW_GMbyxpY9BLY8jwy" }}");'>
+                    <div
+                        class="size-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
+                        <span class="font-bold text-primary text-xs uppercase">
+                            {{ patient.first_name[0] if patient and patient.first_name else '' }}{{ patient.last_name[0]
+                            if patient and patient.last_name else '' }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -205,11 +295,7 @@
                     <p class="text-slate-500 dark:text-slate-400 max-w-lg">{{ _("Your healthcare provider has issued a
                         new prescription. Please review the breakdown and accept the quote.") }}</p>
                 </div>
-                <button
-                    class="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold hover:shadow-md transition-all">
-                    <span class="material-symbols-outlined text-lg">download</span>
-                    Export PDF
-                </button>
+                {# Removed floating download button for compliance #}
             </div>
             {% else %}
             <!-- Treatment Overview Header - shown when there's nothing to review -->
@@ -238,23 +324,63 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for p in prescriptions %}
                     <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-primary/10 text-primary rounded-xl">
-                                <span class="material-symbols-outlined">prescription</span>
+                        class="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-2 group">
+                        <!-- Branded Header Area -->
+                        <div
+                            class="bg-primary/10 rounded-[28px] p-6 relative overflow-hidden mb-6 transition-colors group-hover:bg-primary/15">
+                            <div class="flex justify-between items-start">
+                                <!-- Stylized Logo Area -->
+                                <div class="flex items-center gap-0.5 opacity-80">
+                                    <span class="text-primary font-black text-xl tracking-tighter"
+                                        style="font-family: 'Montserrat', sans-serif; letter-spacing: -0.05em;">PRE</span>
+                                    <div
+                                        class="size-5 border-[2.5px] border-primary flex items-center justify-center rounded-[2px] mx-0.5">
+                                        <span class="text-primary font-black text-[10px]">A</span>
+                                    </div>
+                                    <span class="text-primary font-black text-xl tracking-tighter"
+                                        style="font-family: 'Montserrat', sans-serif; letter-spacing: -0.05em;">ION</span>
+                                </div>
+
+                                <!-- Doctor Approved Badge -->
+                                <div
+                                    class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-3 py-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
+                                    <p
+                                        class="text-[9px] font-bold text-slate-500 leading-tight uppercase tracking-wider text-center">
+                                        {{ _("Doctor") }}<br><span class="text-slate-900 dark:text-white">{{
+                                            _("Approved") }}</span>
+                                    </p>
+                                </div>
                             </div>
-                            <span
-                                class="text-xs font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">{{
-                                p.status }}</span>
+
+                            <!-- Abstract Graphic element -->
+                            <div
+                                class="absolute -bottom-6 -right-6 size-24 bg-primary/20 rounded-full blur-2xl transition-all group-hover:scale-150">
+                            </div>
                         </div>
-                        <h4 class="font-bold text-lg text-charcoal dark:text-white mb-1">{{ p.medication }}</h4>
-                        <p class="text-xs text-slate-500 mb-4">{{ p.dosage }} • {{ p.duration }}</p>
-                        <a href="/printview?doctype=GLP-1 Patient Prescription&name={{ p.name }}&format=Standard"
-                            target="_blank"
-                            class="flex items-center justify-center gap-2 w-full py-3 bg-charcoal text-white rounded-xl text-sm font-bold hover:bg-black transition-colors">
-                            <span class="material-symbols-outlined text-sm">download</span>
-                            {{ _("Download Prescription") }}
-                        </a>
+
+                        <!-- Content Area -->
+                        <div class="px-5 pb-5">
+                            <h4
+                                class="font-display font-bold text-2xl text-charcoal dark:text-white mb-1 uppercase tracking-tight">
+                                {{ p.medication }}</h4>
+                            <p
+                                class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
+                                {{ p.dosage }}
+                                <span class="size-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
+                                {{ p.duration }}
+                            </p>
+
+                            {# Hide download for in-house prescriptions (now handled by my_treatment.py logic mostly,
+                            but good for defense) #}
+                            {% if not p.medication_in_house %}
+                            <a href="/api/method/koraflow_core.api.billing.download_prescription_pdf?prescription_name={{ p.name }}"
+                                target="_blank"
+                                class="flex items-center justify-center size-14 bg-charcoal dark:bg-black text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl shadow-charcoal/20 dark:shadow-black/40"
+                                title="{{ _('Download Prescription') }}">
+                                <span class="material-symbols-outlined text-2xl">download</span>
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -268,10 +394,10 @@
                     <h3 class="text-xl font-bold tracking-tight">{{ _("Pending Quotation") }}</h3>
                 </div>
                 {% for quote in quotations %}
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 gap-8">
                     <!-- Detailed Quote Breakdown -->
                     <div
-                        class="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-primary/20 shadow-md shadow-primary/5 overflow-hidden">
+                        class="bg-white dark:bg-slate-900 rounded-2xl border border-primary/20 shadow-md shadow-primary/5 overflow-hidden">
                         <div
                             class="bg-primary/5 border-b border-primary/10 px-8 py-4 flex items-center justify-between">
                             <span
@@ -279,177 +405,523 @@
                                 <span class="size-2 bg-primary rounded-full animate-pulse"></span>
                                 {{ _("Action Required: Awaiting Acceptance") }}
                             </span>
-                            <span class="text-xs font-medium text-slate-500">{{
-                                frappe.format_date(quote.transaction_date) }}</span>
+                            {# Removed quotation download for compliance #}
                         </div>
-                        <div class="p-8">
-                            <div class="flex flex-col md:flex-row gap-8">
-                                <!-- Medicine Image Placeholder -->
-                                <div class="size-32 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-cover bg-center shrink-0"
-                                    data-alt="Medicine bottle illustration for GLP-1 treatment"
-                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4ZO2kkhFcbXXHiv1xMKtf8CXi-_jCJEwaRsC45RAlmM9lLeH6hDuBU1JAbDNrIZ6YQ2qqKflu65W16D6Q-cugPKKB5KqzwRM5yl4n-hHOef50ifxMOjfku-MlIy2JLQ5I08Q--lSqM0o0J4uav_VSSB94nmJnz6j1nls2nfiVg_zy-WvTwKh2c01xI1IbSWbMvdzVTBEtVxSNlMsExIhuQc31QLuUbzUd8aOxORQXju-WUgmQ3K_GagGAx895JraU28Nk3H1fQYpE");'>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <div class="flex-1 space-y-4">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h4 class="text-2xl font-bold tracking-tight">{{ _("GLP-1 Treatment Quote")
+                                            }}</h4>
+                                        <span
+                                            class="px-2 py-0.5 bg-primary/20 text-charcoal rounded text-[10px] font-bold border border-primary/30 tracking-tighter">S4</span>
+                                    </div>
+                                    <p class="text-slate-500 text-sm">{{ _("Quote ID") }}: <span
+                                            class="text-slate-900 dark:text-slate-200 font-semibold">{{ quote.name
+                                            }}</span></p>
                                 </div>
-                                <div class="flex-1 space-y-4">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <h4 class="text-2xl font-bold tracking-tight">{{ _("GLP-1 Treatment Quote")
-                                                }}</h4>
-                                            <span
-                                                class="px-2 py-0.5 bg-primary/20 text-charcoal rounded text-[10px] font-bold border border-primary/30 tracking-tighter">S4</span>
-                                        </div>
-                                        <p class="text-slate-500 text-sm">{{ _("Quote ID") }}: <span
-                                                class="text-slate-900 dark:text-slate-200 font-semibold">{{ quote.name
-                                                }}</span></p>
-                                    </div>
-                                    <!-- Line Items (Simulated description) -->
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between text-sm text-slate-600">
-                                            <span>Semaglutide 0.25mg Pen (4 weeks)</span>
-                                            <span class="font-bold">1 Unit</span>
-                                        </div>
-                                        <div class="flex justify-between text-sm text-slate-600">
-                                            <span>Needles & Alcohol Swabs</span>
-                                            <span class="font-bold">1 Pack</span>
-                                        </div>
-                                    </div>
+                                <!-- Line Items (Simulated description for now - ideally fetch items) -->
+                                <div class="space-y-4 py-4 border-t border-b border-slate-100 dark:border-slate-800">
+                                    <p class="text-sm text-slate-600 font-medium">{{ _("Treatment Plan Includes:")
+                                        }}</p>
+                                    <ul class="space-y-2">
+                                        <li class="flex items-center gap-2 text-sm text-slate-600">
+                                            <span class="material-symbols-outlined text-primary text-base">check</span>
+                                            <span>Prescribed Medication (1 Month Supply)</span>
+                                        </li>
+                                        <li class="flex items-center gap-2 text-sm text-slate-600">
+                                            <span class="material-symbols-outlined text-primary text-base">check</span>
+                                            <span>Injection Supplies (Needles & Swabs)</span>
+                                        </li>
+                                        <li class="flex items-center gap-2 text-sm text-slate-600">
+                                            <span class="material-symbols-outlined text-primary text-base">check</span>
+                                            <span>Cold-Chain Delivery</span>
+                                        </li>
+                                    </ul>
+                                </div>
 
-                                    <div
-                                        class="grid grid-cols-2 gap-y-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-4">
-                                        <span class="text-lg font-extrabold text-charcoal dark:text-white">{{ _("Total
-                                            Amount")
-                                            }}</span>
-                                        <span class="text-2xl font-black text-right text-primary">{{
-                                            frappe.format_value(quote.grand_total, currency=quote.currency)
-                                            }}</span>
-                                    </div>
+                                <div class="flex items-center justify-between pt-2">
+                                    <span class="text-lg font-extrabold text-charcoal dark:text-white">{{ _("Total
+                                        Amount") }}</span>
+                                    <span class="text-3xl font-black text-primary">{{
+                                        frappe.format_value(quote.grand_total, currency=quote.currency) }}</span>
                                 </div>
+
+                                <!-- Action Buttons -->
+                                <div
+                                    class="flex flex-col sm:flex-row gap-4 pt-6 mt-4 border-t border-slate-100 dark:border-slate-800">
+
+                                    <button onclick="declineQuote('{{ quote.name }}')"
+                                        class="flex-1 px-6 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold rounded-xl hover:bg-slate-50 hover:text-red-600 hover:border-red-200 transition-all flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined">close</span>
+                                        {{ _("Decline") }}
+                                    </button>
+
+                                    <button onclick="openAcceptModal('{{ quote.name }}', '{{ quote.grand_total }}')"
+                                        class="flex-[2] px-6 py-4 bg-charcoal text-white hover:bg-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-charcoal/20">
+                                        {{ _("Confirm & Accept") }}
+                                        <span class="material-symbols-outlined">arrow_forward</span>
+                                    </button>
+                                </div>
+
+                                <p class="text-xs text-center text-slate-400 mt-4 max-w-md mx-auto">
+                                    {{ _("By accepting, you confirm your order and authorize the pharmacy to
+                                    dispense your S4 medication.") }}
+                                </p>
                             </div>
                         </div>
                     </div>
-                    <!-- Sidebar Actions -->
-                    <div class="space-y-4">
-                        <div
-                            class="bg-charcoal p-8 rounded-2xl text-white shadow-xl shadow-charcoal/20 flex flex-col justify-between min-h-[300px] relative overflow-hidden">
-                            <!-- Background Pattern Decorative -->
-                            <div class="absolute -top-10 -right-10 size-40 bg-white/5 rounded-full blur-3xl"></div>
+                </div>
+        </div>
+        {% endfor %}
 
-                            <div class="relative space-y-4 z-10">
-                                <span class="material-symbols-outlined text-4xl text-primary">verified_user</span>
-                                <p class="text-lg font-bold leading-tight">{{ _("Authorize Dispensing") }}</p>
-                                <p class="text-white/70 text-sm leading-relaxed">{{ _("By accepting, you confirm your
-                                    order and authorize the pharmacy to dispense your S4 medication.") }}</p>
-                            </div>
-                            <button
-                                class="relative z-10 w-full bg-primary text-charcoal hover:bg-white hover:text-charcoal font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/20 mt-6">
-                                {{ _("Confirm & Accept") }}
-                                <span class="material-symbols-outlined">chevron_right</span>
-                            </button>
+        <!-- Address Verification Modal (div overlay for Google Maps compatibility) -->
+        <div id="accept-modal" class="fixed inset-0 z-[60] hidden items-center justify-center"
+            style="background: rgba(0,0,0,0.8);">
+            <div
+                class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl m-4 relative animate-[slideUp_0.3s_ease-out]">
+                <button onclick="closeAcceptModal()"
+                    class="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+
+                <div class="text-center mb-8">
+                    <div
+                        class="size-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-3xl">local_shipping</span>
+                    </div>
+                    <h3 class="text-2xl font-bold font-display text-charcoal dark:text-white">{{ _("Confirm
+                        Delivery Details") }}</h3>
+                    <p class="text-slate-500 text-sm mt-2">{{ _("Please verify your delivery address for
+                        cold-chain shipping.") }}</p>
+                </div>
+
+                <form id="accept-form" class="space-y-4">
+                    <input type="hidden" id="modal-quote-name" name="quote_name">
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                            _("Street Address") }}</label>
+                        <input type="text" name="address_line1" id="modal-address"
+                            value="{{ patient.address_line1 or '' }}" required
+                            class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white placeholder:text-slate-400">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("City") }}</label>
+                            <input type="text" name="city" id="modal-city" value="{{ patient.city or '' }}" required
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
                         </div>
-                        <div
-                            class="bg-slate-100 dark:bg-slate-800 p-6 rounded-2xl flex items-start gap-3 border border-slate-200 dark:border-slate-700">
-                            <span class="material-symbols-outlined text-slate-400">info</span>
-                            <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                {{ _("Regulatory Notice: As an S4 classified medicine, this requires a valid
-                                prescription and professional pharmacist oversight as per SAHPRA guidelines.") }}
-                            </p>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                                _("Postal Code") }}</label>
+                            <input type="text" name="zip_code" id="modal-zip" value="{{ patient.zip_code or '' }}"
+                                required
+                                class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
                         </div>
                     </div>
-                </div>
-                {% endfor %}
-            </section>
-            {% endif %}
-            <!-- Order History & Progress -->
-            <section class="space-y-6 pt-6 mb-12">
-                <div class="flex items-center justify-between px-2">
-                    <h3 class="text-xl font-bold tracking-tight">{{ _("Order Lifecycle") }}</h3>
-                    <a class="text-primary text-sm font-bold hover:underline" href="#">{{ _("View Full History") }}</a>
-                </div>
-                {% if shipments %}
-                <div
-                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead
-                                class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                                <tr>
-                                    <th class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                        {{ _("Order Details") }}</th>
-                                    <th class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                        {{ _("Status") }}</th>
-                                    <th
-                                        class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">
-                                        {{ _("Delivery") }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                                {% for shipment in shipments %}
-                                <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    <td class="px-8 py-6">
-                                        <p class="font-bold text-sm mb-1 text-charcoal dark:text-white">{{ shipment.name
-                                            }}</p>
-                                        <p class="text-xs text-slate-500">{{ frappe.format_date(shipment.creation) }}
-                                        </p>
-                                    </td>
-                                    <td class="px-8 py-6">
-                                        <!-- Status Badge -->
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold border
-											{% if shipment.status == 'Delivered' %} bg-green-50 text-green-700 border-green-200
-											{% elif shipment.status == 'Failed' %} bg-red-50 text-red-700 border-red-200
-											{% else %} bg-blue-50 text-blue-700 border-blue-200 {% endif %}">
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
+                            _("Delivery Notes (Optional)") }}</label>
+                        <textarea name="delivery_notes" id="modal-notes" rows="2"
+                            placeholder="{{ _('e.g. Leave with reception, deliver to suite 101...') }}"
+                            class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white placeholder:text-slate-400"></textarea>
+                        <p class="text-[10px] text-slate-400 mt-1 italic">{{ _("Note: These instructions will be
+                            passed to our courier.") }}</p>
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
+                        <button type="submit"
+                            class="w-full py-4 bg-primary text-charcoal font-black rounded-xl hover:brightness-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                            {{ _("Confirm Order") }} • <span id="modal-total" class="font-mono"></span>
+                        </button>
+                        <p class="text-[10px] text-center text-slate-400 mt-3">{{ _("Secure payment link will be
+                            sent via email.") }}</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            const modal = document.getElementById('accept-modal');
+
+            // Custom toast notification (frappe.show_alert not available on portal pages)
+            function showToast(message, type) {
+                const colors = {
+                    green: { bg: '#C1E12F', text: '#2D2D2D' }, // Brand Primary
+                    red: { bg: '#FF4D4D', text: '#fff' },
+                    orange: { bg: '#FAD02C', text: '#2D2D2D' },
+                    blue: { bg: '#2D2D2D', text: '#C1E12F' }  // Brand Secondary
+                };
+                const c = colors[type] || colors.blue;
+                const toast = document.createElement('div');
+                toast.textContent = message;
+                toast.style.cssText = `
+                            position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 99999;
+                            padding: 16px 32px; border-radius: 20px; font-weight: 700; font-size: 15px;
+                            background: ${c.bg}; color: ${c.text}; box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+                            animation: slideInDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+                            max-width: 90%; min-width: 300px; text-align: center;
+                            font-family: 'Montserrat', sans-serif; border: 1px solid rgba(0,0,0,0.05);
+                        `;
+
+                // Add animation keyframes if not exist
+                if (!document.getElementById('toast-animations')) {
+                    const style = document.createElement('style');
+                    style.id = 'toast-animations';
+                    style.innerHTML = `
+                                @keyframes slideInDown {
+                                    from { transform: translate(-50%, -100%); opacity: 0; }
+                                    to { transform: translate(-50%, 0); opacity: 1; }
+                                }
+                            `;
+                    document.head.appendChild(style);
+                }
+
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translate(-50%, -20px)';
+                    toast.style.transition = 'all 0.4s ease-in';
+                }, 4000);
+                setTimeout(() => toast.remove(), 4500);
+            }
+
+            function openAcceptModal(quoteName, total) {
+                document.getElementById('modal-quote-name').value = quoteName;
+                document.getElementById('modal-total').innerText = "R " + total;
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                // Re-init autocomplete if needed for modal input
+                if (typeof initAutocomplete === 'function') {
+                    initAutocomplete();
+                }
+            }
+
+            function closeAcceptModal() {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeAcceptModal();
+            });
+
+            document.getElementById('accept-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Processing...';
+                btn.disabled = true;
+
+                const formData = new FormData(e.target);
+                const quoteName = formData.get('quote_name');
+                const addressData = {
+                    address_line1: formData.get('address_line1'),
+                    city: formData.get('city'),
+                    zip_code: formData.get('zip_code'),
+                    delivery_notes: formData.get('delivery_notes')
+                };
+
+                try {
+                    // Safety timeout - reset button after 30s no matter what
+                    const safetyTimeout = setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        showToast('Request timed out. Please check if your order was processed.', 'orange');
+                    }, 30000);
+
+                    const response = await fetch('/api/method/koraflow_core.www.my_treatment.accept_quote', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Frappe-CSRF-Token': frappe.csrf_token
+                        },
+                        body: JSON.stringify({
+                            quote_name: quoteName,
+                            address_data: JSON.stringify(addressData)
+                        })
+                    });
+
+                    clearTimeout(safetyTimeout);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        showToast('Order Confirmed! Redirecting...', 'green');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        const err = await response.json().catch(() => ({}));
+                        const msg = err._server_messages
+                            ? JSON.parse(err._server_messages)[0]
+                            : (err.message || 'Failed to process. Please try again.');
+                        showToast('Error: ' + msg, 'red');
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Accept quote error:', error);
+                    showToast('Network error occurred. Please try again.', 'red');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            });
+
+            async function declineQuote(quoteName) {
+                if (!confirm("Are you sure you want to decline this quote? This cannot be undone.")) return;
+
+                try {
+                    const response = await fetch('/api/method/koraflow_core.www.my_treatment.decline_quote', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Frappe-CSRF-Token': frappe.csrf_token
+                        },
+                        body: JSON.stringify({ quote_name: quoteName })
+                    });
+                    if (response.ok) {
+                        showToast('Quote Declined', 'blue');
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast('Error declining quote', 'red');
+                    }
+                } catch (e) {
+                    showToast('Network error', 'red');
+                }
+            }
+        </script>
+        </section>
+        {% endif %}
+        <!-- Order History & Progress -->
+        <section class="space-y-6 pt-6 mb-12">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="text-xl font-bold tracking-tight">{{ _("Order Lifecycle") }}</h3>
+                <a class="text-primary text-sm font-bold hover:underline" href="#">{{ _("View Full History") }}</a>
+            </div>
+            {% if shipments %}
+            <div
+                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+                            <tr>
+                                <th class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                    {{ _("Order Details") }}</th>
+                                <th class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                    {{ _("Status") }}</th>
+                                <th
+                                    class="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">
+                                    {{ _("Delivery") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            {% for shipment in shipments %}
+                            <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <td class="px-8 py-6">
+                                    <p class="font-bold text-sm mb-1 text-charcoal dark:text-white">{{ shipment.name
+                                        }}</p>
+                                    <p class="text-xs text-slate-500">{{ frappe.format_date(shipment.creation) }}
+                                    </p>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <!-- Status Badge -->
+                                    <div class="flex flex-col gap-2">
+                                        <span class="inline-flex items-center w-fit px-2.5 py-1 rounded text-[10px] font-bold border
+                                                {% if shipment.status == 'Delivered' %} bg-green-50 text-green-700 border-green-200
+                                                {% elif shipment.status == 'Failed' %} bg-red-50 text-red-700 border-red-200
+                                                {% else %} bg-blue-50 text-blue-700 border-blue-200 {% endif %}">
                                             {{ shipment.status }}
                                         </span>
                                         {% if shipment.waybill_number %}
-                                        <p class="text-xs text-slate-400 mt-2 font-mono ml-1">{{ _("Ref:") }} {{
+                                        <p class="text-[10px] text-slate-400 font-mono">{{ _("Waybill:") }} {{
                                             shipment.waybill_number }}</p>
                                         {% endif %}
-                                    </td>
-                                    <td class="px-8 py-6 text-right">
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <div class="flex flex-col items-end gap-2">
                                         {% if shipment.actual_delivery %}
                                         <p class="font-bold text-sm text-charcoal dark:text-white">{{
                                             frappe.format_date(shipment.actual_delivery) }}</p>
                                         {% else %}
                                         <p class="text-xs text-slate-400 italic">{{ _("In Progress") }}</p>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% else %}
-                <div
-                    class="p-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 border-dashed">
-                    <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">local_shipping</span>
-                    <p>{{ _("No active shipments found.") }}</p>
-                </div>
-                {% endif %}
-            </section>
-            <!-- Help Section -->
-            <div
-                class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between gap-8 border border-slate-200 dark:border-slate-700">
-                <div class="flex-1 space-y-4">
-                    <h4 class="text-2xl font-bold font-display tracking-tight text-charcoal dark:text-white">{{ _("Need
-                        help with your prescription?") }}</h4>
-                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ _("Our clinical support team and
-                        pharmacists are available to answer your questions regarding dosages, side effects, or delivery
-                        logistics.") }}</p>
-                    <div class="flex flex-wrap gap-4 pt-4">
-                        <button
-                            class="px-6 py-3 bg-charcoal text-white hover:bg-black rounded-xl text-sm font-bold shadow-lg shadow-charcoal/20 transition-all">
-                            {{ _("Talk to Doctor") }}
-                        </button>
-                        <button
-                            class="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-charcoal dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-sm font-bold transition-all">
-                            {{ _("Pharmacy Support") }}
-                        </button>
-                    </div>
-                </div>
-                <div
-                    class="hidden md:flex relative size-48 bg-white dark:bg-slate-800 rounded-full border-4 border-white dark:border-slate-700 shadow-xl items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-6xl text-primary">support_agent</span>
+
+                                        {% if shipment.waybill_number %}
+                                        <a href="https://v3.thecourierguy.co.za/tracking?waybill={{ shipment.waybill_number }}"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-charcoal rounded-lg text-[10px] font-bold transition-all border border-primary/20">
+                                            <span class="material-symbols-outlined text-sm">location_on</span>
+                                            {{ _("Track Order") }}
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
+            {% else %}
+            <div
+                class="p-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 border-dashed">
+                <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">local_shipping</span>
+                <p>{{ _("No active shipments found.") }}</p>
+            </div>
+            {% endif %}
+        </section>
+        <!-- Help Section -->
+        <div
+            class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between gap-8 border border-slate-200 dark:border-slate-700">
+            <div class="flex-1 space-y-4">
+                <h4 class="text-2xl font-bold font-display tracking-tight text-charcoal dark:text-white">{{ _("Need
+                    help with your prescription?") }}</h4>
+                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ _("Our clinical support team and
+                    pharmacists are available to answer your questions regarding dosages, side effects, or delivery
+                    logistics.") }}</p>
+                <div class="flex flex-wrap gap-4 pt-4">
+                    <button id="contact-staff-btn" onclick="openSupportModal()"
+                        class="px-8 py-4 bg-charcoal text-white hover:bg-black rounded-xl text-sm font-bold shadow-xl shadow-charcoal/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">support_agent</span>
+                        {{ _("Contact Staff") }}
+                    </button>
+                </div>
+            </div>
+            <div
+                class="hidden md:flex relative size-48 bg-white dark:bg-slate-800 rounded-full border-4 border-white dark:border-slate-700 shadow-xl items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-6xl text-primary">support_agent</span>
+            </div>
+        </div>
+
+        <!-- Support Ticket Modal -->
+        <div id="support-modal" class="fixed inset-0 z-[100] hidden items-center justify-center">
+            <div class="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onclick="closeSupportModal()"></div>
+            <div
+                class="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 id="support-modal-title"
+                            class="text-2xl font-bold tracking-tight text-charcoal dark:text-white">{{ _("Contact
+                            Support Team") }}</h3>
+                        <button onclick="closeSupportModal()"
+                            class="text-slate-400 hover:text-charcoal dark:hover:text-white transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <form id="support-ticket-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{{
+                                _("I need help with...") }}</label>
+                            <div class="relative">
+                                <select id="support-category" name="category" required
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="" disabled selected>{{ _("Select a category") }}</option>
+                                    <option value="Billing/Payments">{{ _("Billing & Payments") }}</option>
+                                    <option value="Side Effects">{{ _("Medical / Side Effects") }}</option>
+                                    <option value="Prescriptions">{{ _("Prescription & Refills") }}</option>
+                                    <option value="Delivery">{{ _("Shipping & Delivery") }}</option>
+                                    <option value="Other">{{ _("Other / General Inquiry") }}</option>
+                                </select>
+                                <span
+                                    class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{{
+                                _("Subject") }}</label>
+                            <input type="text" id="support-subject" name="subject" required
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                placeholder="{{ _('Briefly describe your issue') }}">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{{
+                                _("Message") }}</label>
+                            <textarea id="support-description" name="description" required rows="4"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                placeholder="{{ _('Describe your issue in detail...') }}"></textarea>
+                        </div>
+                        <button type="submit" id="submit-support-btn"
+                            class="w-full py-4 bg-primary text-charcoal rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                            {{ _("Send Message") }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openSupportModal() {
+                const modal = document.getElementById('support-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSupportModal() {
+                const modal = document.getElementById('support-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+                document.getElementById('support-ticket-form').reset();
+            }
+
+            document.getElementById('support-ticket-form').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const btn = document.getElementById('submit-support-btn');
+                const originalText = btn.innerHTML;
+                const subject = document.getElementById('support-subject').value;
+                const description = document.getElementById('support-description').value;
+                const category = document.getElementById('support-category').value;
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Sending...';
+
+                try {
+                    const response = await fetch('/api/method/koraflow_core.api.support.create_patient_support_ticket', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Frappe-CSRF-Token': frappe.csrf_token
+                        },
+                        body: JSON.stringify({
+                            subject: subject,
+                            description: description,
+                            category: category
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        const successMsg = (typeof result.message === 'object') ? result.message.message : (result.message || 'Support ticket created successfully!');
+                        showToast(successMsg, 'green');
+                        closeSupportModal();
+                    } else {
+                        const msg = result._server_messages
+                            ? JSON.parse(result._server_messages)[0]
+                            : (result.message || 'Failed to send message. Please try again.');
+                        showToast('Error: ' + msg, 'red');
+                    }
+                } catch (error) {
+                    console.error('Support ticket error:', error);
+                    showToast('Network error. Please check your connection.', 'red');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        </script>
         </div>
         <!-- Footer -->
         <footer

@@ -5,7 +5,7 @@ Handles all API interactions with The Courier Guy
 import frappe
 import requests
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 
 class CourierGuyAPI:
@@ -45,13 +45,14 @@ class CourierGuyAPI:
 		url = f"{self.api_url}/{endpoint.lstrip('/')}"
 		
 		try:
+			frappe.logger().info(f"Courier Guy API Debug: URL {method} {url}, Params/Data: {data}")
 			if method.upper() == "GET":
 				response = requests.get(url, headers=self.headers, params=data, timeout=30)
 			elif method.upper() == "POST":
 				response = requests.post(url, headers=self.headers, json=data, timeout=30)
 			else:
 				raise ValueError(f"Unsupported HTTP method: {method}")
-			
+			frappe.logger().info(f"Courier Guy API Debug: Status {response.status_code}, Response: {response.text[:500]}")
 			response.raise_for_status()
 			
 			# Try to parse JSON response
@@ -70,10 +71,13 @@ class CourierGuyAPI:
 				}
 		
 		except requests.exceptions.RequestException as e:
-			frappe.log_error(f"Courier Guy API Error: {str(e)}", "Courier Guy API")
+			# Truncate error message for the log title if needed
+			error_msg = str(e)
+			log_title = f"Courier Guy API Error: {error_msg[:100]}"
+			frappe.log_error(title=log_title, message=error_msg)
 			return {
 				"success": False,
-				"error": str(e),
+				"error": error_msg,
 				"status_code": getattr(e.response, 'status_code', None) if hasattr(e, 'response') else None
 			}
 	
@@ -128,9 +132,8 @@ class CourierGuyAPI:
 			"test_mode": self.test_mode
 		}
 		
-		# Make API request
-		# Note: Adjust endpoint based on actual Courier Guy API documentation
-		response = self._make_request("POST", "/api/v1/waybills", waybill_data)
+		# Note: Shiplogic v2 uses /v2/shipments
+		response = self._make_request("POST", "/v2/shipments", waybill_data)
 		
 		if response.get("success"):
 			data = response.get("data", {})
@@ -160,7 +163,7 @@ class CourierGuyAPI:
 		Returns:
 			Tracking information dictionary
 		"""
-		response = self._make_request("GET", f"/api/v1/tracking/{tracking_number}")
+		response = self._make_request("GET", f"/v2/tracking/{tracking_number}")
 		
 		if response.get("success"):
 			data = response.get("data", {})
@@ -190,7 +193,7 @@ class CourierGuyAPI:
 		Returns:
 			Print URL or PDF data
 		"""
-		response = self._make_request("GET", f"/api/v1/waybills/{waybill_number}/print")
+		response = self._make_request("GET", f"/v2/shipments/{waybill_number}/label")
 		
 		if response.get("success"):
 			data = response.get("data", {})
@@ -220,7 +223,8 @@ class CourierGuyAPI:
 		Returns:
 			Cancellation response
 		"""
-		response = self._make_request("POST", f"/api/v1/waybills/{waybill_number}/cancel", {
+		response = self._make_request("POST", f"/v2/shipments/cancel", {
+			"tracking_reference": waybill_number,
 			"reason": reason
 		})
 		
@@ -236,4 +240,112 @@ class CourierGuyAPI:
 				"error": response.get("error", "Unknown error"),
 				"raw_response": response
 			}
+
+	def get_shipments(self, from_date: Optional[str] = None, to_date: Optional[str] = None, limit: int = 50, offset: int = 0) -> Dict:
+		"""
+		Fetch shipments from Courier Guy API
+		
+		Args:
+			from_date: Start date (YYYY-MM-DD)
+			to_date: End date (YYYY-MM-DD)
+			limit: Number of records to fetch
+			offset: Pagination offset
+			
+		Returns:
+			Response with shipments list
+		"""
+		params: Dict[str, Any] = {
+			"limit": limit,
+			"offset": offset
+		}
+		
+		if from_date:
+			params["start_date"] = from_date
+			params["date_filter"] = "time_created"
+		
+		if to_date:
+			params["end_date"] = to_date
+			if "date_filter" not in params:
+				params["date_filter"] = "time_created"
+				
+		# Shiplogic v2 endpoint
+		response = self._make_request("GET", "/v2/shipments", params)
+		
+		if response.get("success"):
+			data = response.get("data", {})
+			shipments = data if isinstance(data, list) else data.get("shipments", [])
+			return {
+				"success": True,
+				"shipments": shipments,
+				"count": len(shipments),
+				"raw_response": data
+			}
+		else:
+			return {
+				"success": False,
+				"error": response.get("error", "Unknown error"),
+				"raw_response": response
+			}
+
+	def get_shipment_by_waybill(self, waybill_number: str) -> Dict:
+		"""
+		Fetch a specific shipment by waybill/tracking number
+		"""
+		params = {"tracking_reference": waybill_number}
+		response = self._make_request("GET", "/v2/shipments", params)
+		
+		if response.get("success"):
+			data = response.get("data", {})
+			shipments = data if isinstance(data, list) else data.get("shipments", [])
+			if shipments:
+				return {
+					"success": True,
+					"data": shipments[0],
+					"raw_response": data
+				}
+			return {"success": False, "error": "Shipment not found"}
+		else:
+			return {
+				"success": False,
+				"error": response.get("error", "Unknown error"),
+				"raw_response": response
+			}
+
+	def get_dashboard_data(self, from_date: Optional[str] = None, to_date: Optional[str] = None) -> Dict:
+		"""
+		Get dashboard summary data. 
+		If no dedicated endpoint exists, we calculate it from shipments.
+		"""
+		# First try to get shipments
+		res = self.get_shipments(from_date=from_date, to_date=to_date, limit=1000)
+		if not res.get("success"):
+			return res
+			
+		shipments = res.get("shipments", [])
+		
+		# Basic aggregation for dashboard
+		summary = {
+			"created": len(shipments),
+			"collected": 0,
+			"delivered": 0,
+			"in_transit": 0,
+			"failed": 0
+		}
+		
+		for s in shipments:
+			status = (s.get("status") or "").lower()
+			if status == "delivered":
+				summary["delivered"] += 1
+			elif status in ["collected", "at-hub", "in-transit", "out-for-delivery"]:
+				summary["collected"] += 1
+				summary["in_transit"] += 1
+			elif status in ["cancelled", "failed", "undeliverable"]:
+				summary["failed"] += 1
+				
+		return {
+			"success": True,
+			"summary": summary,
+			"shipments": shipments[:100], # Return top 100 for display
+			"source": "api"
+		}
 

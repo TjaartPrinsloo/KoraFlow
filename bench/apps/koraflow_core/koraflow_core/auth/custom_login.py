@@ -85,5 +85,4 @@ def apply_login_override():
 try:
 	apply_login_override()
 except Exception as e:
-	frappe.log_error(f"Error applying login override: {str(e)}", "Login Override")
-
+	frappe.log_error(title="Login Override", message=f"Error applying login override: {e}")

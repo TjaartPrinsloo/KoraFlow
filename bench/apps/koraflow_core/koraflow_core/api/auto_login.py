@@ -210,7 +210,7 @@ def auto_login_with_token(token, redirect_to=None):
 			"error": str(e),
 			"error_type": type(e).__name__
 		})
-		frappe.log_error(f"Error in auto_login_with_token: {str(e)}")
+		frappe.log_error(title="Auto-login Error", message=f"Error in auto_login_with_token: {str(e)}")
 		# If called via redirect, show error page
 		if frappe.request and frappe.request.method == "GET" and not frappe.request.headers.get("X-Requested-With"):
 			frappe.respond_as_web_page(

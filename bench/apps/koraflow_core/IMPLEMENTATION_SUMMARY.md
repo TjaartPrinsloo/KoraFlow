@@ -165,7 +165,7 @@ Before deploying, test:
 2. **Run setup** (if needed):
    ```bash
    bench --site your-site.localhost console
-   >>> from koraflow_core.koraflow_core.setup_sales_agent import setup_sales_agent_system
+   >>> from koraflow_core.setup_sales_agent import setup_sales_agent_system
    >>> setup_sales_agent_system()
    ```
 

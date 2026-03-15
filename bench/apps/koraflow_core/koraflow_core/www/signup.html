@@ -61,13 +61,8 @@
 
             <!-- Logo Area (Top Left) -->
             <div class="z-20">
-                <div class="flex items-center gap-3 mb-2">
-                    <!-- Logo Icon -->
-                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                        <span class="text-charcoal font-bold italic">s</span>
-                    </div>
-                    <span class="text-white font-bold text-2xl tracking-tight">Slim<span
-                            class="text-primary font-normal">2</span>Well</span>
+                <div class="flex items-center mb-4">
+                    <img src="/assets/koraflow_core/images/s2w_logo.png" alt="Slim2Well Logo" class="h-20 w-auto">
                 </div>
                 <p class="text-slate-500 text-xs font-semibold tracking-widest uppercase ml-1">Your Journey, Simplified.
                 </p>
@@ -98,9 +93,8 @@
             class="flex-1 flex flex-col items-center justify-center p-8 lg:p-24 bg-background-light dark:bg-background-dark relative">
 
             <!-- Mobile Logo -->
-            <div class="lg:hidden w-full max-w-md mb-12 flex flex-col items-center justify-center gap-1">
-                <span class="text-slate-900 dark:text-white font-bold text-2xl tracking-tight">Slim<span
-                        class="text-primary">2</span>Well</span>
+            <div class="lg:hidden w-full max-w-md mb-12 flex flex-col items-center justify-center">
+                <img src="/assets/koraflow_core/images/s2w_logo.png" alt="Slim2Well Logo" class="h-16 w-auto">
             </div>
 
             <div class="w-full max-w-md">
@@ -133,14 +127,41 @@
                             id="email" name="email" placeholder="john@example.com" type="email" required />
                     </div>
 
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300"
+                            for="password">Password</label>
+                        <input
+                            class="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-300 text-sm font-medium"
+                            id="password" name="password" placeholder="••••••••" type="password" required />
+
+                        <!-- Password Strength Indicators -->
+                        <div class="mt-2 space-y-1 pl-1" id="password-requirements">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Password
+                                Requirements:</p>
+                            <ul class="text-xs text-slate-500 space-y-0.5" id="req-list">
+                                <li id="req-length" class="flex items-center gap-1 transition-colors"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 8+ characters</li>
+                                <li id="req-upper" class="flex items-center gap-1 transition-colors"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 uppercase letter</li>
+                                <li id="req-lower" class="flex items-center gap-1 transition-colors"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 lowercase letter</li>
+                                <li id="req-number" class="flex items-center gap-1 transition-colors"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 number</li>
+                                <li id="req-special" class="flex items-center gap-1 transition-colors"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> 1 special char (!@#$%...)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                     <div class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 pt-1">
                         <input
                             class="w-4 h-4 rounded-full border-slate-300 text-primary focus:ring-primary bg-slate-50 dark:bg-slate-800"
-                            id="terms" type="checkbox" required />
-                        <label for="terms" class="text-xs">I agree to the <a
-                                class="underline hover:text-primary transition-colors" href="/terms"
-                                target="_blank">Terms of
-                                Service</a></label>
+                            id="terms" type="checkbox" />
+                        <label for="terms" class="text-xs">I agree to the <button type="button"
+                                class="underline hover:text-primary transition-colors focus:outline-none"
+                                onclick="toggleTosModal(true)">Terms of
+                                Service</button></label>
                     </div>
 
                     <button id="submit-btn"
@@ -163,18 +184,113 @@
                     </p>
                 </div>
 
-                <!-- Footer Logos (Small) -->
-                <!-- Footer Logos Removed -->
+                <!-- Terms of Service Modal -->
+                <div id="tos-modal"
+                    class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div
+                        class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-800">
+                        <div
+                            class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                            <h3 class="text-xl font-bold dark:text-white">Terms of Service</h3>
+                            <button onclick="toggleTosModal(false)"
+                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <div class="p-8 overflow-y-auto text-sm text-slate-600 dark:text-slate-400 space-y-6">
+                            <section>
+                                <h4 class="font-bold text-slate-900 dark:text-white mb-2">1. Acceptance of Terms</h4>
+                                <p>By accessing and using this portal, you agree to be bound by these Terms of Service.
+                                    If you do not agree to these terms, please do not use our services.</p>
+                            </section>
+                            <section>
+                                <h4 class="font-bold text-slate-900 dark:text-white mb-2">2. Clinical Assessment</h4>
+                                <p>The GLP-1 intake process is a clinical screening. Providing inaccurate information
+                                    may be harmful to your health and will lead to immediate disqualification from our
+                                    programs.</p>
+                            </section>
+                            <section>
+                                <h4 class="font-bold text-slate-900 dark:text-white mb-2">3. POPIA Compliance</h4>
+                                <p>We are fully committed to protecting your personal information in accordance with the
+                                    Protection of Personal Information Act (POPIA) of South Africa. Your medical data is
+                                    handled with the highest level of confidentiality and is only shared with authorized
+                                    clinical personnel.</p>
+                            </section>
+                            <section>
+                                <h4 class="font-bold text-slate-900 dark:text-white mb-2">4. Medical Disclaimer</h4>
+                                <p>All clinical decisions are at the sole discretion of our licensed medical
+                                    practitioners. Submitting an intake form does not guarantee a prescription or
+                                    treatment plan.</p>
+                            </section>
+                        </div>
+                        <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                            <button onclick="toggleTosModal(false)"
+                                class="px-8 py-3 bg-primary text-charcoal font-bold rounded-xl hover:brightness-105 transition-all shadow-lg shadow-primary/20">
+                                Close & Continue
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
-            <!-- Dark Mode Toggle -->
-            <!-- Dark Mode Toggle Removed -->
+            <!-- Footer Logos (Small) -->
+            <!-- Footer Logos Removed -->
 
         </div>
     </div>
 
     <script>
+        function toggleTosModal(show) {
+            const modal = document.getElementById('tos-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Password Validation Logic
+        const passwordInput = document.getElementById('password');
+        const reqList = {
+            length: { regex: /.{8,}/, el: document.getElementById('req-length') },
+            upper: { regex: /[A-Z]/, el: document.getElementById('req-upper') },
+            lower: { regex: /[a-z]/, el: document.getElementById('req-lower') },
+            number: { regex: /[0-9]/, el: document.getElementById('req-number') },
+            special: { regex: /[!@#$%^&*(),.?":{}|<>]/, el: document.getElementById('req-special') }
+        };
+
+        function validatePassword(e) {
+            const val = e.target.value;
+            let allValid = true;
+
+            for (const [key, req] of Object.entries(reqList)) {
+                const isValid = req.regex.test(val);
+                const icon = req.el.querySelector('span');
+
+                if (isValid) {
+                    req.el.classList.remove('text-slate-500');
+                    req.el.classList.add('text-green-600', 'font-medium');
+                    icon.classList.remove('bg-slate-300');
+                    icon.classList.add('bg-green-500');
+                } else {
+                    req.el.classList.add('text-slate-500');
+                    req.el.classList.remove('text-green-600', 'font-medium');
+                    icon.classList.add('bg-slate-300');
+                    icon.classList.remove('bg-green-500');
+                    allValid = false;
+                }
+            }
+
+            // Optional: Disable submit button until valid (logic can be added here or in handleSignup)
+        }
+
+        passwordInput.addEventListener('input', validatePassword);
+
         async function handleSignup(e) {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
@@ -190,6 +306,16 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
+            // Custom TOS Validation
+            if (!document.getElementById('terms').checked) {
+                errorDiv.textContent = 'Please accept the Terms of Service to proceed.';
+                errorDiv.classList.remove('hidden');
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
             try {
                 const response = await fetch('/api/method/koraflow_core.api.patient_signup.custom_sign_up', {
                     method: 'POST',
@@ -199,7 +325,8 @@
                     },
                     body: JSON.stringify({
                         email: data.email,
-                        full_name: data.full_name
+                        full_name: data.full_name,
+                        password: data.password
                     })
                 });
 
@@ -207,7 +334,7 @@
 
                 if (response.ok) {
                     // Determine redirect
-                    const redirectUrl = result.home_page || "/glp1_intake_wizard";
+                    const redirectUrl = result.home_page || "/intake";
                     window.location.href = redirectUrl;
                 } else {
                     let msg = 'Registration failed';

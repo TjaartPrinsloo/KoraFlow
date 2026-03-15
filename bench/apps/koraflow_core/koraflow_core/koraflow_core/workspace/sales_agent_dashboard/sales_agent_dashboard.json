@@ -1,0 +1,62 @@
+{
+    "content": "[{\"id\":\"commission_kpis\",\"label\":\"Commission Dashboard\",\"title\":\"Commission Dashboard\",\"type\":\"custom_block\",\"dependencies\":\"\",\"onboard\":0,\"is_standard\":1,\"link_type\":\"\",\"idx\":0,\"label\":\"Commission Dashboard\"},{\"id\":\"my_referrals\",\"label\":\"My Referrals\",\"title\":\"My Referrals\",\"type\":\"link\",\"dependencies\":\"\",\"onboard\":0,\"is_standard\":1,\"link_type\":\"DocType\",\"idx\":1,\"label\":\"My Referrals\",\"link_to\":\"Patient Referral\"},{\"id\":\"commission_records\",\"label\":\"Commission Records\",\"title\":\"Commission Records\",\"type\":\"link\",\"dependencies\":\"\",\"onboard\":0,\"is_standard\":1,\"link_type\":\"DocType\",\"idx\":2,\"label\":\"Commission Records\",\"link_to\":\"Commission Record\"},{\"id\":\"messages\",\"label\":\"Messages\",\"title\":\"Messages\",\"type\":\"link\",\"dependencies\":\"\",\"onboard\":0,\"is_standard\":1,\"link_type\":\"DocType\",\"idx\":3,\"label\":\"Messages\",\"link_to\":\"Referral Message\"}]",
+    "custom_blocks": [
+        {
+            "custom_block_name": "Sales Agent Dashboard",
+            "label": "Sales Agent Dashboard"
+        }
+    ],
+    "custom_sections": {},
+    "docstatus": 0,
+    "doctype": "Workspace",
+    "for_user": "",
+    "hide_custom": 0,
+    "icon": "dashboard",
+    "is_hidden": 0,
+    "label": "Sales Agent Portal",
+    "links": [
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "My Referrals",
+            "link_count": 0,
+            "link_to": "List",
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "Commission Records",
+            "link_count": 0,
+            "link_to": "List",
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "Messages",
+            "link_count": 0,
+            "link_to": "List",
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Link"
+        }
+    ],
+    "module": "KoraFlow Core",
+    "name": "Sales Agent Dashboard",
+    "parent": "",
+    "parentfield": "",
+    "parenttype": "",
+    "public": 1,
+    "roles": [
+        {
+            "role": "Sales Agent"
+        }
+    ],
+    "sequence_id": 10.0,
+    "title": "Sales Agent Dashboard"
+}

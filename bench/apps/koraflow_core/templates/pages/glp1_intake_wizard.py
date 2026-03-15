@@ -37,27 +37,22 @@ def get_context(context):
 	
 	# Get patient information
 	try:
-		user = frappe.get_doc("User", frappe.session.user)
 		patient = None
-		
 		if frappe.db.exists("Patient", {"email": frappe.session.user}):
 			patient = frappe.get_doc("Patient", {"email": frappe.session.user})
-			if patient.glp1_intake_forms:
-				# Check if any intake form is completed
-				completed_forms = [
-					f for f in patient.glp1_intake_forms 
-					if f.intake_form and frappe.db.get_value("GLP-1 Intake Form", f.intake_form, "form_status") == "Completed"
-				]
-				if completed_forms:
-					context_dict["intake_status"] = {"status": "completed"}
-					context.intake_status = context_dict["intake_status"]
-					return context_dict
+			
+			# Check if there is a completed intake submission using standalone DocType
+			intake_forms = frappe.get_all("GLP-1 Intake Submission", filters={"patient": patient.name}, limit=1, ignore_permissions=True)
+			if intake_forms:
+				context_dict["intake_status"] = {"status": "completed"}
+				context.intake_status = context_dict["intake_status"]
+				return context_dict
 		
 		context_dict["patient"] = patient
 		context.patient = patient
 	except Exception as e:
 		# If there's an error, just use default context
-		frappe.log_error(f"Error in get_context for glp1_intake_wizard: {e}", "Intake Wizard Context Error")
+		frappe.log_error(title="Intake Wizard Context Error", message=f"Error in get_context for glp1_intake_wizard: {e}")
 	
 	# Return dict that will be merged into context
 	return context_dict

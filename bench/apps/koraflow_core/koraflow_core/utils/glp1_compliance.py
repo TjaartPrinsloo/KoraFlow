@@ -31,7 +31,7 @@ def create_audit_log(event_type, reference_doctype=None, reference_name=None,
 		frappe.db.commit()
 		return audit_log.name
 	except Exception as e:
-		frappe.log_error(f"Error creating audit log: {str(e)}", "GLP-1 Compliance")
+		frappe.log_error(title="GLP-1 Compliance", message=f"Error creating audit log: {str(e)}")
 		return None
 
 
@@ -107,7 +107,7 @@ def get_batch_traceability(batch_name):
 			"traceability_complete": True
 		}
 	except Exception as e:
-		frappe.log_error(f"Error getting batch traceability: {str(e)}", "GLP-1 Compliance")
+		frappe.log_error(title="GLP-1 Compliance", message=f"Error getting batch traceability: {str(e)}")
 		return {"error": str(e)}
 
 
@@ -246,7 +246,7 @@ def generate_sahpra_audit_report(start_date, end_date):
 			"dispenses": dispenses
 		}
 	except Exception as e:
-		frappe.log_error(f"Error generating SAHPRA audit report: {str(e)}", "GLP-1 Compliance")
+		frappe.log_error(title="GLP-1 Compliance", message=f"Error generating SAHPRA audit report: {str(e)}")
 		return {"error": str(e)}
 
 

@@ -64,7 +64,7 @@ def get_apps():
 					}
 				)
 			except Exception:
-				frappe.log_error(f"Failed to call has_permission hook ({has_permission_path}) for {app}")
+				frappe.log_error(title="App Permission Error", message=f"Failed to call has_permission hook ({has_permission_path}) for {app}")
 	return app_list
 
 

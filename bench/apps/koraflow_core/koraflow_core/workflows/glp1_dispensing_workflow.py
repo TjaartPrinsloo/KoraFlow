@@ -58,7 +58,7 @@ def create_quotation_from_prescription(prescription):
 		medication_item = medication.item if hasattr(medication, 'item') else None
 		
 		if not medication_item:
-			frappe.log_error(f"No item found for medication {prescription.medication}", "GLP-1 Workflow")
+			frappe.log_error(title="GLP-1 Workflow", message=f"No item found for medication {prescription.medication}")
 			return
 		
 		# Create quotation
@@ -74,12 +74,13 @@ def create_quotation_from_prescription(prescription):
 		})
 		quotation.flags.from_medication_request = True
 		quotation.insert(ignore_permissions=True)
-		quotation.submit(ignore_permissions=True)
+		quotation.flags.ignore_permissions = True
+		quotation.submit()
 		frappe.db.commit()
 		
 		return quotation.name
 	except Exception as e:
-		frappe.log_error(f"Error creating quotation: {str(e)}", "GLP-1 Workflow")
+		frappe.log_error(title="GLP-1 Workflow", message=f"Error creating quotation: {str(e)}")
 
 
 def handle_quotation_accepted(doc, method):
@@ -96,25 +97,44 @@ def create_sales_chain_from_quotation(quotation):
 		
 		# Create Sales Order
 		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = frappe.utils.add_days(frappe.utils.nowdate(), 1)
+		
+		# Set Warehouse
+		pharm_warehouse = frappe.db.get_value("Pharmacy Warehouse", {"warehouse_name": "PHARM-CENTRAL-COLD"}, "erpnext_warehouse")
+		if pharm_warehouse:
+			for item in sales_order.items:
+				if not item.warehouse:
+					item.warehouse = pharm_warehouse
+
+		if hasattr(quotation, 'custom_delivery_notes'):
+			sales_order.custom_delivery_notes = quotation.custom_delivery_notes
+
 		sales_order.flags.from_medication_request = True
 		sales_order.insert(ignore_permissions=True)
-		sales_order.submit(ignore_permissions=True)
+		sales_order.flags.ignore_permissions = True
+		sales_order.submit()
 		frappe.db.commit()
 		
 		# Create Delivery Note
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		delivery_note = make_delivery_note(sales_order.name)
 		delivery_note.flags.from_medication_request = True
+		if hasattr(sales_order, 'custom_delivery_notes'):
+			delivery_note.custom_delivery_notes = sales_order.custom_delivery_notes
 		delivery_note.insert(ignore_permissions=True)
-		delivery_note.submit(ignore_permissions=True)
+		# delivery_note.flags.ignore_permissions = True
+		# delivery_note.submit()
 		frappe.db.commit()
 		
 		# Create Sales Invoice
 		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 		sales_invoice = make_sales_invoice(sales_order.name)
 		sales_invoice.flags.from_medication_request = True
+		if hasattr(sales_order, 'custom_delivery_notes'):
+			sales_invoice.custom_delivery_notes = sales_order.custom_delivery_notes
 		sales_invoice.insert(ignore_permissions=True)
-		sales_invoice.submit(ignore_permissions=True)
+		sales_invoice.flags.ignore_permissions = True
+		sales_invoice.submit()
 		frappe.db.commit()
 		
 		# Create dispense allocation (Step 11)
@@ -122,7 +142,7 @@ def create_sales_chain_from_quotation(quotation):
 		
 		return sales_invoice.name
 	except Exception as e:
-		frappe.log_error(f"Error creating sales chain: {str(e)}", "GLP-1 Workflow")
+		frappe.log_error(title="GLP-1 Workflow", message=f"Error creating sales chain: {str(e)}")
 
 
 def create_dispense_allocation_from_invoice(invoice):
@@ -166,7 +186,7 @@ def create_dispense_allocation_from_invoice(invoice):
 				
 				return allocation.name
 	except Exception as e:
-		frappe.log_error(f"Error creating allocation: {str(e)}", "GLP-1 Workflow")
+		frappe.log_error(title="GLP-1 Workflow", message=f"Error creating allocation: {str(e)}")
 
 
 def create_dispense_task(allocation, invoice):
@@ -184,7 +204,7 @@ def create_dispense_task(allocation, invoice):
 		frappe.db.commit()
 		return task.name
 	except Exception as e:
-		frappe.log_error(f"Error creating dispense task: {str(e)}", "GLP-1 Workflow")
+		frappe.log_error(title="GLP-1 Workflow", message=f"Error creating dispense task: {str(e)}")
 
 
 def handle_pharmacist_dispense(doc, method):
@@ -242,4 +262,4 @@ def create_dispense_confirmation(stock_entry, item):
 			frappe.db.commit()
 			return confirmation.name
 	except Exception as e:
-		frappe.log_error(f"Error creating dispense confirmation: {str(e)}", "GLP-1 Workflow")
+		frappe.log_error(title="GLP-1 Workflow", message=f"Error creating dispense confirmation: {str(e)}")

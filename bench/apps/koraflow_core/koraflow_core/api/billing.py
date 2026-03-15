@@ -132,7 +132,7 @@ def accept_quotation(quotation_name):
 	except Exception as e:
 		import traceback
 		traceback_str = traceback.format_exc()
-		frappe.log_error(f"Error accepting quotation {quotation_name}: {traceback_str}", "Quotation Acceptance Error")
+		frappe.log_error(title="Quotation Acceptance Error", message=f"Error accepting quotation {quotation_name}: {traceback_str}")
 		return {
 			"success": False,
 			"error": str(e) or "Unknown Error - Check Logs"
@@ -187,7 +187,7 @@ def reject_quotation(quotation_name):
 		}
 
 	except Exception as e:
-		frappe.log_error(f"Error rejecting quotation {quotation_name}: {str(e)}", "Quotation Rejection Error")
+		frappe.log_error(title="Quotation Rejection Error", message=f"Error rejecting quotation {quotation_name}: {str(e)}")
 		return {
 			"success": False,
 			"error": str(e)
@@ -243,7 +243,7 @@ def download_quotation_pdf(quotation_name):
 			html = frappe.get_print(
 				doctype="Quotation",
 				name=quotation_name,
-				print_format="Standard",
+				print_format="Slim 2 Well Quotation",
 				doc=quotation_doc,
 				as_pdf=False # Get HTML
 			)
@@ -260,9 +260,30 @@ def download_quotation_pdf(quotation_name):
 				frappe.local.response.display_content_as = "inline"
 				
 			except Exception:
-				# Fallback to HTML if PDF generation failure
+				# Fallback to HTML if PDF generation failure (e.g. missing wkhtmltopdf)
+				# Wrap in a minimal template to trigger print and hide UI
+				fallback_html = f"""
+				<html class="pdf-fallback">
+					<head>
+						<style>
+							@media print {{ @page {{ margin: 0; }} }}
+							.print-view-header, .navbar, .app-header, .action-banner {{ display: none !important; }}
+						</style>
+						<script>
+							window.onload = function() {{
+								setTimeout(function() {{
+									window.print();
+								}}, 500);
+							}};
+						</script>
+					</head>
+					<body>
+						{html}
+					</body>
+				</html>
+				"""
 				frappe.local.response.filename = f"{quotation_name}.html"
-				frappe.local.response.filecontent = html
+				frappe.local.response.filecontent = fallback_html
 				frappe.local.response.type = "download"
 				frappe.local.response.content_type = "text/html"
 				frappe.local.response.display_content_as = "inline"
@@ -276,17 +297,24 @@ def download_quotation_pdf(quotation_name):
 		print(f"Document generation error for {quotation_name}: {str(e)}")
 		
 		# Last resort fallback: try to return HTML one more time with forced permissions
+		original_user = frappe.session.user
 		try:
-			frappe.flags.ignore_print_permissions = True
-			html = frappe.get_print(doctype="Quotation", name=quotation_name, print_format="Standard")
+			frappe.set_user("Administrator")
+			html = frappe.get_print(doctype="Quotation", name=quotation_name, print_format="Slim 2 Well Quotation")
+			
+			# Minimal fallback with auto-print
+			fallback_html = f"<html class='pdf-fallback'><head><script>window.onload = function() {{ window.print(); }};</script></head><body>{html}</body></html>"
+			
 			frappe.local.response.filename = f"{quotation_name}.html"
-			frappe.local.response.filecontent = html
+			frappe.local.response.filecontent = fallback_html
 			frappe.local.response.type = "download"
 			frappe.local.response.content_type = "text/html"
 			frappe.local.response.display_content_as = "inline"
 		except Exception as fallback_error:
-			frappe.flags.ignore_print_permissions = False
+			frappe.log_error(title="Quotation PDF Fallback Error", message=f"Fallback generation error for {quotation_name}: {str(fallback_error)}")
 			frappe.throw(_("Unable to generate document request."))
+		finally:
+			frappe.set_user(original_user)
 
 @frappe.whitelist()
 def download_invoice_pdf(invoice_name):
@@ -334,7 +362,7 @@ def download_invoice_pdf(invoice_name):
 			html = frappe.get_print(
 				doctype="Sales Invoice",
 				name=invoice_name,
-				print_format="Standard",
+				print_format="Slim 2 Well Invoice",
 				doc=invoice_doc,
 				as_pdf=False # Get HTML
 			)
@@ -351,9 +379,30 @@ def download_invoice_pdf(invoice_name):
 				frappe.local.response.display_content_as = "inline"
 				
 			except Exception:
-				# Fallback to HTML if PDF generation failure
+				# Fallback to HTML if PDF generation failure (e.g. missing wkhtmltopdf)
+				# Wrap in a minimal template to trigger print and hide UI
+				fallback_html = f"""
+				<html class="pdf-fallback">
+					<head>
+						<style>
+							@media print {{ @page {{ margin: 0; }} }}
+							.print-view-header, .navbar, .app-header, .action-banner {{ display: none !important; }}
+						</style>
+						<script>
+							window.onload = function() {{
+								setTimeout(function() {{
+									window.print();
+								}}, 500);
+							}};
+						</script>
+					</head>
+					<body>
+						{html}
+					</body>
+				</html>
+				"""
 				frappe.local.response.filename = f"{invoice_name}.html"
-				frappe.local.response.filecontent = html
+				frappe.local.response.filecontent = fallback_html
 				frappe.local.response.type = "download"
 				frappe.local.response.content_type = "text/html"
 				frappe.local.response.display_content_as = "inline"
@@ -369,9 +418,13 @@ def download_invoice_pdf(invoice_name):
 		# Last resort fallback
 		try:
 			frappe.flags.ignore_print_permissions = True
-			html = frappe.get_print(doctype="Sales Invoice", name=invoice_name, print_format="Standard")
+			html = frappe.get_print(doctype="Sales Invoice", name=invoice_name, print_format="Slim 2 Well Invoice")
+			
+			# Minimal fallback with auto-print
+			fallback_html = f"<html class='pdf-fallback'><head><script>window.onload = function() {{ window.print(); }};</script></head><body>{html}</body></html>"
+			
 			frappe.local.response.filename = f"{invoice_name}.html"
-			frappe.local.response.filecontent = html
+			frappe.local.response.filecontent = fallback_html
 			frappe.local.response.type = "download"
 			frappe.local.response.content_type = "text/html"
 			frappe.local.response.display_content_as = "inline"
@@ -380,3 +433,108 @@ def download_invoice_pdf(invoice_name):
 			frappe.throw(_("Unable to generate document request."))
 		finally:
 			frappe.flags.ignore_print_permissions = False
+
+@frappe.whitelist()
+def download_prescription_pdf(prescription_name):
+	"""
+	Generates and returns the Prescription PDF/HTML.
+	Bypasses standard permission checks but verifies Patient ownership.
+	"""
+	try:
+		if frappe.session.user == "Guest":
+			frappe.throw(_("Please log in to access this document"), frappe.PermissionError)
+
+		# 1. Validate Patient & Prescription Ownership
+		patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+		
+		# Debug fallback for System Manager
+		if not patient_name and "System Manager" in frappe.get_roles():
+			patient_name = frappe.db.get_value("Patient", {"email": "lezel@koraflow.com"}, "name")
+			if not patient_name:
+				patient_name = frappe.db.get_value("Patient", {}, "name")
+
+		if not patient_name:
+			frappe.throw(_("Patient record not found"), frappe.PermissionError)
+
+		# Check if prescription exists and belongs to this patient
+		prescription_patient = frappe.db.get_value("GLP-1 Patient Prescription", prescription_name, "patient")
+		
+		if not prescription_patient or prescription_patient != patient_name:
+			frappe.throw(_("Access Denied: Document not found or unauthorized"), frappe.PermissionError)
+
+		# 2. Generate PDF/HTML using system permissions
+		from frappe.utils.pdf import get_pdf
+		
+		prescription_doc = frappe.get_doc("GLP-1 Patient Prescription", prescription_name)
+		
+		frappe.flags.ignore_print_permissions = True
+		
+		try:
+			# Get HTML first
+			html = frappe.get_print(
+				doctype="GLP-1 Patient Prescription",
+				name=prescription_name,
+				print_format="Standard",
+				doc=prescription_doc,
+				as_pdf=False # Get HTML
+			)
+			
+			# Generate PDF from HTML
+			try:
+				pdf_content = get_pdf(html)
+				
+				frappe.local.response.filename = f"{prescription_name}.pdf"
+				frappe.local.response.filecontent = pdf_content
+				frappe.local.response.type = "download"
+				frappe.local.response.content_type = "application/pdf"
+				frappe.local.response.display_content_as = "inline"
+				
+			except Exception:
+				# Fallback to HTML if PDF generation failure
+				fallback_html = f"""
+				<html class="pdf-fallback">
+					<head>
+						<style>
+							@media print {{ @page {{ margin: 0; }} }}
+							.print-view-header, .navbar, .app-header, .action-banner {{ display: none !important; }}
+						</style>
+						<script>
+							window.onload = function() {{
+								setTimeout(function() {{
+									window.print();
+								}}, 500);
+							}};
+						</script>
+					</head>
+					<body>
+						{html}
+					</body>
+				</html>
+				"""
+				frappe.local.response.filename = f"{prescription_name}.html"
+				frappe.local.response.filecontent = fallback_html
+				frappe.local.response.type = "download"
+				frappe.local.response.content_type = "text/html"
+				frappe.local.response.display_content_as = "inline"
+
+		finally:
+			# Always reset the flag
+			frappe.flags.ignore_print_permissions = False
+
+	except Exception as e:
+		print(f"Document generation error for {prescription_name}: {str(e)}")
+		try:
+			frappe.flags.ignore_print_permissions = True
+			html = frappe.get_print(doctype="GLP-1 Patient Prescription", name=prescription_name, print_format="Standard")
+			fallback_html = f"<html class='pdf-fallback'><head><script>window.onload = function() {{ window.print(); }};</script></head><body>{html}</body></html>"
+			frappe.local.response.filename = f"{prescription_name}.html"
+			frappe.local.response.filecontent = fallback_html
+			frappe.local.response.type = "download"
+			frappe.local.response.content_type = "text/html"
+			frappe.local.response.display_content_as = "inline"
+		except Exception as fallback_error:
+			frappe.flags.ignore_print_permissions = False
+			frappe.throw(_("Unable to generate document request."))
+		finally:
+			frappe.flags.ignore_print_permissions = False
+

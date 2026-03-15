@@ -246,7 +246,7 @@
         window.frappe = {};
         frappe.app = {
             logout: function () {
-                window.location.href = '/login?logout=1';
+                window.location.href = '/api/method/koraflow_core.utils.auth.logout';
             }
         }
     </script>

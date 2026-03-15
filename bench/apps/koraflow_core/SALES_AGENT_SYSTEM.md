@@ -216,14 +216,14 @@ Updates referral status (sales team only)
 #### Initial Setup
 ```python
 # Run after installing koraflow_core
-from koraflow_core.koraflow_core.setup_sales_agent import setup_sales_agent_system
+from koraflow_core.setup_sales_agent import setup_sales_agent_system
 setup_sales_agent_system()
 ```
 
 Or via bench console:
 ```bash
 bench --site your-site.localhost console
->>> from koraflow_core.koraflow_core.setup_sales_agent import setup_sales_agent_system
+>>> from koraflow_core.setup_sales_agent import setup_sales_agent_system
 >>> setup_sales_agent_system()
 ```
 

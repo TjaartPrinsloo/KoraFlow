@@ -180,7 +180,7 @@ def execute():
 		if pr.status != "Approved":
 			try:
 				print("Attempting manual invoice creation via Controller logic...")
-				from koraflow_core.doctype.sales_agent_payout_request.sales_agent_payout_request import SalesAgentPayoutRequest
+				from koraflow_core.koraflow_core.doctype.sales_agent_payout_request.sales_agent_payout_request import SalesAgentPayoutRequest
 				SalesAgentPayoutRequest.create_purchase_invoice(pr)
 				pr.reload()
 				print(f"Post-Manual Invoke Status: {pr.status}, Invoice: {pr.generated_invoice}")

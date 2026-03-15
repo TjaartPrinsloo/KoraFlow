@@ -3,7 +3,7 @@ Courier Guy Hooks
 Hooks for integrating Courier Guy with Delivery Notes
 """
 import frappe
-from koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import create_waybill_from_delivery_note
+from koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import create_waybill_from_delivery_note
 
 
 def create_waybill_on_delivery_note_submit(doc, method):
@@ -38,7 +38,7 @@ def create_waybill_on_delivery_note_submit(doc, method):
 		frappe.msgprint(f"Courier Guy waybill created: {waybill_name}")
 		
 	except Exception as e:
-		frappe.log_error(f"Error creating Courier Guy waybill: {str(e)}", "Courier Guy Integration")
+		frappe.log_error(title="Courier Guy Integration", message=f"Error creating Courier Guy waybill: {str(e)}")
 		# Don't fail the delivery note submission if waybill creation fails
 		frappe.msgprint(f"Warning: Could not create Courier Guy waybill: {str(e)}", indicator="orange")
 

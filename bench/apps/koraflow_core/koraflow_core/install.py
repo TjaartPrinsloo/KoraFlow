@@ -13,7 +13,7 @@ def after_install():
 		# create_sales_agent_workspace()  # Removed - using custom page instead
 		frappe.db.commit()
 	except Exception as e:
-		frappe.log_error(f"Error in Sales Agent setup: {str(e)}")
+		frappe.log_error(title="Sales Agent Setup Error", message=f"Error in Sales Agent setup: {str(e)}")
 		# Don't fail installation if setup fails
 
 

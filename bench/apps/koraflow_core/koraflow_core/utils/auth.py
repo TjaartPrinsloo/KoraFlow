@@ -27,7 +27,7 @@ def on_login(login_manager):
 				user_doc.save(ignore_permissions=True)
 				frappe.db.commit()
 		except Exception as e:
-			frappe.log_error(f"Error clearing default workspace for {user}: {str(e)}")
+			frappe.log_error(title="Workspace Reset Error", message=f"Error clearing default workspace for {user}: {str(e)}")
 
 	elif "Patient" in roles:
 		frappe.local.response["default_route"] = "/dashboard"
@@ -77,6 +77,22 @@ def redirect_sales_agents():
 		path = frappe.local.request.path if hasattr(frappe.local, "request") and frappe.local.request else ""
 
 		if path in ["/app/build", "/app/home", "/app/sales-agent-dashboard", "/app/user-profile"]:
-			frappe.local.response["type"] = "redirect"
 			frappe.local.response["location"] = "/sales_agent_dashboard"
 			return
+
+
+def on_logout(login_manager):
+	"""
+	Hook called after user logout.
+	Redirects to branded login page.
+	"""
+	frappe.local.response["type"] = "redirect"
+	frappe.local.response["location"] = "/s2w_login"
+
+
+@frappe.whitelist(allow_guest=True)
+def logout():
+	frappe.local.login_manager.logout()
+	frappe.db.commit()
+	frappe.local.response["type"] = "redirect"
+	frappe.local.response["location"] = "/s2w_login"

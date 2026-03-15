@@ -29,7 +29,7 @@ def fix_medicine_defaults():
 			frappe.db.commit()
 			frappe.msgprint(_("Created Prescription Duration: {0}").format(prescription_duration))
 		except Exception as e:
-			frappe.log_error(f"Could not create Prescription Duration: {str(e)}", "Medicine Setup Fix")
+			frappe.log_error(title="Medicine Setup Fix", message=f"Could not create Prescription Duration: {str(e)}")
 	
 	for med_name in medicines:
 		if frappe.db.exists("Medication", med_name):
@@ -157,7 +157,7 @@ def ensure_healthcare_practitioners():
 				practitioner.insert(ignore_permissions=True)
 				frappe.msgprint(_("Created Healthcare Practitioner: {0}").format(practitioner_name))
 			except Exception as e:
-				frappe.log_error(f"Could not create Healthcare Practitioner for {user_email}: {str(e)}", "Practitioner Setup")
+				frappe.log_error(title="Practitioner Setup", message=f"Could not create Healthcare Practitioner for {user_email}: {str(e)}")
 	
 	frappe.db.commit()
 

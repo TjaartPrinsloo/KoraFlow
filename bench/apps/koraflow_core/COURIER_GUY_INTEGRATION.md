@@ -86,13 +86,13 @@ When a Delivery Note is submitted, a waybill is automatically created if:
 
 #### For Patients
 Patients can track shipments using:
-- **API Endpoint**: `/api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_tracking_by_number`
+- **API Endpoint**: `/api/method/koraflow_core.api.courier_guy_tracking.get_tracking_by_number`
 - **Parameters**: `tracking_number`
 - **Access**: Public (allow_guest=True)
 
 Example:
 ```
-GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_tracking_by_number?tracking_number=TRACK123
+GET /api/method/koraflow_core.api.courier_guy_tracking.get_tracking_by_number?tracking_number=TRACK123
 ```
 
 ### Patient Tracking Integration
@@ -108,7 +108,7 @@ The integration automatically shows waybill tracking information on Patient form
 
 #### Get Tracking by Number
 ```
-GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_tracking_by_number
+GET /api/method/koraflow_core.api.courier_guy_tracking.get_tracking_by_number
 Parameters:
   - tracking_number: Courier Guy tracking number
 ```
@@ -117,14 +117,14 @@ Parameters:
 
 #### Get Patient Tracking
 ```
-GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_patient_tracking
+GET /api/method/koraflow_core.api.courier_guy_tracking.get_patient_tracking
 Parameters:
   - patient_name: Patient name
 ```
 
 #### Get Delivery Note Tracking
 ```
-GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_delivery_note_tracking
+GET /api/method/koraflow_core.api.courier_guy_tracking.get_delivery_note_tracking
 Parameters:
   - delivery_note: Delivery Note name
 ```
@@ -167,7 +167,7 @@ To disable automatic waybill creation on Delivery Note submit:
 1. Comment out the hook in `hooks.py`:
 ```python
 # "Delivery Note": {
-#     "on_submit": "koraflow_core.koraflow_core.hooks.courier_guy_hooks.create_waybill_on_delivery_note_submit"
+#     "on_submit": "koraflow_core.hooks.courier_guy_hooks.create_waybill_on_delivery_note_submit"
 # }
 ```
 

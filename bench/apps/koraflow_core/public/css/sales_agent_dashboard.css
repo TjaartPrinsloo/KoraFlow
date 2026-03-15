@@ -1,0 +1,130 @@
+/* Sales Agent Dashboard Styles */
+
+.commission-kpis {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.kpi-card {
+	background: white;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 1.5rem;
+	text-align: center;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.kpi-value {
+	font-size: 2rem;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.kpi-value.green {
+	color: #28a745;
+}
+
+.kpi-value.blue {
+	color: #007bff;
+}
+
+.kpi-value.orange {
+	color: #ffc107;
+}
+
+.kpi-value.red {
+	color: #dc3545;
+}
+
+.kpi-label {
+	font-size: 0.9rem;
+	color: #666;
+	margin-bottom: 0.25rem;
+}
+
+.kpi-subtitle {
+	font-size: 0.8rem;
+	color: #999;
+	margin-top: 0.5rem;
+}
+
+.referrals-table-container {
+	margin-top: 2rem;
+}
+
+.referrals-table-container table {
+	width: 100%;
+}
+
+.referrals-table-container .badge {
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+}
+
+.messages-container {
+	margin-top: 2rem;
+}
+
+.message-item {
+	background: white;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 1rem;
+	margin-bottom: 1rem;
+}
+
+.message-item.unread {
+	border-left: 4px solid #007bff;
+	background: #f8f9fa;
+}
+
+.message-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+
+.message-meta {
+	font-size: 0.85rem;
+	color: #666;
+}
+
+.status-chart-container {
+	margin-top: 2rem;
+}
+
+.status-bar-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 1rem;
+	gap: 1rem;
+}
+
+.status-label {
+	min-width: 200px;
+	font-weight: 500;
+}
+
+.status-bar {
+	flex: 1;
+	height: 24px;
+	background: #e0e0e0;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.status-bar-fill {
+	height: 100%;
+	background: linear-gradient(90deg, #007bff, #0056b3);
+	transition: width 0.3s ease;
+}
+
+.status-count {
+	min-width: 50px;
+	text-align: right;
+	font-weight: bold;
+}
+

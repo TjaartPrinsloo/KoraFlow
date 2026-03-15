@@ -114,11 +114,7 @@ def activate_patient_user(doc):
 					title=_("User Activated")
 				)
 	except Exception as e:
-		frappe.log_error(
-			message=f"Error activating user for patient {doc.patient}: {str(e)}",
-			title="User Activation Error"
-		)
-
+		frappe.log_error(title="User Activation Error", message=f"Error activating user for patient {doc.patient}: {str(e)}")
 
 
 def generate_quotation_from_encounter(doc):
@@ -258,10 +254,7 @@ def generate_quotation_from_encounter(doc):
 		)
 
 	except Exception as e:
-		frappe.log_error(
-			message=f"Error generating quotation for encounter {doc.name}: {str(e)}",
-			title="Quotation Generation Error"
-		)
+		frappe.log_error(title="Quotation Generation Error", message=f"Error generating quotation for encounter {doc.name}: {str(e)}")
 		frappe.msgprint(
 			_("Error creating Quotation. Please check Error Log."),
 			indicator="red"

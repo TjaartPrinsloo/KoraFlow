@@ -17,9 +17,10 @@ def get_dashboard_data():
 		return {"message": "No Sales Agent profile found for this user."}
 	
 	# Get referrals
+	# Patient Referral uses User (email) for sales_agent link
 	referrals = frappe.get_all(
 		"Patient Referral",
-		filters={"sales_agent": agent},
+		filters={"sales_agent": user},
 		fields=[
 			"name",
 			"referral_id",
@@ -51,6 +52,18 @@ def get_dashboard_data():
 	# Get status distribution
 	status_distribution = get_status_distribution(agent)
 	
+	# Get KPI Stats
+	kpi_stats = get_kpi_stats(agent)
+	
+	# Get Commission History
+	commission_history = frappe.get_all(
+		"Sales Agent Accrual",
+		filters={"sales_agent": agent},
+		fields=["name", "creation", "accrued_amount", "status", "invoice_reference"],
+		order_by="creation desc",
+		limit=10
+	)
+	
 	# Check for banking details
 	bank_details_configured = frappe.db.exists("Sales Agent Bank Details", {"sales_agent": user})
 	
@@ -61,6 +74,8 @@ def get_dashboard_data():
 		},
 		"referrals": referrals,
 		"commission_summary": commission_summary,
+		"commission_history": commission_history,
+		"kpi_stats": kpi_stats,
 		"messages": messages,
 		"status_distribution": status_distribution
 	}
@@ -212,13 +227,16 @@ def get_profile_data():
 	if frappe.db.exists("Sales Agent Bank Details", {"sales_agent": user}):
 		bank_doc_name = frappe.db.get_value("Sales Agent Bank Details", {"sales_agent": user}, "name")
 		bank_doc = frappe.get_doc("Sales Agent Bank Details", bank_doc_name)
+        # Account Number is Password field, so we need to decrypt it to mask it partially
+		raw_account_number = bank_doc.get_password("account_number")
+		
 		bank_details = {
 			"bank_name": bank_doc.bank_name,
 			"account_holder_name": bank_doc.account_holder_name,
-			"account_number": bank_doc.account_number, # Will be masked often, but for edit we might need it if strict permission allows
+			"account_number": mask_account_number(raw_account_number), # MASKED
 			"branch_code": bank_doc.branch_code,
 			"account_type": bank_doc.account_type,
-			"account_number_masked": bank_doc.account_number_masked,
+			"account_number_masked": mask_account_number(raw_account_number),
 			"proof_of_account": bank_doc.proof_of_account
 		}
 	else:
@@ -227,7 +245,7 @@ def get_profile_data():
 			parts = agent.bank_details.split('\n')
 			if len(parts) >= 1: bank_details["bank_name"] = parts[0]
 			if len(parts) >= 2: bank_details["account_holder_name"] = parts[1]
-			if len(parts) >= 3: bank_details["account_number"] = parts[2]
+			if len(parts) >= 3: bank_details["account_number"] = mask_account_number(parts[2])
 			if len(parts) >= 4: bank_details["branch_code"] = parts[3]
 			if len(parts) >= 5: bank_details["account_type"] = parts[4]
 	
@@ -248,6 +266,14 @@ def get_profile_data():
 		},
 		"bank_details": bank_details
 	}
+
+def mask_account_number(account_number):
+	"""Masks account number, showing only last 4 digits"""
+	if not account_number:
+		return ""
+	if len(account_number) <= 4:
+		return "*" * len(account_number)
+	return "*" * (len(account_number) - 4) + account_number[-4:]
 
 @frappe.whitelist()
 def update_profile_data(bank_name, account_holder_name, account_number, branch_code, account_type, proof_of_account=None):
@@ -300,7 +326,7 @@ def update_profile_data(bank_name, account_holder_name, account_number, branch_c
 
 
 @frappe.whitelist()
-def create_referral(first_name, last_name, email, mobile_no):
+def create_referral(first_name, last_name, email, mobile_no, sex=None, dob=None):
 	"""Create a new referral (and patient if needed)"""
 	agent = frappe.session.user
 	if agent == "Guest":
@@ -319,9 +345,12 @@ def create_referral(first_name, last_name, email, mobile_no):
 			"last_name": last_name,
 			"email": email,
 			"mobile": mobile_no,
-			"sex": "Female", # Defaulting as per common flow
+			"sex": sex or "Female", # Defaulting as per common flow but allowing override
 			"referred_by_sales_agent": frappe.db.get_value("Sales Agent", {"user": agent}, "name")
 		})
+		if dob:
+			p.dob = dob
+			
 		p.insert(ignore_permissions=True)
 		patient_name = p.name
 		
@@ -338,3 +367,86 @@ def create_referral(first_name, last_name, email, mobile_no):
 	referral.insert(ignore_permissions=True)
 	
 	return {"message": "Referral created successfully", "referral": referral.name}
+
+@frappe.whitelist()
+def get_kpi_stats(agent):
+	"""Calculate KPI statistics for the agent"""
+	# Agent passed is the Name. Patient Referral links to User Email.
+	# We need to get the user email for this agent.
+	user_email = frappe.db.get_value("Sales Agent", agent, "user")
+	
+	if not user_email:
+		return {
+			"total_referrals": 0,
+			"conversion_rate": 0,
+			"total_patients": 0,
+			"avg_ticket": 0
+		}
+
+	# 1. New Referrals (This Week)
+	total_referrals = frappe.db.count("Patient Referral", {"sales_agent": user_email})
+	
+	# 2. Conversion Rate
+	converted_count = frappe.db.count("Patient Referral", {
+		"sales_agent": user_email,
+		"current_journey_status": ["in", ["Prescription Issued", "Invoice Paid", "Medication Dispatched", "Completed", "Converted"]]
+	})
+	
+	conversion_rate = 0
+	if total_referrals > 0:
+		conversion_rate = (converted_count / total_referrals) * 100
+		
+	# 3. Total Patients
+	total_patients = frappe.db.count("Patient Referral", {"sales_agent": user_email}) 
+	
+	# 4. Avg Ticket
+	avg_ticket = 0
+	
+	# Get all patient names for this agent
+	patient_names = frappe.get_all("Patient Referral", filters={"sales_agent": user_email}, pluck="patient")
+	
+	if patient_names:
+		# Get average invoice amount for these patients
+		result = frappe.db.sql("""
+			SELECT AVG(grand_total) 
+			FROM `tabSales Invoice` 
+			WHERE patient IN %(patients)s 
+			AND status = 'Paid'
+		""", {"patients": patient_names})
+		
+		if result and result[0][0]:
+			avg_ticket = result[0][0]
+			
+	return {
+		"total_referrals": total_referrals,
+		"conversion_rate": round(conversion_rate, 1),
+		"total_patients": total_patients,
+		"avg_ticket": round(avg_ticket, 2)
+	}
+
+@frappe.whitelist()
+def create_support_ticket(subject, description):
+    """Create a new support ticket (Issue) for the sales agent"""
+    if not subject or not description:
+        frappe.throw("Subject and Description are required.")
+        
+    user = frappe.session.user
+    
+    issue = frappe.get_doc({
+        "doctype": "Issue",
+        "subject": subject,
+        "raised_by": user,
+        "description": description,
+        "custom_sales_agent_email": user, # Optional: if we want to track who raised it explicitly in a custom field
+        "status": "Open",
+        "priority": "Medium",
+        "issue_type": "Sales Agent Support" # Adjust if "Issue Type" exists
+    })
+    
+    # Check if Issue Type exists, if not use default or skip
+    if not frappe.db.exists("Issue Type", "Sales Agent Support"):
+        issue.issue_type = None # Let system default handle it or just leave empty
+        
+    issue.insert(ignore_permissions=True)
+    
+    return {"message": "Support ticket created successfully", "issue": issue.name}

@@ -137,15 +137,15 @@ Edit `apps/koraflow_core/koraflow_core/utils/courier_guy_api.py`:
 
 ### Public (No Authentication Required)
 
-- `GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_tracking_by_number?tracking_number=XXX`
+- `GET /api/method/koraflow_core.api.courier_guy_tracking.get_tracking_by_number?tracking_number=XXX`
 
 ### Authenticated (Requires Login)
 
-- `GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_patient_tracking?patient_name=XXX`
-- `GET /api/method/koraflow_core.koraflow_core.api.courier_guy_tracking.get_delivery_note_tracking?delivery_note=XXX`
-- `POST /api/method/koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.create_waybill_from_delivery_note`
-- `POST /api/method/koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.update_tracking_status`
-- `GET /api/method/koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.get_waybill_print_url`
+- `GET /api/method/koraflow_core.api.courier_guy_tracking.get_patient_tracking?patient_name=XXX`
+- `GET /api/method/koraflow_core.api.courier_guy_tracking.get_delivery_note_tracking?delivery_note=XXX`
+- `POST /api/method/koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.create_waybill_from_delivery_note`
+- `POST /api/method/koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.update_tracking_status`
+- `GET /api/method/koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill.get_waybill_print_url`
 
 ## Next Steps
 
