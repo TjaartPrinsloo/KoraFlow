@@ -28,7 +28,7 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no "$SERVER" << 'ENDSSH'
   bench --site portal.slim2well.com migrate || echo "WARNING: migrate had errors, continuing..."
 
   echo "--- Building assets..."
-  bench build
+  bench build --skip-frappe-assets || bench build || echo "WARNING: bench build had errors"
 
   echo "--- Restarting services..."
   sudo supervisorctl restart frappe-bench-web:frappe-bench-frappe-web

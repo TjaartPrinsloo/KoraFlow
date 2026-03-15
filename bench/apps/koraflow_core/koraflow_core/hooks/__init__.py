@@ -251,7 +251,7 @@ before_request_methods = [
 
 # Override default signup
 after_migrate = [
-	"koraflow_core.koraflow_core.doctype.user.user_override.override_sign_up",
+	"koraflow_core.utils.user_override.override_sign_up",
 	"koraflow_core.utils.app_path_fix.fix_app_path"
 ]
 
