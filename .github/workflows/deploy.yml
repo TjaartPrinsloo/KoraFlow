@@ -30,12 +30,12 @@ jobs:
             --exclude='*.egg-info' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             bench/apps/koraflow_core/ \
-            frappe@${{ secrets.SERVER_IP }}:/home/frappe/frappe-bench/apps/koraflow_core/
+            frappe@156.38.193.194:/home/frappe/frappe-bench/apps/koraflow_core/
 
       - name: Reinstall app, migrate, build, restart
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            frappe@${{ secrets.SERVER_IP }} << 'ENDSSH'
+            frappe@156.38.193.194 << 'ENDSSH'
             set -e
             export PATH=/home/frappe/.local/bin:/usr/local/bin:$PATH
             cd /home/frappe/frappe-bench
