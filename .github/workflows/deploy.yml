@@ -16,11 +16,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Sync koraflow_core to server
         run: |
@@ -28,13 +27,13 @@ jobs:
             --exclude='*.pyc' \
             --exclude='__pycache__' \
             --exclude='*.egg-info' \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            -e "ssh -o StrictHostKeyChecking=no" \
             bench/apps/koraflow_core/ \
             frappe@156.38.193.194:/home/frappe/frappe-bench/apps/koraflow_core/
 
       - name: Reinstall app, migrate, build, restart
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          ssh -o StrictHostKeyChecking=no \
             frappe@156.38.193.194 << 'ENDSSH'
             set -e
             export PATH=/home/frappe/.local/bin:/usr/local/bin:$PATH
