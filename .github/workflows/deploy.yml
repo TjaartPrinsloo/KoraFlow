@@ -1,0 +1,66 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/koraflow_core/**'
+  workflow_dispatch:          # allow manual trigger
+
+jobs:
+  deploy:
+    name: Deploy koraflow_core to server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Sync koraflow_core to server
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            apps/koraflow_core/ \
+            frappe@${{ secrets.SERVER_IP }}:/home/frappe/KoraFlow/apps/koraflow_core/
+
+      - name: Run bench migrate and restart
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            frappe@${{ secrets.SERVER_IP }} << 'ENDSSH'
+            set -e
+            export PATH=/home/frappe/.local/bin:$PATH
+            cd /home/frappe/frappe-bench
+
+            echo "Running migrations on all sites..."
+            bench --site portal.slim2well.com migrate
+            bench --site speelkind.co.za migrate
+            bench --site koraflow.com migrate
+
+            echo "Building assets..."
+            cd apps/frappe && yarn run production 2>&1 | tail -5
+            cd /home/frappe/frappe-bench
+
+            echo "Restarting workers..."
+            sudo supervisorctl restart frappe-bench-web:frappe-bench-frappe-web
+            sudo supervisorctl restart frappe-bench-workers:
+
+            echo "Deploy complete."
+          ENDSSH
+
+      - name: Health check
+        run: |
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://portal.slim2well.com)
+          echo "Site responded: $STATUS"
+          if [ "$STATUS" != "200" ] && [ "$STATUS" != "302" ]; then
+            echo "Health check FAILED — site returned $STATUS"
+            exit 1
+          fi
+          echo "Health check PASSED"

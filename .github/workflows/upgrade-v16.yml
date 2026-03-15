@@ -1,0 +1,83 @@
+name: Upgrade to Frappe v16
+
+# Run MANUALLY only — never on push
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type YES to confirm the v16 upgrade'
+        required: true
+
+jobs:
+  upgrade:
+    name: Frappe v15 → v16 upgrade
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'YES' }}
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Run v16 upgrade on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            frappe@${{ secrets.SERVER_IP }} << 'ENDSSH'
+            set -e
+            export PATH=/home/frappe/.local/bin:$PATH
+            cd /home/frappe/frappe-bench
+
+            echo "=== Starting Frappe v15 → v16 upgrade ==="
+
+            # 1. Put sites in maintenance mode
+            bench --site portal.slim2well.com set-maintenance-mode on
+            bench --site speelkind.co.za       set-maintenance-mode on
+            bench --site koraflow.com           set-maintenance-mode on
+
+            # 2. Upgrade core apps to v16
+            bench update --pull --patch --build --reset \
+              --apps frappe --branch version-16
+            bench update --pull --patch --build --reset \
+              --apps erpnext --branch version-16
+            bench update --pull --patch --build --reset \
+              --apps hrms --branch version-16
+
+            # 3. Upgrade healthcare to v16 tag
+            cd apps/healthcare
+            git fetch upstream --tags
+            git checkout v16.0.7
+            cd /home/frappe/frappe-bench
+            ./env/bin/pip install -e apps/healthcare -q
+
+            # 4. Run migrations on all sites
+            bench --site all migrate
+
+            # 5. Rebuild assets
+            cd apps/frappe && yarn run production 2>&1 | tail -5
+            cd /home/frappe/frappe-bench
+
+            # 6. Take sites out of maintenance mode
+            bench --site portal.slim2well.com set-maintenance-mode off
+            bench --site speelkind.co.za       set-maintenance-mode off
+            bench --site koraflow.com           set-maintenance-mode off
+
+            # 7. Restart everything
+            sudo supervisorctl restart all
+
+            echo "=== v16 upgrade complete ==="
+            bench version
+          ENDSSH
+
+      - name: Health check post-upgrade
+        run: |
+          sleep 10
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://portal.slim2well.com)
+          echo "Post-upgrade status: $STATUS"
+          if [ "$STATUS" != "200" ] && [ "$STATUS" != "302" ]; then
+            echo "UPGRADE HEALTH CHECK FAILED — site returned $STATUS"
+            exit 1
+          fi
+          echo "Upgrade health check PASSED"
