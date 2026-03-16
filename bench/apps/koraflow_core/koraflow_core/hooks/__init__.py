@@ -93,7 +93,11 @@ app_include_css = [
 # Scheduled Tasks
 scheduler_events = {
 	"hourly": [
-		"koraflow_core.utils.xero_connector.sync_xero_payments"
+		"koraflow_core.utils.xero_connector.sync_xero_payments",
+		"koraflow_core.utils.xero_connector.sync_xero_quotes"
+	],
+	"daily": [
+		"koraflow_core.utils.xero_connector.sync_xero_contacts"
 	],
 }
 
@@ -133,7 +137,8 @@ doc_events = {
 		"on_submit": [
 			"koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.update_referral_on_invoice_paid",
 			"koraflow_core.koraflow_core.doctype.commission_record.commission_record.create_commission_from_invoice",
-			"koraflow_core.hooks.automation.on_invoice_submit"
+			"koraflow_core.hooks.automation.on_invoice_submit",
+			"koraflow_core.utils.xero_connector.sync_invoice"
 		],
 		"on_cancel": [
 			"koraflow_core.koraflow_core.doctype.patient_referral.patient_referral.update_referral_on_invoice_paid",
@@ -198,6 +203,9 @@ doc_events = {
 	"GLP-1 Shipment": {
 		"on_update": "koraflow_core.hooks.automation.on_shipment_update"
 	},
+	"Customer": {
+		"after_insert": "koraflow_core.utils.xero_connector.sync_customer_to_xero"
+	},
 	"User": {
 		"after_insert": "koraflow_core.permissions.after_insert_user"
 	},
@@ -212,6 +220,7 @@ doctype_js = {
     "Patient": "public/js/patient.js",
     "Patient Appointment": "public/js/nurse_appointment.js",
     "Patient Encounter": "public/js/nurse_encounter.js",
+    "Customer": "public/js/xero_customer.js",
     "GLP-1 Intake Submission": "koraflow_core/doctype/glp1_intake_submission/glp1_intake_submission.js",
     "GLP-1 Intake Review": "koraflow_core/doctype/glp_1_intake_review/glp_1_intake_review.js"
 }
@@ -399,6 +408,105 @@ custom_fields = {
 			"insert_after": "custom_courier_rate",
 			"read_only": 1,
 			"description": "TCG service level code (e.g. ECO)"
+		},
+		{
+			"fieldname": "custom_xero_quote_id",
+			"label": "Xero Quote ID",
+			"fieldtype": "Data",
+			"insert_after": "custom_courier_service_level",
+			"read_only": 1,
+			"hidden": 1,
+			"description": "Xero Quote ID for bi-directional sync"
+		}
+	],
+	"Sales Invoice": [
+		{
+			"fieldname": "custom_xero_invoice_id",
+			"label": "Xero Invoice ID",
+			"fieldtype": "Data",
+			"insert_after": "remarks",
+			"read_only": 1,
+			"hidden": 1,
+			"description": "Xero Invoice ID for bi-directional sync"
+		},
+		{
+			"fieldname": "custom_xero_invoice_number",
+			"label": "Xero Invoice Number",
+			"fieldtype": "Data",
+			"insert_after": "custom_xero_invoice_id",
+			"read_only": 1,
+			"hidden": 1,
+			"description": "Xero Invoice Number"
+		},
+		{
+			"fieldname": "custom_xero_status",
+			"label": "Xero Status",
+			"fieldtype": "Data",
+			"insert_after": "custom_xero_invoice_number",
+			"read_only": 1,
+			"description": "Current status in Xero (AUTHORISED, PAID, VOIDED)"
+		},
+		{
+			"fieldname": "custom_xero_voided",
+			"label": "Voided in Xero",
+			"fieldtype": "Check",
+			"insert_after": "custom_xero_status",
+			"read_only": 1,
+			"default": 0
+		}
+	],
+	"Customer": [
+		{
+			"fieldname": "custom_xero_section",
+			"label": "Xero Integration",
+			"fieldtype": "Section Break",
+			"insert_after": "default_currency",
+			"collapsible": 1
+		},
+		{
+			"fieldname": "custom_xero_contact_id",
+			"label": "Xero Contact ID",
+			"fieldtype": "Data",
+			"insert_after": "custom_xero_section",
+			"read_only": 1,
+			"description": "Xero Contact ID for bi-directional sync"
+		},
+		{
+			"fieldname": "custom_is_xero_customer",
+			"label": "Imported from Xero",
+			"fieldtype": "Check",
+			"insert_after": "custom_xero_contact_id",
+			"read_only": 1,
+			"default": 0,
+			"description": "Customer was imported from Xero (no portal account or intake form initially)"
+		},
+		{
+			"fieldname": "custom_xero_sync_date",
+			"label": "Last Xero Sync",
+			"fieldtype": "Datetime",
+			"insert_after": "custom_is_xero_customer",
+			"read_only": 1
+		},
+		{
+			"fieldname": "custom_xero_col",
+			"fieldtype": "Column Break",
+			"insert_after": "custom_xero_sync_date"
+		},
+		{
+			"fieldname": "custom_intake_required",
+			"label": "Intake Form Required",
+			"fieldtype": "Check",
+			"insert_after": "custom_xero_col",
+			"default": 0,
+			"description": "When checked, intake form must be completed before treatment"
+		},
+		{
+			"fieldname": "custom_intake_completed",
+			"label": "Intake Form Completed",
+			"fieldtype": "Check",
+			"insert_after": "custom_intake_required",
+			"read_only": 1,
+			"default": 0
 		}
 	],
 	"Issue": [

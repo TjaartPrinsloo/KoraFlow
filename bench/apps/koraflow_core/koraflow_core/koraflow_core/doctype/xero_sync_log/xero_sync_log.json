@@ -1,0 +1,101 @@
+{
+    "actions": [],
+    "autoname": "XLOG-.#####",
+    "creation": "2026-03-16 12:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "sync_type",
+        "direction",
+        "status",
+        "cb1",
+        "reference_doctype",
+        "reference_name",
+        "xero_id",
+        "sb_error",
+        "error_message",
+        "retry_count"
+    ],
+    "fields": [
+        {
+            "fieldname": "sync_type",
+            "fieldtype": "Select",
+            "label": "Sync Type",
+            "options": "\nQuote\nInvoice\nPayment\nContact\nCustomer",
+            "in_list_view": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "direction",
+            "fieldtype": "Select",
+            "label": "Direction",
+            "options": "\nFrappe to Xero\nXero to Frappe",
+            "in_list_view": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "\nSuccess\nFailed\nSkipped",
+            "in_list_view": 1,
+            "default": "Success"
+        },
+        {
+            "fieldname": "cb1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "reference_doctype",
+            "fieldtype": "Data",
+            "label": "Reference DocType"
+        },
+        {
+            "fieldname": "reference_name",
+            "fieldtype": "Data",
+            "label": "Reference Name",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "xero_id",
+            "fieldtype": "Data",
+            "label": "Xero ID"
+        },
+        {
+            "fieldname": "sb_error",
+            "fieldtype": "Section Break",
+            "label": "Error Details",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "error_message",
+            "fieldtype": "Small Text",
+            "label": "Error Message"
+        },
+        {
+            "fieldname": "retry_count",
+            "fieldtype": "Int",
+            "label": "Retry Count",
+            "default": 0
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "issingle": 0,
+    "links": [],
+    "modified": "2026-03-16 12:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "KoraFlow Core",
+    "name": "Xero Sync Log",
+    "naming_rule": "Expression (old style)",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "read": 1,
+            "role": "System Manager"
+        }
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 0
+}

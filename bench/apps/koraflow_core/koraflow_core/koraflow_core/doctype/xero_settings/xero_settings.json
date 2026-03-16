@@ -16,7 +16,14 @@
         "access_token",
         "refresh_token",
         "tenant_id",
-        "token_expiry"
+        "token_expiry",
+        "sb_defaults",
+        "default_payment_account",
+        "default_sales_account",
+        "sb_sync_tracking",
+        "last_payment_sync",
+        "last_contact_sync",
+        "webhook_key"
     ],
     "fields": [
         {
@@ -112,6 +119,30 @@
             "label": "Default Sales Account",
             "options": "Account",
             "description": "Default income account for invoices synced to Xero"
+        },
+        {
+            "fieldname": "sb_sync_tracking",
+            "fieldtype": "Section Break",
+            "label": "Sync Tracking",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "last_payment_sync",
+            "fieldtype": "Datetime",
+            "label": "Last Payment Sync",
+            "read_only": 1
+        },
+        {
+            "fieldname": "last_contact_sync",
+            "fieldtype": "Datetime",
+            "label": "Last Contact Sync",
+            "read_only": 1
+        },
+        {
+            "fieldname": "webhook_key",
+            "fieldtype": "Password",
+            "label": "Webhook Key",
+            "description": "HMAC-SHA256 key for validating Xero webhook signatures"
         }
     ],
     "issingle": 1,
