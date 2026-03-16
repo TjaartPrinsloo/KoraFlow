@@ -38,219 +38,67 @@
 				}
 
 				setup_custom_block() {
-					// Helper function to safely get route
-					const getRoute = () => {
-						try {
-							// Check if frappe exists and has get_route as a function
-							if (typeof frappe === 'undefined') {
-								return null;
-							}
-							if (!frappe.get_route || typeof frappe.get_route !== 'function') {
-								return null;
-							}
-
-							// Call get_route safely
-							let route;
-							try {
-								route = frappe.get_route();
-							} catch (callError) {
-								// get_route itself threw an error
-								return null;
-							}
-
-							// Ensure route is an array with at least 2 elements
-							if (!route || !Array.isArray(route) || route.length < 2) {
-								return null;
-							}
-							return route;
-						} catch (e) {
-							// Silently fail - route not available yet
-							return null;
-						}
-					};
-
-					// Helper to check if we're on Courier Guy workspace
+					// URL-only workspace detection (no content sniffing to avoid false positives)
 					const isCourierGuyWorkspace = () => {
 						try {
-							// Get pathname early for use in multiple methods
-							const pathname = window.location.pathname.toLowerCase();
-
-							// Method 1: Check route
-							const route = getRoute();
-							if (route && Array.isArray(route) && route.length >= 2) {
-								const routeStr = route.map(r => String(r).toLowerCase().trim()).join(',');
-								const routeLower = routeStr.toLowerCase();
-								const hasWorkspace = routeLower.includes('workspace');
-								const hasCourierGuy = (routeLower.includes('courier') && routeLower.includes('guy')) ||
-									routeLower.includes('courier-guy') || routeLower.includes('courierguy');
-
-								// Also check individual route parts
-								const routeParts = route.map(r => String(r).toLowerCase().trim());
-								const hasCourierGuyInParts = routeParts.some(part =>
-									(part.includes('courier') && part.includes('guy')) ||
-									part === 'courier-guy' || part === 'courierguy' || part === 'courier guy'
-								);
-
-								if (hasWorkspace && (hasCourierGuy || hasCourierGuyInParts)) {
-									console.log('Courier Guy Dashboard: ✅ Matched workspace route!', route);
-									return true;
-								}
+							// Method 1: Check frappe route (most reliable in SPA)
+							if (typeof frappe !== 'undefined' && frappe.get_route && typeof frappe.get_route === 'function') {
+								try {
+									const route = frappe.get_route();
+									if (route && Array.isArray(route) && route.length >= 2) {
+										const routeStr = route.map(r => String(r).toLowerCase().trim()).join('/');
+										if (routeStr.includes('workspace') && (
+											routeStr.includes('courier-guy') ||
+											routeStr.includes('courier guy') ||
+											routeStr.includes('courier_guy')
+										)) {
+											return true;
+										}
+									}
+								} catch (e) { /* ignore */ }
 							}
-
-							// Method 2: Check URL
+							// Method 2: Check URL hash and pathname
 							const url = window.location.href.toLowerCase();
-							// Check for workspace URL or direct /app/courier-guy URL
-							if ((url.includes('workspace') || pathname.includes('/app/courier-guy') || pathname.includes('/app/courier_guy')) &&
-								(url.includes('courier') || url.includes('courier-guy') || pathname.includes('courier'))) {
-								console.log('Courier Guy Dashboard: ✅ Matched workspace URL!', url, pathname);
+							const hash = (window.location.hash || '').toLowerCase();
+							if (hash.includes('workspace') && (
+								hash.includes('courier-guy') || hash.includes('courier%20guy') || hash.includes('courier_guy')
+							)) {
 								return true;
 							}
-
-							// Method 3: Check page title or workspace name in DOM
-							const pageTitle = document.title.toLowerCase();
-							const workspaceName = document.querySelector('.workspace-name, [data-workspace-name]');
-							if (pageTitle.includes('courier guy') ||
-								(workspaceName && workspaceName.textContent.toLowerCase().includes('courier guy'))) {
-								console.log('Courier Guy Dashboard: ✅ Matched workspace name in DOM!');
-								return true;
-							}
-
-							// Method 4: Check if we're on a workspace page and look for Courier Guy content
-							const workspaceContent = document.querySelector('.layout-main-section');
-							if (workspaceContent) {
-								const contentText = workspaceContent.textContent.toLowerCase();
-								// Check for specific Courier Guy content
-								if (contentText.includes('courier guy dashboard') ||
-									contentText.includes('courier guy settings') ||
-									contentText.includes('courier guy') ||
-									contentText.includes('waybills') ||
-									contentText.includes('waybill') ||
-									// Check for page title
-									document.title.toLowerCase().includes('courier guy')) {
-									console.log('Courier Guy Dashboard: ✅ Matched workspace content!', contentText.substring(0, 100));
-									return true;
-								}
-							}
-
-							// Method 5: Check pathname directly (most reliable for /app/courier-guy)
+							const pathname = window.location.pathname.toLowerCase();
 							if (pathname.includes('/app/courier-guy') || pathname.includes('/app/courier_guy')) {
-								console.log('Courier Guy Dashboard: ✅ Matched pathname!', pathname);
 								return true;
 							}
-
 							return false;
 						} catch (e) {
-							console.log('Courier Guy Dashboard: Error checking workspace:', e);
 							return false;
 						}
 					};
 
-					// Wait for frappe.router to be available
+					// Listen for route changes
 					const setupRouter = () => {
 						if (typeof frappe !== 'undefined' && frappe.router && typeof frappe.router.on === 'function') {
-							// Wait for workspace to load
 							frappe.router.on('change', () => {
-								if (isCourierGuyWorkspace()) {
+								if (isCourierGuyWorkspace() && !document.querySelector('.courier-guy-api-dashboard')) {
 									setTimeout(() => this.load_dashboard_data(), 1000);
 								}
 							});
 						} else {
-							// Retry if router not ready
-							setTimeout(setupRouter, 100);
+							setTimeout(setupRouter, 500);
 						}
 					};
-
-					// Only setup router if frappe is available
 					if (typeof frappe !== 'undefined') {
 						setupRouter();
 					}
 
-					// Also load if already on the page (with delay to ensure frappe is ready)
+					// Check on initial page load (once)
 					setTimeout(() => {
-						console.log('Courier Guy Dashboard: Checking if on workspace...');
-						if (isCourierGuyWorkspace()) {
-							console.log('Courier Guy Dashboard: On Courier Guy workspace, loading dashboard...');
-							setTimeout(() => this.load_dashboard_data(), 2000);
-						} else {
-							console.log('Courier Guy Dashboard: Not on Courier Guy workspace yet');
-						}
-					}, 500);
-
-					// Listen for workspace content updates
-					$(document).on('workspace-rendered', () => {
-						if (isCourierGuyWorkspace()) {
-							setTimeout(() => this.load_dashboard_data(), 1000);
-						}
-					});
-
-					// Also try on DOM ready and after a delay
-					$(document).ready(() => {
-						setTimeout(() => {
-							if (isCourierGuyWorkspace()) {
-								setTimeout(() => this.load_dashboard_data(), 2500);
-							}
-						}, 1000);
-					});
-
-					// Periodic check (as fallback) - try loading immediately and then periodically
-					// Try immediate load with multiple attempts
-					const tryLoad = () => {
-						// Check if we're on a workspace page (any workspace)
-						const isWorkspacePage = window.location.pathname.includes('/app/') &&
-							(document.querySelector('.layout-main-section') ||
-								document.querySelector('.workspace-content') ||
-								document.querySelector('#page-Workspaces'));
-
-						// Check if content suggests Courier Guy workspace
-						const hasCourierGuyContent = document.body.textContent.toLowerCase().includes('courier guy') ||
-							document.body.textContent.toLowerCase().includes('waybill');
-
-						if ((isCourierGuyWorkspace() || (isWorkspacePage && hasCourierGuyContent)) &&
-							!document.querySelector('.courier-guy-api-dashboard')) {
-							console.log('Courier Guy Dashboard: Attempting to load dashboard...');
+						if (isCourierGuyWorkspace() && !document.querySelector('.courier-guy-api-dashboard')) {
 							this.load_dashboard_data();
 						}
-					};
-
-					// Try multiple times with increasing delays
-					setTimeout(tryLoad, 1000);
-					setTimeout(tryLoad, 3000);
-					setTimeout(tryLoad, 5000);
-					setTimeout(tryLoad, 8000);
-					setTimeout(tryLoad, 12000);
-
-					// Then periodic checks every 10 seconds
-					setInterval(tryLoad, 10000);
-
-					// Also try loading immediately if we can detect Courier Guy content
-					setTimeout(() => {
-						const layoutSection = document.querySelector('.layout-main-section');
-						const pathname = window.location.pathname.toLowerCase();
-						const pageTitle = document.title.toLowerCase();
-
-						// Multiple checks to ensure we trigger
-						if (layoutSection && (
-							layoutSection.textContent.toLowerCase().includes('courier guy') ||
-							pathname.includes('/app/courier-guy') ||
-							pathname.includes('/app/courier_guy') ||
-							pageTitle.includes('courier guy')
-						)) {
-							console.log('Courier Guy Dashboard: Immediate load triggered by content/URL detection');
-							this.load_dashboard_data();
-						}
-					}, 500);
-
-					// Additional aggressive check - just check URL pattern
-					setTimeout(() => {
-						const pathname = window.location.pathname.toLowerCase();
-						if (pathname.includes('courier-guy') || pathname.includes('courier_guy')) {
-							console.log('Courier Guy Dashboard: Aggressive URL check - loading dashboard');
-							if (!document.querySelector('.courier-guy-api-dashboard')) {
-								this.load_dashboard_data();
-							}
-						}
-					}, 1000);
+					}, 1500);
 				}
+
 
 				async load_dashboard_data() {
 					console.log('Courier Guy Dashboard: load_dashboard_data called');
