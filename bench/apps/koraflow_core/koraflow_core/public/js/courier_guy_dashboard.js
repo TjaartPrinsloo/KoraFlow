@@ -101,11 +101,19 @@
 
 
 				async load_dashboard_data() {
-					console.log('Courier Guy Dashboard: load_dashboard_data called');
+					// Route guard: only render on Courier Guy workspace
+					const pathname = window.location.pathname.toLowerCase();
+					const hash = (window.location.hash || '').toLowerCase();
+					const onCourierGuyPage = (
+						pathname.includes('/app/courier-guy') || pathname.includes('/app/courier_guy') ||
+						(hash.includes('workspace') && (hash.includes('courier-guy') || hash.includes('courier%20guy') || hash.includes('courier_guy')))
+					);
+					if (!onCourierGuyPage) {
+						return;
+					}
 
 					// Check if dashboard already loaded
 					if (document.querySelector('.courier-guy-api-dashboard')) {
-						console.log('Courier Guy Dashboard: Already loaded, skipping');
 						return;
 					}
 
@@ -124,7 +132,6 @@
 						document.querySelector('.main-section');
 
 					if (!dashboard_container) {
-						console.error('Courier Guy Dashboard: Container not found!');
 						console.error('  Tried selectors: .layout-main-section, .codex-editor, #editorjs, etc.');
 						console.error('  Available elements:', {
 							layoutMainSection: !!document.querySelector('.layout-main-section'),
@@ -133,13 +140,10 @@
 							pageContent: !!document.querySelector('.page-content'),
 							body: !!document.querySelector('#body')
 						});
-						console.log('Courier Guy Dashboard: Retrying in 1 second...');
 						setTimeout(() => this.load_dashboard_data(), 1000);
 						return;
 					}
 
-					console.log('Courier Guy Dashboard: Found container:', dashboard_container.className);
-					console.log('Courier Guy Dashboard: Container element:', dashboard_container);
 
 					// Create dashboard container
 					const api_dashboard = document.createElement('div');
@@ -163,7 +167,6 @@
 						fromDateStr = formatDate(oneWeekAgo);
 						toDateStr = formatDate(today);
 					} catch (e) {
-						console.error('Courier Guy Dashboard: Error formatting dates:', e);
 						// Fallback to hardcoded dates if formatting fails
 						const today_fallback = new Date();
 						const oneWeekAgo_fallback = new Date(today_fallback);
@@ -197,8 +200,11 @@
 								Apply
 							</button>
 						</div>
-						<div class="dashboard-loading">
+						<div class="dashboard-loading" style="display: none;">
 							<i class="fa fa-spinner fa-spin"></i> Loading dashboard data...
+						</div>
+						<div class="dashboard-prompt" style="text-align: center; padding: 20px; color: #888;">
+							Select a date range and click <strong>Apply</strong> to load shipment data.
 						</div>
 						<div class="dashboard-content" style="display: none;">
 							<div class="dashboard-summary">
@@ -281,32 +287,24 @@
 						const headerParent = firstHeader.closest('.ce-block, .workspace-block') || firstHeader.parentElement;
 						if (headerParent && headerParent.nextSibling) {
 							headerParent.parentElement.insertBefore(api_dashboard, headerParent.nextSibling);
-							console.log('Courier Guy Dashboard: Inserted after header block');
 						} else if (headerParent) {
 							headerParent.parentElement.insertBefore(api_dashboard, headerParent);
-							console.log('Courier Guy Dashboard: Inserted before header block');
 						} else {
 							dashboard_container.insertBefore(api_dashboard, dashboard_container.firstChild);
-							console.log('Courier Guy Dashboard: Inserted at beginning (header found but no parent)');
 						}
 					} else if (dashboard_container.firstChild) {
 						dashboard_container.insertBefore(api_dashboard, dashboard_container.firstChild);
-						console.log('Courier Guy Dashboard: Inserted before first child of', dashboard_container.className);
 					} else {
 						dashboard_container.appendChild(api_dashboard);
-						console.log('Courier Guy Dashboard: Appended to', dashboard_container.className);
 					}
 
-					console.log('Courier Guy Dashboard: Dashboard inserted successfully into', dashboard_container.className);
 
-					// Load data
-					await this.fetch_dashboard_data();
+					// Dashboard rendered. Data loads when user clicks Apply.
 				}
 
 				async fetch_dashboard_data() {
 					const dashboard = document.querySelector('.courier-guy-api-dashboard');
 					if (!dashboard) {
-						console.error('Courier Guy Dashboard: Dashboard container not found');
 						return;
 					}
 
@@ -315,7 +313,6 @@
 					const error = dashboard.querySelector('.dashboard-error');
 
 					if (!loading || !content || !error) {
-						console.error('Courier Guy Dashboard: Dashboard elements not found', { loading, content, error });
 						return;
 					}
 
@@ -336,14 +333,8 @@
 								to_date: toDate
 							},
 							callback: (r) => {
-								console.log('Courier Guy Dashboard: API response raw', r);
 								if (r && r.message && r.message.success) {
 									const data = r.message.data || {};
-									console.log('Courier Guy Dashboard: Data received', data);
-									console.log('Courier Guy Dashboard: Source', data.source);
-									console.log('Courier Guy Dashboard: Summary', data.summary);
-									console.log('Courier Guy Dashboard: Stats', data.stats);
-									console.log('Courier Guy Dashboard: Shipments count', data.shipments?.length || 0);
 
 									// Check for API warning (network connectivity issues)
 									if (data.api_warning) {
@@ -366,18 +357,15 @@
 									this.render_dashboard(data);
 								} else {
 									const errorMsg = r?.message?.error || r?.message || 'Failed to load dashboard data';
-									console.error('Courier Guy Dashboard: API error', errorMsg);
 									this.show_error(errorMsg);
 								}
 							},
 							error: (r) => {
-								console.error('Courier Guy Dashboard: API call failed', r);
 								this.show_error(r?.message || r?.exc || 'Error connecting to Courier Guy API');
 							}
 						});
 
 					} catch (e) {
-						console.error('Courier Guy Dashboard: Exception', e);
 						this.show_error(e.message || 'Unknown error occurred');
 					}
 				}
@@ -389,7 +377,6 @@
 				render_dashboard(data) {
 					const dashboard = document.querySelector('.courier-guy-api-dashboard');
 					if (!dashboard) {
-						console.error('Courier Guy Dashboard: Dashboard container not found for rendering');
 						return;
 					}
 
@@ -397,7 +384,6 @@
 					const content = dashboard.querySelector('.dashboard-content');
 
 					if (!loading || !content) {
-						console.error('Courier Guy Dashboard: Dashboard elements not found for rendering');
 						return;
 					}
 
@@ -405,9 +391,6 @@
 					content.style.display = 'block';
 
 					// Ensure stats are visible even if 0
-					console.log('Courier Guy Dashboard: Rendering dashboard with data:', data);
-					console.log('Courier Guy Dashboard: Summary:', data.summary);
-					console.log('Courier Guy Dashboard: Stats:', data.stats);
 
 					// Render summary cards
 					const summary = data.summary || {};
@@ -423,15 +406,12 @@
 
 					if (summaryCreated) {
 						summaryCreated.textContent = createdValue;
-						console.log('Courier Guy Dashboard: Set summary-created to', createdValue);
 					}
 					if (summaryCollected) {
 						summaryCollected.textContent = collectedValue;
-						console.log('Courier Guy Dashboard: Set summary-collected to', collectedValue);
 					}
 					if (summaryDelivered) {
 						summaryDelivered.textContent = deliveredValue;
-						console.log('Courier Guy Dashboard: Set summary-delivered to', deliveredValue);
 					}
 
 					// Render KPIs
@@ -451,7 +431,6 @@
 					this.currentPage = 1;
 
 					// Render shipments table with pagination
-					console.log('Courier Guy Dashboard: Rendering shipments', this.allShipments);
 					this.renderPaginatedShipments();
 
 					// Update shipments count badge
@@ -529,7 +508,6 @@
 				}
 
 				render_shipments_table(shipments) {
-					console.log('Courier Guy Dashboard: render_shipments_table called with', shipments);
 					const tbody = document.querySelector('.courier-guy-api-dashboard #shipments-tbody') ||
 						document.getElementById('shipments-tbody');
 					if (!tbody) {
@@ -538,7 +516,6 @@
 					}
 
 					if (!shipments || shipments.length === 0) {
-						console.log('Courier Guy Dashboard: No shipments to display');
 						tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No shipments found for the selected period.</td></tr>';
 						return;
 					}
@@ -816,7 +793,6 @@
 				show_error(message) {
 					const dashboard = document.querySelector('.courier-guy-api-dashboard');
 					if (!dashboard) {
-						console.error('Courier Guy Dashboard: Dashboard container not found for error display');
 						return;
 					}
 
@@ -825,7 +801,6 @@
 					const error = dashboard.querySelector('.dashboard-error');
 
 					if (!loading || !content || !error) {
-						console.error('Courier Guy Dashboard: Dashboard elements not found for error display');
 						return;
 					}
 
@@ -859,7 +834,6 @@
 		// Initialize dashboard instance
 		if (!koraflow_core.courier_guy.dashboard) {
 			koraflow_core.courier_guy.dashboard = new koraflow_core.courier_guy.Dashboard();
-			console.log('Courier Guy Dashboard: Initialized successfully');
 		}
 
 		// Also try direct injection on page load
@@ -891,7 +865,6 @@
 						}
 					}
 				} catch (e) {
-					console.log('Courier Guy Dashboard: Error checking route', e);
 				}
 			}, 3000);
 		});
@@ -913,20 +886,5 @@
 		waitForFrappe();
 	}
 
-	// Final fallback: Check every 2 seconds if we're on courier-guy page and dashboard isn't loaded
-	setInterval(() => {
-		const pathname = window.location.pathname.toLowerCase();
-		if ((pathname.includes('courier-guy') || pathname.includes('courier_guy')) &&
-			!document.querySelector('.courier-guy-api-dashboard')) {
-			console.log('Courier Guy Dashboard: Fallback check - attempting to load dashboard');
-			if (typeof koraflow_core !== 'undefined' &&
-				koraflow_core.courier_guy &&
-				koraflow_core.courier_guy.dashboard) {
-				koraflow_core.courier_guy.dashboard.load_dashboard_data();
-			} else if (typeof frappe !== 'undefined' && typeof frappe.provide === 'function') {
-				// Try to initialize if not already done
-				waitForFrappe();
-			}
-		}
-	}, 2000);
+
 })();

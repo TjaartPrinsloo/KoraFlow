@@ -82,12 +82,12 @@ app_include_js = [
 	"/assets/koraflow_core/js/sales_agent_dashboard.js",
 	"/assets/koraflow_core/js/courier_guy_delivery_note.js",
 	"/assets/koraflow_core/js/courier_guy_patient.js",
-	"/assets/koraflow_core/js/courier_guy_dashboard.js?v=20260315b"
+	"/assets/koraflow_core/js/courier_guy_dashboard.js?v=20260316a"
 ]
 app_include_css = [
 	"/assets/koraflow_core/css/koraflow_core.css",
 	"/assets/koraflow_core/css/sales_agent_dashboard.css",
-	"/assets/koraflow_core/css/courier_guy_dashboard.css?v=20260315b"
+	"/assets/koraflow_core/css/courier_guy_dashboard.css?v=20260316a"
 ]
 
 # Scheduled Tasks
