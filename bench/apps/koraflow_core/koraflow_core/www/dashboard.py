@@ -8,12 +8,25 @@ def get_context(context):
 	Load context for Patient Dashboard including Vitals and Refill Info.
 	"""
 	context.no_cache = 1
-	
+
+	# Set defaults so template never crashes on undefined
+	context.patient = None
+	context.alerts = []
+	context.refill_info = None
+	context.vitals_history = []
+	context.latest_vital = None
+	context.weight_change = 0
+	context.vitals_chart_data = "[]"
+	context.bmi_class = "Unknown"
+	context.bmi_badge_color = "gray-200"
+	context.bmi_percent = 50
+	context.target_weight = 70
+	context.progress_percent = 0
+	context.intake_completed = False
+
 	# 1. Access Control
 	if frappe.session.user == "Guest":
-		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = "/s2w_login"
-		return
+		frappe.throw(_("Please login to view the dashboard"), frappe.PermissionError)
 
 	# Check if user is Patient or Sales Agent
 	roles = frappe.get_roles()
@@ -21,18 +34,18 @@ def get_context(context):
 		if "Sales Agent" in roles:
 			frappe.local.response["type"] = "redirect"
 			frappe.local.response["location"] = "/sales_agent_dashboard"
-			return
+			raise frappe.Redirect
 		else:
 			frappe.local.response["type"] = "redirect"
-			frappe.local.response["location"] = "/app/home" 
-			return
+			frappe.local.response["location"] = "/app/home"
+			raise frappe.Redirect
 
 	# Get Patient Doc
 	patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
 	if not patient_name:
 		frappe.local.response["type"] = "redirect"
 		frappe.local.response["location"] = "/glp1-intake"
-		return
+		raise frappe.Redirect
 
 	patient = frappe.get_doc("Patient", patient_name)
 	context.patient = patient
