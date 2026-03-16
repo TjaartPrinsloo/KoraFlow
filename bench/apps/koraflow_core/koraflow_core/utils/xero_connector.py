@@ -17,7 +17,7 @@ class XeroConnector:
         self.client_id = self.settings.client_id
         self.client_secret = self.settings.get_password("client_secret")
         self.redirect_uri = self.settings.redirect_uri
-        self.scope = "offline_access accounting.transactions accounting.contacts"
+        self.scope = "offline_access accounting.transactions.read accounting.transactions.create accounting.transactions.update accounting.contacts.read accounting.contacts.create accounting.contacts.update accounting.settings.read"
 
         def oauth2_token_getter():
             expires_in = 1800 # Default fallback
