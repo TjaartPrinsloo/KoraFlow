@@ -2,7 +2,29 @@
 
 frappe.ui.form.on('Patient Encounter', {
     refresh(frm) {
-        if (frappe.user.has_role('Nurse')) {
+        // Doctors (Physician role) bypass all nurse restrictions
+        var is_physician = frappe.user.has_role('Physician');
+        var is_nurse = frappe.user.has_role('Nurse');
+
+        // Hide sections for both nurses and doctors (not admin)
+        if (is_nurse && !frappe.user.has_role('System Manager')) {
+            var hidden_fields = [
+                'invoiced',                // Invoiced checkbox
+                'codification',            // Medical Coding section
+                'codification_table',      // Medical Coding table
+                'sb_test_prescription',    // Investigations section
+                'lab_test_prescription',   // Lab Tests table
+                'sb_procedures',           // Procedures section
+                'procedure_prescription',  // Clinical Procedures table
+                'rehabilitation_section'   // Rehabilitation section
+            ];
+            hidden_fields.forEach(function(f) {
+                frm.set_df_property(f, 'hidden', 1);
+            });
+        }
+
+        // Nurse-only restrictions (not doctors)
+        if (is_nurse && !is_physician) {
 
             // Hard hide the Submit button
             frm.page.clear_primary_action();
@@ -28,7 +50,7 @@ frappe.ui.form.on('Patient Encounter', {
 
     // Prevent accidental submit via keyboard shortcuts or other triggers
     before_submit(frm) {
-        if (frappe.user.has_role('Nurse')) {
+        if (frappe.user.has_role('Nurse') && !frappe.user.has_role('Physician')) {
             frappe.throw(__('Only a Doctor can submit a Patient Encounter.'));
             frappe.validated = false;
         }

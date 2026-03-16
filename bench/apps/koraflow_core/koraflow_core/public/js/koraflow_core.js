@@ -459,6 +459,60 @@ koraflow.modules = {
 		});
 	}
 };// ======================================================
+// HIDE TIMELINE (AUDIT TRAIL) FOR NON-ADMIN USERS
+// Only System Manager / Administrator can see the timeline
+// ======================================================
+(function () {
+	function hideTimelineForNonAdmin() {
+		if (typeof frappe === 'undefined' || !frappe.boot || !frappe.boot.user) {
+			setTimeout(hideTimelineForNonAdmin, 200);
+			return;
+		}
+
+		var roles = frappe.boot.user.roles || [];
+		var isAdmin = roles.includes('System Manager') || roles.includes('Administrator');
+
+		if (!isAdmin && !document.getElementById('s2w-hide-timeline')) {
+			var style = document.createElement('style');
+			style.id = 's2w-hide-timeline';
+			style.textContent = [
+				'.form-footer .after-save .timeline,',
+				'.form-footer .after-save .comment-box,',
+				'.form-footer .new-timeline {',
+				'    display: none !important;',
+				'}'
+			].join('\n');
+			document.head.appendChild(style);
+		}
+	}
+
+	hideTimelineForNonAdmin();
+})();
+
+// ======================================================
+// OVERRIDE LOGOUT TO REDIRECT TO CUSTOM LOGIN PAGE
+// ======================================================
+(function () {
+	function overrideLogout() {
+		if (typeof frappe === 'undefined' || !frappe.app) {
+			setTimeout(overrideLogout, 200);
+			return;
+		}
+
+		frappe.app.logout = function () {
+			frappe.call({
+				method: 'logout',
+				callback: function () {
+					window.location.href = '/s2w_login';
+				}
+			});
+		};
+	}
+
+	overrideLogout();
+})();
+
+// ======================================================
 // S2W NAVBAR LOGO SIZING FIX
 // Frappe's SCSS sets .app-logo { width: 24px } with no height,
 // causing SVGs to render as 0x0. We fix this imperatively.

@@ -1,0 +1,212 @@
+{
+    "actions": [],
+    "allow_rename": 0,
+    "autoname": "naming_series:",
+    "creation": "2026-01-14 00:00:00.000000",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "section_main",
+        "prescription",
+        "patient",
+        "stock_entry",
+        "column_break_main",
+        "delivery_note",
+        "invoice",
+        "section_status",
+        "status",
+        "workflow_state",
+        "column_break_status",
+        "cold_chain_status",
+        "cold_chain_notes",
+        "section_courier",
+        "waybill",
+        "waybill_number",
+        "courier_reference",
+        "column_break_courier",
+        "estimated_delivery",
+        "actual_delivery",
+        "section_naming",
+        "naming_series"
+    ],
+    "fields": [
+        {
+            "fieldname": "section_main",
+            "fieldtype": "Section Break",
+            "label": "Shipment Details"
+        },
+        {
+            "fieldname": "prescription",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Prescription",
+            "options": "GLP-1 Patient Prescription",
+            "reqd": 1
+        },
+        {
+            "fieldname": "patient",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Patient",
+            "options": "Patient",
+            "reqd": 1
+        },
+        {
+            "fieldname": "stock_entry",
+            "fieldtype": "Link",
+            "label": "Stock Entry (Dispense)",
+            "options": "Stock Entry",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_main",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "delivery_note",
+            "fieldtype": "Link",
+            "label": "Delivery Note",
+            "options": "Delivery Note",
+            "read_only": 1
+        },
+        {
+            "fieldname": "invoice",
+            "fieldtype": "Link",
+            "label": "Sales Invoice",
+            "options": "Sales Invoice",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_status",
+            "fieldtype": "Section Break",
+            "label": "Status"
+        },
+        {
+            "default": "Created",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "\nCreated\nCourier Booked\nAwaiting Collection\nIn Transit\nDelivered\nFailed",
+            "reqd": 1
+        },
+        {
+            "fieldname": "workflow_state",
+            "fieldtype": "Data",
+            "hidden": 1,
+            "label": "Workflow State",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_status",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "Valid",
+            "fieldname": "cold_chain_status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Cold Chain Status",
+            "options": "\nValid\nBreach Detected\nNot Applicable"
+        },
+        {
+            "fieldname": "cold_chain_notes",
+            "fieldtype": "Small Text",
+            "label": "Cold Chain Notes"
+        },
+        {
+            "fieldname": "section_courier",
+            "fieldtype": "Section Break",
+            "label": "Courier Details"
+        },
+        {
+            "fieldname": "waybill",
+            "fieldtype": "Link",
+            "label": "Courier Guy Waybill",
+            "options": "Courier Guy Waybill",
+            "read_only": 1
+        },
+        {
+            "fieldname": "waybill_number",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Waybill Number",
+            "read_only": 1
+        },
+        {
+            "fieldname": "courier_reference",
+            "fieldtype": "Data",
+            "label": "Courier Booking Reference",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_courier",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "estimated_delivery",
+            "fieldtype": "Date",
+            "label": "Estimated Delivery",
+            "read_only": 1
+        },
+        {
+            "fieldname": "actual_delivery",
+            "fieldtype": "Datetime",
+            "label": "Actual Delivery",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_naming",
+            "fieldtype": "Section Break",
+            "label": "Naming"
+        },
+        {
+            "default": "SHIP-.YYYY.-.#####",
+            "fieldname": "naming_series",
+            "fieldtype": "Select",
+            "hidden": 1,
+            "label": "Naming Series",
+            "options": "SHIP-.YYYY.-.#####"
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [],
+    "modified": "2026-01-14 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "KoraFlow Core",
+    "name": "GLP-1 Shipment",
+    "naming_rule": "By \"Naming Series\" field",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Pharmacist",
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Nurse"
+        },
+        {
+            "read": 1,
+            "role": "Compliance Officer"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

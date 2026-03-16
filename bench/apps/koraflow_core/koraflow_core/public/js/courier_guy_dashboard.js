@@ -721,105 +721,208 @@
 				show_shipment_details(shipment) {
 					console.log('Showing details for:', shipment);
 
+					// Pull rich data from raw_data if available
+					const raw = shipment.raw_data || {};
+					const colAddr = raw.collection_address || {};
+					const delAddr = raw.delivery_address || {};
+					const colContact = raw.collection_contact || {};
+					const delContact = raw.delivery_contact || {};
+					const parcels = raw.parcels || [];
+					const rates = raw.rates || [];
+					const account = raw.account || {};
+
+					// Format full address
+					const fmtAddr = (addr) => {
+						if (!addr || typeof addr !== 'object') return 'N/A';
+						return [
+							addr.street_address,
+							addr.local_area || addr.geo_local_area,
+							addr.city || addr.geo_city,
+							addr.code,
+							addr.zone,
+							addr.country
+						].filter(Boolean).join('<br>');
+					};
+
+					// Format date nicely
+					const fmtDate = (dateStr) => {
+						if (!dateStr) return 'N/A';
+						try {
+							const d = new Date(dateStr);
+							return d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+						} catch (e) { return dateStr; }
+					};
+
+					const fmtDateTime = (dateStr) => {
+						if (!dateStr) return 'N/A';
+						try {
+							const d = new Date(dateStr);
+							return d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+								+ ' ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+						} catch (e) { return dateStr; }
+					};
+
+					// Build parcels table rows
+					const parcelsHtml = parcels.length > 0 ? parcels.map((p, i) => `
+						<tr>
+							<td>${i + 1}</td>
+							<td>${p.packaging || 'Custom parcel'}</td>
+							<td>${p.parcel_description || '-'}</td>
+							<td>${p.submitted_length_cm || 0} x ${p.submitted_width_cm || 0} x ${p.submitted_height_cm || 0} cm</td>
+							<td>${p.submitted_weight_kg || p.actual_weight_kg || 0} kg</td>
+							<td>${p.tracking_reference || '-'}</td>
+							<td><span class="badge badge-${this.get_status_color(p.status || '')}">${this.format_status_text(p.status)}</span></td>
+						</tr>
+					`).join('') : '<tr><td colspan="7" class="text-center text-muted">No parcel details</td></tr>';
+
+					// Build rates breakdown
+					const baseRates = rates.filter(r => r.type === 'base' || r.type === 'rate_formula');
+					const optInRates = raw.opt_in_rates || [];
+					let rateBreakdownHtml = '';
+					if (baseRates.length > 0) {
+						rateBreakdownHtml = baseRates.map(r =>
+							`<li>${r.name || r.type}: R ${parseFloat(r.value || 0).toFixed(2)} (VAT: R ${parseFloat(r.vat || 0).toFixed(2)})</li>`
+						).join('');
+					}
+					if (optInRates.length > 0) {
+						rateBreakdownHtml += optInRates.map(r =>
+							`<li>${r.name || 'Add-on'}: R ${parseFloat(r.value || 0).toFixed(2)}</li>`
+						).join('');
+					}
+
+					const statusColor = this.get_status_color(shipment.status);
+
 					const d = new frappe.ui.Dialog({
-						title: `Waybill Details: ${shipment.waybill_number || shipment.name}`,
-						size: 'large',
+						title: `Shipment: ${shipment.waybill_number || shipment.name}`,
+						size: 'extra-large',
 						fields: [
 							{
-								label: 'Status Information',
-								fieldtype: 'Section Break'
-							},
-							{
-								label: 'Current Status',
-								fieldname: 'status_html',
+								fieldname: 'shipment_details_html',
 								fieldtype: 'HTML',
-								options: `<div style="padding: 10px; background-color: var(--bg-light-gray); border-radius: 6px;">
-									<h3 class="text-${this.get_status_color(shipment.status)}" style="margin-top: 5px;">${shipment.status}</h3>
-									<p><strong>Service:</strong> ${shipment.service || shipment.service_type || 'N/A'}</p>
-									<p><strong>Tracking No:</strong> ${shipment.tracking_number || shipment.waybill_number || 'N/A'}</p>
+								options: `
+								<div style="font-size: 13px;">
+									<!-- Shipment Details -->
+									<div style="background: var(--bg-light-gray, #f5f5f5); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+										<h5 style="margin-top: 0;">Shipment Details</h5>
+										<div style="display: flex; gap: 24px; flex-wrap: wrap;">
+											<div><strong>Service level:</strong> ${raw.service_level_name || shipment.service_type || 'N/A'} (${raw.service_level_code || ''})</div>
+											<div><strong>Status:</strong> <span class="badge badge-${statusColor}">${shipment.status}</span></div>
+										</div>
+										<div style="margin-top: 8px; color: var(--text-muted);">
+											Created: ${fmtDateTime(raw.time_created)} by ${raw.created_by || 'N/A'}
+										</div>
+									</div>
+
+									<!-- Collection & Delivery side by side -->
+									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+										<!-- Collection -->
+										<div style="border: 1px solid var(--border-color, #d1d8dd); border-radius: 8px; padding: 16px;">
+											<h5 style="margin-top: 0;">Collection</h5>
+											<p><strong>Expected collection:</strong> ${fmtDate(raw.estimated_collection)}</p>
+											${raw.collected_date ? `<p><strong>Collected:</strong> ${fmtDate(raw.collected_date)}</p>` : ''}
+											<hr>
+											<h6>Address and instructions</h6>
+											<p>${fmtAddr(colAddr)}</p>
+											${raw.special_instructions_collection ? `<p style="color: var(--text-muted); font-style: italic;">${raw.special_instructions_collection}</p>` : ''}
+											<hr>
+											<h6>Contact details</h6>
+											<p>
+												<strong>Name:</strong> ${colContact.name || 'N/A'}<br>
+												<strong>Email:</strong> ${colContact.email || '-'}<br>
+												<strong>Phone:</strong> ${colContact.mobile_number || '-'}
+											</p>
+										</div>
+										<!-- Delivery -->
+										<div style="border: 1px solid var(--border-color, #d1d8dd); border-radius: 8px; padding: 16px;">
+											<h5 style="margin-top: 0;">Delivery</h5>
+											<p><strong>Expected delivery:</strong> ${fmtDate(raw.estimated_delivery_from)}${raw.estimated_delivery_to ? ' - ' + fmtDate(raw.estimated_delivery_to) : ''}</p>
+											${raw.delivered_date ? `<p><strong>Delivered:</strong> ${fmtDate(raw.delivered_date)}</p>` : ''}
+											<hr>
+											<h6>Address and instructions</h6>
+											<p>${fmtAddr(delAddr)}</p>
+											${raw.special_instructions_delivery ? `<p style="color: var(--text-muted); font-style: italic;">${raw.special_instructions_delivery}</p>` : ''}
+											<hr>
+											<h6>Contact details</h6>
+											<p>
+												<strong>Name:</strong> ${delContact.name || 'N/A'}<br>
+												<strong>Email:</strong> ${delContact.email || '-'}<br>
+												<strong>Phone:</strong> ${delContact.mobile_number || '-'}
+											</p>
+										</div>
+									</div>
+
+									<!-- Parcel Details -->
+									<div style="border: 1px solid var(--border-color, #d1d8dd); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+										<h5 style="margin-top: 0;">Parcel Details</h5>
+										<div style="overflow-x: auto;">
+											<table class="table table-bordered table-sm" style="margin-bottom: 0;">
+												<thead style="background: #fef3cd;">
+													<tr>
+														<th>#</th>
+														<th>Package Type</th>
+														<th>Parcel Category</th>
+														<th>Dimensions</th>
+														<th>Weight</th>
+														<th>Tracking Ref.</th>
+														<th>Status</th>
+													</tr>
+												</thead>
+												<tbody>${parcelsHtml}</tbody>
+											</table>
+										</div>
+									</div>
+
+									<!-- Service Type -->
+									<div style="border: 1px solid var(--border-color, #d1d8dd); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+										<h5 style="margin-top: 0;">Service Type</h5>
+										<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+											<div><strong>Service level:</strong> ${raw.service_level_name || 'N/A'} (${raw.service_level_code || ''})</div>
+											<div><strong>Charged weight:</strong> ${raw.charged_weight || 0} kg</div>
+											<div><strong>Expected collection:</strong> ${fmtDate(raw.estimated_collection)}</div>
+											<div><strong>Actual weight:</strong> ${raw.actual_weight || 0} kg</div>
+											<div><strong>Expected delivery:</strong> ${fmtDate(raw.estimated_delivery_from)}${raw.estimated_delivery_to ? ' - ' + fmtDate(raw.estimated_delivery_to) : ''}</div>
+											<div><strong>Volumetric weight:</strong> ${raw.volumetric_weight || 0} kg</div>
+										</div>
+										<div style="margin-top: 12px;">
+											<strong>Rate:</strong> R ${parseFloat(raw.rate || 0).toFixed(2)}
+											${rateBreakdownHtml ? `<ul style="margin-top: 4px;">${rateBreakdownHtml}</ul>` : ''}
+										</div>
+									</div>
+
+									<!-- Billing -->
+									${account.name ? `
+									<div style="border: 1px solid var(--border-color, #d1d8dd); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+										<h5 style="margin-top: 0;">Billing</h5>
+										<p>
+											<strong>${account.name || 'N/A'}</strong><br>
+											${account.billing_contact ? (account.billing_contact.email || '') : ''}<br>
+											${account.billing_contact ? (account.billing_contact.mobile_number || '') : ''}
+										</p>
+									</div>` : ''}
+
+									<!-- Latest Tracking -->
+									${raw.latest_tracking_message ? `
+									<div style="border: 1px solid var(--border-color, #d1d8dd); border-radius: 8px; padding: 16px;">
+										<h5 style="margin-top: 0;">Latest Tracking</h5>
+										<p>${raw.latest_tracking_message}</p>
+										<p class="text-muted small">${fmtDateTime(raw.latest_tracking_event_time)}</p>
+									</div>` : ''}
 								</div>`
-							},
-							{
-								label: 'Addresses',
-								fieldtype: 'Section Break'
-							},
-							{
-								label: 'Collection',
-								fieldname: 'collection_col',
-								fieldtype: 'Column Break'
-							},
-							{
-								label: 'Collection Details',
-								fieldname: 'collection_html',
-								fieldtype: 'HTML',
-								options: `<div>
-									<h6>From:</h6>
-									<p>
-										<strong>${shipment.collection_contact_name || 'N/A'}</strong><br>
-										${shipment.collection_contact_number || ''}<br>
-										<span class="text-muted">${this.format_address(shipment.collection_address) || 'No address provided'}</span>
-									</p>
-									<p class="text-muted small">Requested: ${shipment.created || 'N/A'}</p>
-								</div>`
-							},
-							{
-								label: 'Delivery',
-								fieldname: 'delivery_col',
-								fieldtype: 'Column Break'
-							},
-							{
-								label: 'Delivery Details',
-								fieldname: 'delivery_html',
-								fieldtype: 'HTML',
-								options: `<div>
-									<h6>To:</h6>
-									<p>
-										<strong>${shipment.delivery_contact_name || 'N/A'}</strong><br>
-										${shipment.delivery_contact_number || ''}<br>
-										<span class="text-muted">${this.format_address(shipment.delivery_address) || 'No address provided'}</span>
-									</p>
-									<p class="text-muted small">Delivered: ${shipment.delivered_at || shipment.delivered_date || 'Pending'}</p>
-								</div>`
-							},
-							{
-								label: 'Shipment Info',
-								fieldtype: 'Section Break'
-							},
-							{
-								label: 'Details',
-								fieldname: 'details_html',
-								fieldtype: 'HTML',
-								options: `<table class="table table-bordered table-sm">
-									<tr>
-										<th width="30%">Total Value</th>
-										<td>R ${parseFloat(shipment.total_value || shipment.rate || 0).toFixed(2)}</td>
-									</tr>
-									<tr>
-										<th>Billable Weight</th>
-										<td>${parseFloat(shipment.total_weight || shipment.charged_weight || 0).toFixed(2)} kg</td>
-									</tr>
-									<tr>
-										<th>Parcels</th>
-										<td>${shipment.parcel_count || (shipment.parcels ? shipment.parcels.length : 1)}</td>
-									</tr>
-									<tr>
-										<th>Ref / Order No</th>
-										<td>${shipment.reference || shipment.client_reference || '-'}</td>
-									</tr>
-								</table>`
 							}
 						]
 					});
 
-					// Add Actions if needed
-					if (shipment.status !== 'Delivered' && shipment.status !== 'Cancelled') {
-						d.set_primary_action('Track', () => {
-							const trackingUrl = `https://thecourierguy.co.za/tracking?waybill=${shipment.waybill_number}`;
-							window.open(trackingUrl, '_blank');
-						});
-					}
+					// Add Track button
+					d.set_primary_action('Track on Courier Guy', () => {
+						window.open(`https://portal.thecourierguy.co.za/shipments`, '_blank');
+					});
 
 					d.show();
+				}
+
+				format_status_text(status) {
+					if (!status) return 'N/A';
+					return status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 				}
 
 				format_address(address) {

@@ -81,11 +81,13 @@ app_include_js = [
 	"/assets/koraflow_core/js/koraflow_core.js",
 	"/assets/koraflow_core/js/sales_agent_dashboard.js",
 	"/assets/koraflow_core/js/courier_guy_delivery_note.js",
-	"/assets/koraflow_core/js/courier_guy_patient.js"
+	"/assets/koraflow_core/js/courier_guy_patient.js",
+	"/assets/koraflow_core/js/courier_guy_dashboard.js?v=20260315b"
 ]
 app_include_css = [
 	"/assets/koraflow_core/css/koraflow_core.css",
-	"/assets/koraflow_core/css/sales_agent_dashboard.css"
+	"/assets/koraflow_core/css/sales_agent_dashboard.css",
+	"/assets/koraflow_core/css/courier_guy_dashboard.css?v=20260315b"
 ]
 
 # Scheduled Tasks
@@ -108,7 +110,8 @@ permission_query_conditions = {
 	"GLP-1 Pharmacy Dispense Task": "koraflow_core.utils.glp1_permissions.get_glp1_dispense_task_permission_query_conditions",
 	# Nurse Role Permissions
 	"Patient Appointment": "koraflow_core.permissions.get_nurse_appointment_conditions",
-	"Patient": "koraflow_core.permissions.get_nurse_patient_conditions"
+	"Patient": "koraflow_core.permissions.get_nurse_patient_conditions",
+	"Issue": "koraflow_core.permissions.get_nurse_issue_conditions"
 }
 
 # Has Permission Checks
@@ -120,7 +123,8 @@ has_permission = {
 	"GLP-1 Patient Prescription": "koraflow_core.utils.glp1_permissions.has_glp1_prescription_permission",
 	"GLP-1 Pharmacy Dispense Task": "koraflow_core.utils.glp1_permissions.has_glp1_dispense_task_permission",
 	# Nurse Role Permissions
-	"Patient": "koraflow_core.permissions.patient_has_permission"
+	"Patient": "koraflow_core.permissions.patient_has_permission",
+	"Issue": "koraflow_core.permissions.issue_has_permission"
 }
 
 # Document Events
@@ -144,6 +148,9 @@ doc_events = {
 	},
 	"Delivery Note": {
 		"on_submit": "koraflow_core.hooks.courier_guy_hooks.create_waybill_on_delivery_note_submit"
+	},
+	"Payment Entry": {
+		"on_submit": "koraflow_core.hooks.courier_guy_hooks.on_payment_entry_submit"
 	},
     "Quotation": {
         "on_submit": "koraflow_core.utils.xero_connector.sync_quotation",
@@ -193,6 +200,9 @@ doc_events = {
 	},
 	"User": {
 		"after_insert": "koraflow_core.permissions.after_insert_user"
+	},
+	"Workspace": {
+		"onload": "koraflow_core.utils.workspace_filter.filter_healthcare_workspace"
 	}
 
 }
@@ -200,6 +210,7 @@ doc_events = {
 # Custom Scripts for DocTypes
 doctype_js = {
     "Patient": "public/js/patient.js",
+    "Patient Appointment": "public/js/nurse_appointment.js",
     "Patient Encounter": "public/js/nurse_encounter.js",
     "GLP-1 Intake Submission": "koraflow_core/doctype/glp1_intake_submission/glp1_intake_submission.js",
     "GLP-1 Intake Review": "koraflow_core/doctype/glp_1_intake_review/glp_1_intake_review.js"
@@ -230,6 +241,7 @@ website_route_rules = [
 # Override workspace sidebar to restrict Sales Agents
 override_whitelisted_methods = {
 	"frappe.desk.desktop.get_workspace_sidebar_items": "koraflow_core.utils.workspace_filter.get_workspace_sidebar_items",
+	"frappe.desk.desktop.get_desktop_page": "koraflow_core.utils.workspace_filter.get_desktop_page",
 	"frappe.website.router.resolve_route": "koraflow_core.utils.router.resolve_sales_agent_route",
 	"frappe.apps.get_apps": "koraflow_core.api.apps.get_apps"
 }
@@ -369,6 +381,24 @@ custom_fields = {
 			"options": "User",
 			"insert_after": "custom_bmi",
 			"description": "Clinical nurse assigned to this patient for portal support."
+		}
+	],
+	"Quotation": [
+		{
+			"fieldname": "custom_courier_rate",
+			"label": "Courier Rate",
+			"fieldtype": "Currency",
+			"insert_after": "custom_prescription",
+			"read_only": 1,
+			"description": "Actual TCG shipping rate used"
+		},
+		{
+			"fieldname": "custom_courier_service_level",
+			"label": "Courier Service Level",
+			"fieldtype": "Data",
+			"insert_after": "custom_courier_rate",
+			"read_only": 1,
+			"description": "TCG service level code (e.g. ECO)"
 		}
 	],
 	"Issue": [

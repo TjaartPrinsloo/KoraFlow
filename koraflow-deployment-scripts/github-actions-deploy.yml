@@ -1,0 +1,30 @@
+name: KoraFlow Oracle Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: unnecessary
+          if_key_exists: fail
+
+      - name: Run Remote Deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.ORACLE_HOST }} << 'EOF'
+            cd /home/frappe/frappe-bench
+            bench update --pull --no-backup
+            bench migrate
+            bench build
+            sudo supervisorctl restart all
+          EOF

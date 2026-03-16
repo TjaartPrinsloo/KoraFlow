@@ -12,23 +12,23 @@ class CourierGuyWaybill(Document):
 		"""Validate waybill data"""
 		if not self.delivery_note:
 			frappe.throw("Delivery Note is required")
-		
+
 		# Load delivery note details if not set
 		if self.delivery_note and not self.customer:
 			dn = frappe.get_doc("Delivery Note", self.delivery_note)
 			self.customer = dn.customer
-			
+
 			# Try to find patient from customer
 			if dn.customer:
 				patient = frappe.db.get_value("Patient", {"customer": dn.customer}, "name")
 				if patient:
 					self.patient = patient
-	
+
 	def before_save(self):
 		"""Populate address details from delivery note"""
 		if self.delivery_note:
 			dn = frappe.get_doc("Delivery Note", self.delivery_note)
-			
+
 			# Populate delivery address from delivery note
 			if dn.shipping_address_name:
 				address = frappe.get_doc("Address", dn.shipping_address_name)
@@ -40,7 +40,7 @@ class CourierGuyWaybill(Document):
 				self.delivery_city = address.city
 				self.delivery_postal_code = address.pincode
 				self.delivery_country = address.country or "South Africa"
-				
+
 				# Get contact details
 				if dn.contact_person:
 					contact = frappe.get_doc("Contact", dn.contact_person)
@@ -49,7 +49,7 @@ class CourierGuyWaybill(Document):
 						self.delivery_contact_name += " " + contact.last_name
 					self.delivery_contact_phone = contact.mobile_no or contact.phone
 					self.delivery_contact_email = contact.email_id
-			
+
 			# Populate pickup address from settings
 			settings = frappe.get_single("Courier Guy Settings")
 			if settings.enabled:
@@ -62,7 +62,7 @@ class CourierGuyWaybill(Document):
 				self.pickup_contact_name = settings.pickup_contact_name
 				self.pickup_contact_phone = settings.pickup_contact_phone
 				self.pickup_contact_email = settings.pickup_contact_email
-			
+
 			# Calculate weight and value from items
 			if not self.total_weight:
 				total_weight = 0
@@ -70,119 +70,121 @@ class CourierGuyWaybill(Document):
 					if item.weight_per_unit:
 						total_weight += item.weight_per_unit * item.qty
 				self.total_weight = total_weight or 1.0  # Default 1kg if not specified
-			
+
 			if not self.total_value:
 				self.total_value = dn.grand_total
-	
-	def on_submit(self):
-		"""Create waybill in Courier Guy system"""
-		if self.status == "Draft" or not self.waybill_number:
-			self.create_waybill()
-	
+
 	def create_waybill(self):
-		"""Create waybill via Courier Guy API"""
+		"""Create waybill via Courier Guy API. Called explicitly when invoice is paid."""
 		try:
 			api = CourierGuyAPI()
 			response = api.create_waybill(self)
-			
+
 			if response.get("success"):
 				self.waybill_number = response.get("waybill_number")
 				self.tracking_number = response.get("tracking_number")
 				self.status = "Created"
 				self.api_response = json.dumps(response, indent=2)
 				self.error_message = None
-				
-				# Save without triggering hooks
+
 				self.flags.ignore_validate = True
-				self.save()
+				self.save(ignore_permissions=True)
 				frappe.db.commit()
-				
-				frappe.msgprint(f"Waybill created successfully: {self.waybill_number}")
+
+				frappe.msgprint(f"Waybill booked successfully: {self.waybill_number}")
 			else:
 				self.status = "Failed"
 				self.error_message = response.get("error", "Unknown error")
 				self.api_response = json.dumps(response, indent=2)
-				self.save()
+				self.save(ignore_permissions=True)
+				frappe.db.commit()
 				frappe.throw(f"Failed to create waybill: {self.error_message}")
-				
+
 		except Exception as e:
 			self.status = "Failed"
 			self.error_message = str(e)
-			self.save()
+			self.save(ignore_permissions=True)
+			frappe.db.commit()
 			frappe.throw(f"Error creating waybill: {str(e)}")
-	
+
 	def update_tracking(self):
 		"""Update tracking information from Courier Guy API"""
 		if not self.tracking_number:
 			frappe.throw("No tracking number available")
-		
+
 		try:
 			api = CourierGuyAPI()
 			tracking_data = api.get_tracking(self.tracking_number)
-			
+
 			if tracking_data.get("success"):
 				self.tracking_history = json.dumps(tracking_data.get("history", []), indent=2)
 				self.last_tracking_update = frappe.utils.now()
-				
+
 				# Update status based on tracking
 				latest_status = tracking_data.get("status", "").lower()
 				if "delivered" in latest_status:
 					self.status = "Delivered"
 				elif "in transit" in latest_status or "picked up" in latest_status:
 					self.status = "In Transit"
-				
-				self.save()
+
+				self.save(ignore_permissions=True)
 				frappe.db.commit()
-				
+
 				return tracking_data
 			else:
 				frappe.throw(f"Failed to get tracking: {tracking_data.get('error', 'Unknown error')}")
-				
+
 		except Exception as e:
 			frappe.throw(f"Error getting tracking: {str(e)}")
-	
+
 	def print_waybill(self):
 		"""Get waybill print URL"""
 		if not self.waybill_number:
 			frappe.throw("Waybill not created yet")
-		
+
 		try:
 			api = CourierGuyAPI()
 			print_data = api.get_waybill_print(self.waybill_number)
-			
+
 			if print_data.get("success"):
 				return print_data.get("print_url") or print_data.get("pdf_url")
 			else:
 				frappe.throw(f"Failed to get print URL: {print_data.get('error', 'Unknown error')}")
-				
+
 		except Exception as e:
 			frappe.throw(f"Error getting print URL: {str(e)}")
 
 
 @frappe.whitelist()
 def create_waybill_from_delivery_note(delivery_note):
-	"""Create waybill from delivery note"""
+	"""Create a draft waybill from delivery note (does NOT call TCG API)"""
 	dn = frappe.get_doc("Delivery Note", delivery_note)
-	
+
 	# Check if waybill already exists
 	existing = frappe.db.exists("Courier Guy Waybill", {"delivery_note": delivery_note})
 	if existing:
 		frappe.throw("Waybill already exists for this Delivery Note")
-	
-	# Create waybill
+
+	# Create draft waybill
 	waybill = frappe.get_doc({
 		"doctype": "Courier Guy Waybill",
 		"delivery_note": delivery_note,
 		"customer": dn.customer,
 		"status": "Draft"
 	})
-	
-	waybill.insert()
-	
-	# Submit to create waybill via API
-	waybill.submit()
-	
+	waybill.insert(ignore_permissions=True)
+
 	return waybill.name
+
+
+@frappe.whitelist()
+def book_waybill(waybill_name):
+	"""Manually trigger waybill booking via TCG API"""
+	waybill = frappe.get_doc("Courier Guy Waybill", waybill_name)
+	if waybill.status not in ("Draft", "Failed"):
+		frappe.throw(f"Waybill is in '{waybill.status}' status. Only Draft or Failed waybills can be booked.")
+	waybill.create_waybill()
+	return waybill.status
 
 
 @frappe.whitelist()
@@ -198,4 +200,3 @@ def get_waybill_print_url(waybill_name):
 	"""Get print URL for waybill"""
 	waybill = frappe.get_doc("Courier Guy Waybill", waybill_name)
 	return waybill.print_waybill()
-

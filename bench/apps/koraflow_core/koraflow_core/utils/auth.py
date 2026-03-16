@@ -29,6 +29,9 @@ def on_login(login_manager):
 		except Exception as e:
 			frappe.log_error(title="Workspace Reset Error", message=f"Error clearing default workspace for {user}: {str(e)}")
 
+	elif "Nurse" in roles and "System Manager" not in roles:
+		frappe.local.response["default_route"] = "/app/nurse-view"
+
 	elif "Patient" in roles:
 		frappe.local.response["default_route"] = "/dashboard"
 
@@ -48,6 +51,9 @@ def on_session_creation(login_manager=None):
 	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
 		frappe.local.response["home_page"] = "/sales_agent_dashboard"
 		frappe.local.response["default_route"] = "/sales_agent_dashboard"
+	elif "Nurse" in roles and "System Manager" not in roles:
+		frappe.local.response["home_page"] = "/app/nurse-view"
+		frappe.local.response["default_route"] = "/app/nurse-view"
 	elif "Patient" in roles:
 		frappe.local.response["home_page"] = "/dashboard"
 		frappe.local.response["default_route"] = "/dashboard"
@@ -57,17 +63,19 @@ def get_website_user_home_page(user):
 	"""
 	Hook for get_website_user_home_page — called by get_home_page()
 	to determine the home page for Website Users.
-	Returns the dashboard path for Patients.
 	"""
 	roles = frappe.get_roles(user)
+	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
+		return "sales_agent_dashboard"
 	if "Patient" in roles:
-		return "/dashboard"
+		return "dashboard"
 	return None
 
 
 def redirect_sales_agents():
 	"""
-	Before request hook to redirect Sales Agents from /app routes to dashboard
+	Before request hook to redirect Sales Agents from /app routes to dashboard.
+	Sales Agents should ONLY see the partner portal pages.
 	"""
 	if frappe.session.user == "Guest":
 		return
@@ -76,9 +84,26 @@ def redirect_sales_agents():
 	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
 		path = frappe.local.request.path if hasattr(frappe.local, "request") and frappe.local.request else ""
 
-		if path in ["/app/build", "/app/home", "/app/sales-agent-dashboard", "/app/user-profile"]:
-			frappe.local.response["location"] = "/sales_agent_dashboard"
-			return
+		# Allow these paths for sales agents
+		allowed_prefixes = (
+			"/sales_agent_dashboard",
+			"/sales_agent_portal",
+			"/sales_agent_profile",
+			"/sales-agent-portal",
+			"/api/",
+			"/assets/",
+			"/s2w_login",
+			"/login",
+			"/logout",
+		)
+
+		if path and not path.startswith(allowed_prefixes):
+			frappe.response["type"] = "redirect"
+			frappe.response["location"] = "/sales_agent_dashboard"
+			raise frappe.Redirect
+
+		# Also override home_page on every request so Frappe SPA doesn't route elsewhere
+		frappe.local.response["home_page"] = "/sales_agent_dashboard"
 
 
 def on_logout(login_manager):
@@ -94,5 +119,8 @@ def on_logout(login_manager):
 def logout():
 	frappe.local.login_manager.logout()
 	frappe.db.commit()
-	frappe.local.response["type"] = "redirect"
-	frappe.local.response["location"] = "/s2w_login"
+	frappe.respond_as_web_page(
+		"Logging out...",
+		"""<script>window.location.href = '/s2w_login';</script>""",
+		http_status_code=200,
+	)

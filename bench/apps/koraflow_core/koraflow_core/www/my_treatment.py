@@ -47,9 +47,10 @@ def get_context(context):
 			)
 		except Exception:
 			# Fallback: if custom field doesn't exist yet, use hardcoded list
-			in_house_meds = ["Ozempic", "Wegovy", "Mounjaro", "Zepbound", "Saxenda", "Rybelsus", 
-					   "Titanium", "PreZion", "Semaglutide", "Tirzepatide", "Liraglutide", 
-					   "Ruby Boost", "Eco Boost", "RUBY", "Gold", "Eco", "Aminowell"]
+			in_house_meds = ["Ozempic", "Wegovy", "Mounjaro", "Zepbound", "Saxenda", "Rybelsus",
+					   "Titanium", "PreZion", "Semaglutide", "Tirzepatide", "Liraglutide",
+					   "Ruby Boost", "Eco Boost", "RUBY", "Gold", "Eco", "Aminowell",
+					   "Wolverine Stack", "Glow Stack", "NAD+"]
 
 		# Add in_house flag to all prescriptions
 		for p in context.prescriptions:

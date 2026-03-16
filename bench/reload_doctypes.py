@@ -6,14 +6,11 @@ def reload_schemas():
         frappe.init(site="koraflow-site", sites_path="sites")
         frappe.connect()
 
-    print("Reloading GLP-1 Intake Form...")
-    frappe.reload_doc("koraflow_core", "doctype", "glp1_intake_form")
+    print("Reloading GLP-1 Intake Submission...")
+    frappe.reload_doc("koraflow_core", "doctype", "glp1_intake_submission")
     
-    print("Reloading Healthcare Patient...")
-    frappe.reload_doc("healthcare", "doctype", "patient")
-    
-    print("Reloading ERPNext Quotation...")
-    frappe.reload_doc("selling", "doctype", "quotation")
+    print("Reloading Intake Form Print Format...")
+    frappe.reload_doc("koraflow_core", "print_format", "intake_form")
     
     print("Reload Complete.")
 

@@ -1,0 +1,381 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-01-02 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "delivery_note",
+  "customer",
+  "patient",
+  "quotation",
+  "sales_invoice",
+  "column_break_1",
+  "status",
+  "waybill_number",
+  "tracking_number",
+  "service_level_code",
+  "section_break_1",
+  "pickup_details",
+  "pickup_name",
+  "pickup_address",
+  "pickup_suburb",
+  "pickup_city",
+  "pickup_postal_code",
+  "pickup_country",
+  "pickup_contact_name",
+  "pickup_contact_phone",
+  "pickup_contact_email",
+  "column_break_2",
+  "delivery_details",
+  "delivery_name",
+  "delivery_address",
+  "delivery_suburb",
+  "delivery_city",
+  "delivery_postal_code",
+  "delivery_country",
+  "delivery_contact_name",
+  "delivery_contact_phone",
+  "delivery_contact_email",
+  "section_break_2",
+  "shipment_details",
+  "service_type",
+  "parcel_count",
+  "total_weight",
+  "total_value",
+  "column_break_3",
+  "special_instructions",
+  "insurance_required",
+  "signature_required",
+  "section_break_3",
+  "api_response",
+  "error_message",
+  "section_break_4",
+  "tracking_history",
+  "last_tracking_update"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CG-WB-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "delivery_note",
+   "fieldtype": "Link",
+   "label": "Delivery Note",
+   "options": "Delivery Note",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient"
+  },
+  {
+   "fieldname": "quotation",
+   "fieldtype": "Link",
+   "label": "Quotation",
+   "options": "Quotation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nCreated\nIn Transit\nDelivered\nFailed\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "waybill_number",
+   "fieldtype": "Data",
+   "label": "Waybill Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tracking_number",
+   "fieldtype": "Data",
+   "label": "Tracking Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "service_level_code",
+   "fieldtype": "Data",
+   "label": "Service Level Code",
+   "description": "TCG service level code (e.g. ECO, NXT)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Address Details"
+  },
+  {
+   "fieldname": "pickup_details",
+   "fieldtype": "Section Break",
+   "label": "Pickup Address"
+  },
+  {
+   "fieldname": "pickup_name",
+   "fieldtype": "Data",
+   "label": "Name"
+  },
+  {
+   "fieldname": "pickup_address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "pickup_suburb",
+   "fieldtype": "Data",
+   "label": "Suburb"
+  },
+  {
+   "fieldname": "pickup_city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "pickup_postal_code",
+   "fieldtype": "Data",
+   "label": "Postal Code"
+  },
+  {
+   "fieldname": "pickup_country",
+   "default": "South Africa",
+   "fieldtype": "Data",
+   "label": "Country"
+  },
+  {
+   "fieldname": "pickup_contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "pickup_contact_phone",
+   "fieldtype": "Data",
+   "label": "Contact Phone"
+  },
+  {
+   "fieldname": "pickup_contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "delivery_details",
+   "fieldtype": "Section Break",
+   "label": "Delivery Address"
+  },
+  {
+   "fieldname": "delivery_name",
+   "fieldtype": "Data",
+   "label": "Name"
+  },
+  {
+   "fieldname": "delivery_address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "delivery_suburb",
+   "fieldtype": "Data",
+   "label": "Suburb"
+  },
+  {
+   "fieldname": "delivery_city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "delivery_postal_code",
+   "fieldtype": "Data",
+   "label": "Postal Code"
+  },
+  {
+   "fieldname": "delivery_country",
+   "default": "South Africa",
+   "fieldtype": "Data",
+   "label": "Country"
+  },
+  {
+   "fieldname": "delivery_contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "delivery_contact_phone",
+   "fieldtype": "Data",
+   "label": "Contact Phone"
+  },
+  {
+   "fieldname": "delivery_contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email"
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Shipment Details"
+  },
+  {
+   "fieldname": "shipment_details",
+   "fieldtype": "Section Break",
+   "label": "Shipment Information"
+  },
+  {
+   "default": "Express",
+   "fieldname": "service_type",
+   "fieldtype": "Select",
+   "label": "Service Type",
+   "options": "Express\nSame Day\nNext Day\nEconomy"
+  },
+  {
+   "default": "1",
+   "fieldname": "parcel_count",
+   "fieldtype": "Int",
+   "label": "Parcel Count"
+  },
+  {
+   "fieldname": "total_weight",
+   "fieldtype": "Float",
+   "label": "Total Weight (kg)"
+  },
+  {
+   "fieldname": "total_value",
+   "fieldtype": "Currency",
+   "label": "Total Value"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "special_instructions",
+   "fieldtype": "Small Text",
+   "label": "Special Instructions"
+  },
+  {
+   "default": "0",
+   "fieldname": "insurance_required",
+   "fieldtype": "Check",
+   "label": "Insurance Required"
+  },
+  {
+   "default": "1",
+   "fieldname": "signature_required",
+   "fieldtype": "Check",
+   "label": "Signature Required"
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break",
+   "label": "API Information"
+  },
+  {
+   "fieldname": "api_response",
+   "fieldtype": "Code",
+   "label": "API Response",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break",
+   "label": "Tracking"
+  },
+  {
+   "fieldname": "tracking_history",
+   "fieldtype": "Code",
+   "label": "Tracking History",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_tracking_update",
+   "fieldtype": "Datetime",
+   "label": "Last Tracking Update",
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-truck",
+ "idx": 0,
+ "is_submittable": 0,
+ "links": [
+  {
+   "link_doctype": "Delivery Note",
+   "link_fieldname": "delivery_note"
+  },
+  {
+   "link_doctype": "Patient",
+   "link_fieldname": "patient"
+  }
+ ],
+ "modified": "2026-03-16 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "Courier Guy Waybill",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Stock User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

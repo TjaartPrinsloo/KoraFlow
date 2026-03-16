@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "dispense_request",
+  "pharmacist",
+  "pharmacist_license_number",
+  "review_status",
+  "section_validation",
+  "patient_history_reviewed",
+  "dosing_appropriate",
+  "validation_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "dispense_request",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Dispense Request",
+   "options": "GLP-1 Dispense Request",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "pharmacist",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Pharmacist",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "pharmacist_license_number",
+   "fieldtype": "Data",
+   "label": "Pharmacist License Number",
+   "reqd": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "review_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Review Status",
+   "options": "\nPending\nApproved\nRejected\nNeeds Clarification",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_validation",
+   "fieldtype": "Section Break",
+   "label": "Validation Checklist"
+  },
+  {
+   "fieldname": "patient_history_reviewed",
+   "fieldtype": "Check",
+   "label": "Patient History Reviewed"
+  },
+  {
+   "fieldname": "dosing_appropriate",
+   "fieldtype": "Check",
+   "label": "Dosing Appropriate"
+  },
+  {
+   "fieldname": "validation_notes",
+   "fieldtype": "Text Editor",
+   "label": "Validation Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2025-01-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "GLP-1 Pharmacy Review",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Pharmacist",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Compliance Officer"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -39,20 +39,24 @@ def is_valid_sa_id(id_number):
 
 def execute():
 	"""Migrate existing ID data to new fields"""
-	
+
 	# Migrate GLP-1 Intake Submission records
-	submissions = frappe.db.sql("""
-		SELECT name, id_number__passport_number
-		FROM `tabGLP-1 Intake Submission`
-		WHERE id_number__passport_number IS NOT NULL
-		AND id_number__passport_number != ''
-		AND (sa_id_number IS NULL OR sa_id_number = '')
-		AND (passport_number IS NULL OR passport_number = '')
-	""", as_dict=True)
-	
+	# Skip gracefully if the table or column doesn't exist yet (fresh install)
+	try:
+		submissions = frappe.db.sql("""
+			SELECT name, id_number__passport_number
+			FROM `tabGLP-1 Intake Submission`
+			WHERE id_number__passport_number IS NOT NULL
+			AND id_number__passport_number != ''
+			AND (sa_id_number IS NULL OR sa_id_number = '')
+			AND (passport_number IS NULL OR passport_number = '')
+		""", as_dict=True)
+	except Exception:
+		submissions = []
+
 	migrated_sa_id = 0
 	migrated_passport = 0
-	
+
 	for sub in submissions:
 		id_value = sub.id_number__passport_number.strip()
 		
@@ -78,14 +82,17 @@ def execute():
 			migrated_passport += 1
 	
 	# Migrate GLP-1 Intake Form records (child table)
-	forms = frappe.db.sql("""
-		SELECT name, id_number
-		FROM `tabGLP-1 Intake Form`
-		WHERE id_number IS NOT NULL
-		AND id_number != ''
-		AND (sa_id_number IS NULL OR sa_id_number = '')
-		AND (passport_number IS NULL OR passport_number = '')
-	""", as_dict=True)
+	try:
+		forms = frappe.db.sql("""
+			SELECT name, id_number
+			FROM `tabGLP-1 Intake Form`
+			WHERE id_number IS NOT NULL
+			AND id_number != ''
+			AND (sa_id_number IS NULL OR sa_id_number = '')
+			AND (passport_number IS NULL OR passport_number = '')
+		""", as_dict=True)
+	except Exception:
+		forms = []
 	
 	for form in forms:
 		id_value = form.id_number.strip()
@@ -108,14 +115,17 @@ def execute():
 			)
 	
 	# Migrate Patient uid field to custom_sa_id_number
-	patients = frappe.db.sql("""
-		SELECT name, uid
-		FROM `tabPatient`
-		WHERE uid IS NOT NULL
-		AND uid != ''
-		AND (custom_sa_id_number IS NULL OR custom_sa_id_number = '')
-		AND (custom_passport_number IS NULL OR custom_passport_number = '')
-	""", as_dict=True)
+	try:
+		patients = frappe.db.sql("""
+			SELECT name, uid
+			FROM `tabPatient`
+			WHERE uid IS NOT NULL
+			AND uid != ''
+			AND (custom_sa_id_number IS NULL OR custom_sa_id_number = '')
+			AND (custom_passport_number IS NULL OR custom_passport_number = '')
+		""", as_dict=True)
+	except Exception:
+		patients = []
 	
 	for patient in patients:
 		if patient.uid:

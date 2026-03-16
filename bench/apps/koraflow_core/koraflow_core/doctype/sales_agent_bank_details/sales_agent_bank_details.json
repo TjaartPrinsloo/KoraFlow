@@ -1,0 +1,181 @@
+{
+    "actions": [],
+    "allow_rename": 0,
+    "autoname": "field:sales_agent",
+    "creation": "2026-01-16 07:20:00.000000",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "sales_agent",
+        "verification_status",
+        "column_break_1",
+        "last_updated",
+        "section_break_banking",
+        "account_holder_name",
+        "bank_name",
+        "account_number",
+        "account_number_masked",
+        "column_break_banking",
+        "account_type",
+        "branch_code",
+        "section_break_verification",
+        "verification_method",
+        "verification_code",
+        "verification_expiry",
+        "column_break_verification",
+        "updated_by_ip"
+    ],
+    "fields": [
+        {
+            "fieldname": "sales_agent",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Sales Agent",
+            "options": "User",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "verification_status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Verification Status",
+            "options": "Pending\nVerified\nFailed",
+            "default": "Pending"
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "last_updated",
+            "fieldtype": "Datetime",
+            "label": "Last Updated",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_banking",
+            "fieldtype": "Section Break",
+            "label": "Banking Information"
+        },
+        {
+            "fieldname": "account_holder_name",
+            "fieldtype": "Data",
+            "label": "Account Holder Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "bank_name",
+            "fieldtype": "Select",
+            "label": "Bank Name",
+            "options": "\nStandard Bank\nABSA\nFNB\nNedbank\nCapitec\nAfrican Bank\nInvestec\nDiscovery Bank\nTymeBank\nBank Zero",
+            "reqd": 1
+        },
+        {
+            "fieldname": "account_number",
+            "fieldtype": "Password",
+            "label": "Account Number",
+            "reqd": 1
+        },
+        {
+            "fieldname": "proof_of_account",
+            "fieldtype": "Attach",
+            "label": "Proof of Account",
+            "reqd": 1
+        },
+        {
+            "fieldname": "account_number_masked",
+            "fieldtype": "Data",
+            "label": "Account Number (Masked)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_banking",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "account_type",
+            "fieldtype": "Select",
+            "label": "Account Type",
+            "options": "Savings\nCheque/Current",
+            "default": "Savings",
+            "reqd": 1
+        },
+        {
+            "fieldname": "branch_code",
+            "fieldtype": "Data",
+            "label": "Branch Code",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_break_verification",
+            "fieldtype": "Section Break",
+            "label": "Verification Details"
+        },
+        {
+            "fieldname": "verification_method",
+            "fieldtype": "Select",
+            "label": "Verification Method",
+            "options": "Email\nSMS",
+            "default": "Email",
+            "read_only": 1
+        },
+        {
+            "fieldname": "verification_code",
+            "fieldtype": "Data",
+            "label": "Verification Code",
+            "read_only": 1,
+            "hidden": 1
+        },
+        {
+            "fieldname": "verification_expiry",
+            "fieldtype": "Datetime",
+            "label": "Code Expiry",
+            "read_only": 1,
+            "hidden": 1
+        },
+        {
+            "fieldname": "column_break_verification",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "updated_by_ip",
+            "fieldtype": "Data",
+            "label": "Last Updated from IP",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-01-16 07:20:00.000000",
+    "modified_by": "Administrator",
+    "module": "Koraflow Core",
+    "name": "Sales Agent Bank Details",
+    "naming_rule": "By fieldname",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "read": 1,
+            "role": "Sales Agent",
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

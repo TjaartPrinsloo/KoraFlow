@@ -77,14 +77,33 @@ def create_quotation_from_prescription(prescription):
 			"valid_till": frappe.utils.add_days(nowdate(), 30)
 		})
 		
+		# Add courier fee using TCG rates API
+		from koraflow_core.jobs import get_courier_fee, get_courier_rate_info
+		courier_fee = get_courier_fee(patient)
+		if courier_fee and frappe.db.exists("Item", "COURIER-FEE"):
+			quotation.append("items", {
+				"item_code": "COURIER-FEE",
+				"qty": 1,
+				"rate": courier_fee,
+				"description": "Courier Delivery Fee"
+			})
+
 		quotation.flags.from_prescription = True
 		quotation.insert(ignore_permissions=True)
 		quotation.submit(ignore_permissions=True)
 		frappe.db.commit()
-		
+
 		# Link quotation to prescription
 		frappe.db.set_value("GLP-1 Patient Prescription", prescription.name, "quotation", quotation.name)
-		
+
+		# Store TCG rate metadata on quotation
+		rate_info = get_courier_rate_info(patient)
+		if rate_info:
+			frappe.db.set_value("Quotation", quotation.name, {
+				"custom_courier_rate": rate_info.get("courier_fee"),
+				"custom_courier_service_level": rate_info.get("service_level_code")
+			})
+
 		frappe.msgprint(_("Quotation {0} created automatically").format(quotation.name))
 		return quotation.name
 		

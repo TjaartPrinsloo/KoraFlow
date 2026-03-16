@@ -23,6 +23,9 @@ MEDICINES_DATA = [
 	{"name": "RUBY", "price": 2500},
 	{"name": "Titanium", "price": 2500},
 	{"name": "Ruby Boost", "price": 2500},
+	{"name": "Wolverine Stack", "price": 2500},
+	{"name": "Glow Stack", "price": 2500},
+	{"name": "NAD+", "price": 2500},
 ]
 
 COMMISSION_DATA = {
@@ -33,6 +36,9 @@ COMMISSION_DATA = {
 	"Ruby Boost": 250,
 	"Eco Boost": 250,
 	"Titanium": 250,
+	"Wolverine Stack": 250,
+	"Glow Stack": 250,
+	"NAD+": 250,
 }
 
 
@@ -337,7 +343,44 @@ SALES_PARTNERS = [
 	"Jorine Rich",
 	"Theresa Visser",
 	"Karin Ferreira",
-	"Cherise Delport"
+	"Cherise Delport",
+	"Salomé Gouws",
+	"Michelle Potgieter",
+	"Erika du Toit",
+	"Jacky de Jager",
+	"Anita Graham",
+	"Jeanne-Mari Uys",
+	"Anna Maria Hattingh",
+	"Elmee Ellerbeck",
+	"Janine Cronje",
+	"Jean Breedt",
+	"Reta Britz",
+	"Zell Lombard",
+	"Seanari Sharneck",
+	"Terrence Abrahams",
+	"Anke Balt",
+	"Belinda Scharneck",
+	"Adri Kotze",
+	"Le-Lue van der Sandt",
+	"Marinda Scharmeck",
+	"Chantal Rossouw",
+	"Madalea Scharmeck",
+	"Lydia Nel",
+	"Expo Sure",
+	"Yolandi Smith",
+	"SR Tracey",
+	"Carolina Nel",
+	"Natasha Roth",
+	"Annelise Huisamen",
+	"Andre Scharmeck",
+	"Juanita Jansen v Rensburg",
+	"Zanine Viljoen",
+	"Ryno Cilliers",
+	"Marzette Bantjes",
+	"Tjaart Prinsloo",
+	"Mariska Barnard",
+	"Inette Ferreira",
+	"Heidi Mattheus",
 ]
 
 def setup_sales_partners():
@@ -517,28 +560,34 @@ USERS_DATA = [
 		"roles": ["Accounts User", "Sales User"]
 	},
 	{
-		"email": "nurse.lee@koraflow.com",
-		"first_name": "Nurse",
+		"email": "sr.lee@koraflow.com",
+		"first_name": "Sr",
 		"last_name": "Lee",
-		"roles": ["Nurse", "Healthcare User"]
+		"roles": ["Nurse", "Healthcare User", "Desk User"]
 	},
 	{
 		"email": "andre.terblanche@koraflow.com",
 		"first_name": "Andre",
 		"last_name": "Terblanche",
-		"roles": ["Doctor", "Healthcare Practitioner"]
+		"roles": ["Nurse", "Physician", "Desk User"]
 	},
 	{
 		"email": "marinda.scharneck@koraflow.com",
 		"first_name": "Marinda",
 		"last_name": "Scharneck",
-		"roles": ["Doctor", "Healthcare Practitioner"]
+		"roles": ["Nurse", "Physician", "Desk User"]
 	},
 	{
 		"email": "tjaart.prinsloo@koraflow.com",
 		"first_name": "Tjaart",
 		"last_name": "Prinsloo",
 		"roles": ["System Administrator", "Administrator"]
+	},
+	{
+		"email": "tpprinsloo@mweb.co.za",
+		"first_name": "Tjaart",
+		"last_name": "Prinsloo",
+		"roles": ["System Manager", "Administrator", "Healthcare Administrator"]
 	}
 ]
 

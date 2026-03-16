@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "issingle": 1,
+ "autoname": "field:name",
+ "creation": "2025-01-02 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "api_configuration",
+  "api_key",
+  "api_url",
+  "column_break_1",
+  "enabled",
+  "test_mode",
+  "default_service_type",
+  "section_break_2",
+  "default_pickup_address",
+  "pickup_contact_name",
+  "pickup_contact_email",
+  "pickup_contact_phone",
+  "column_break_3",
+  "pickup_suburb",
+  "pickup_city",
+  "pickup_postal_code",
+  "pickup_country",
+  "section_break_rates",
+  "default_rate",
+  "default_parcel_length_cm",
+  "default_parcel_width_cm",
+  "column_break_rates",
+  "default_parcel_height_cm",
+  "default_parcel_weight_kg",
+  "pickup_local_area",
+  "pickup_zone"
+ ],
+ "fields": [
+  {
+   "fieldname": "api_configuration",
+   "fieldtype": "Section Break",
+   "label": "API Configuration"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key",
+   "reqd": 1
+  },
+  {
+   "fieldname": "api_url",
+   "default": "https://api.thecourierguy.co.za",
+   "fieldtype": "Data",
+   "label": "API Base URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "fieldname": "test_mode",
+   "fieldtype": "Check",
+   "label": "Test Mode"
+  },
+  {
+   "default": "Express",
+   "fieldname": "default_service_type",
+   "fieldtype": "Select",
+   "label": "Default Service Type",
+   "options": "Express\nSame Day\nNext Day\nEconomy"
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Default Pickup Address"
+  },
+  {
+   "fieldname": "default_pickup_address",
+   "fieldtype": "Small Text",
+   "label": "Address Line 1"
+  },
+  {
+   "fieldname": "pickup_contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "pickup_contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email"
+  },
+  {
+   "fieldname": "pickup_contact_phone",
+   "fieldtype": "Data",
+   "label": "Contact Phone"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pickup_suburb",
+   "fieldtype": "Data",
+   "label": "Suburb"
+  },
+  {
+   "fieldname": "pickup_city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "pickup_postal_code",
+   "fieldtype": "Data",
+   "label": "Postal Code"
+  },
+  {
+   "default": "South Africa",
+   "fieldname": "pickup_country",
+   "fieldtype": "Data",
+   "label": "Country"
+  },
+  {
+   "fieldname": "section_break_rates",
+   "fieldtype": "Section Break",
+   "label": "Rate Defaults"
+  },
+  {
+   "fieldname": "default_rate",
+   "fieldtype": "Currency",
+   "label": "Default Rate (Fallback)",
+   "default": "99",
+   "description": "Fallback courier rate when TCG API is unavailable"
+  },
+  {
+   "fieldname": "default_parcel_length_cm",
+   "fieldtype": "Float",
+   "label": "Default Parcel Length (cm)",
+   "default": "20"
+  },
+  {
+   "fieldname": "default_parcel_width_cm",
+   "fieldtype": "Float",
+   "label": "Default Parcel Width (cm)",
+   "default": "20"
+  },
+  {
+   "fieldname": "column_break_rates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_parcel_height_cm",
+   "fieldtype": "Float",
+   "label": "Default Parcel Height (cm)",
+   "default": "10"
+  },
+  {
+   "fieldname": "default_parcel_weight_kg",
+   "fieldtype": "Float",
+   "label": "Default Parcel Weight (kg)",
+   "default": "2"
+  },
+  {
+   "fieldname": "pickup_local_area",
+   "fieldtype": "Data",
+   "label": "Local Area / Suburb",
+   "description": "TCG local_area field (e.g. Menlyn)"
+  },
+  {
+   "fieldname": "pickup_zone",
+   "fieldtype": "Data",
+   "label": "Province / Zone",
+   "description": "TCG zone field (e.g. Gauteng)"
+  }
+ ],
+ "icon": "fa fa-cog",
+ "idx": 0,
+ "is_child": 0,
+ "istable": 0,
+ "modified": "2026-03-16 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "Courier Guy Settings",
+ "naming_rule": "By \"Name\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "update": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

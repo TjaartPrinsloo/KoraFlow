@@ -25,6 +25,9 @@ ITEMS_TO_CREATE = [
     {"item_name": "Ruby Injection 0.8ml", "price": 2500},
     {"item_name": "Titanium Injection 0.8ml", "price": 2500},
     {"item_name": "Ruby Boost Injection 0.8ml", "price": 2500},
+    {"item_name": "Wolverine Stack Injection 0.8ml", "price": 2500},
+    {"item_name": "Glow Stack Injection 0.8ml", "price": 2500},
+    {"item_name": "NAD+ Injection 0.8ml", "price": 2500},
 ]
 
 

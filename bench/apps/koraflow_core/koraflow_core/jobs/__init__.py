@@ -111,9 +111,17 @@ def create_quotation_job(prescription_name):
         frappe.db.commit()
         
         # Link quotation to prescription
-        frappe.db.set_value("GLP-1 Patient Prescription", prescription_name, 
+        frappe.db.set_value("GLP-1 Patient Prescription", prescription_name,
                           "linked_quotation", quotation.name)
-        
+
+        # Store TCG rate metadata on quotation
+        rate_info = get_courier_rate_info(prescription.patient)
+        if rate_info:
+            frappe.db.set_value("Quotation", quotation.name, {
+                "custom_courier_rate": rate_info.get("courier_fee"),
+                "custom_courier_service_level": rate_info.get("service_level_code")
+            })
+
         # Log to compliance
         log_audit("Quotation", "Quotation", quotation.name, prescription.patient,
                  {"total": quotation.grand_total, "prescription": prescription_name})
@@ -127,12 +135,46 @@ def create_quotation_job(prescription_name):
 
 
 def get_courier_fee(patient):
-    """Calculate courier fee based on patient address or default rate"""
+    """Calculate courier fee via TCG rates API, fallback to default"""
     try:
         settings = frappe.get_single("Courier Guy Settings")
-        return settings.default_rate if hasattr(settings, 'default_rate') else 99.00
-    except:
-        return 99.00
+        if not settings.enabled:
+            return settings.default_rate or 99.00
+
+        from koraflow_core.utils.courier_guy_api import CourierGuyAPI
+        api = CourierGuyAPI()
+        result = api.get_rates_for_patient(patient)
+        return result.get("courier_fee", settings.default_rate or 99.00)
+    except Exception as e:
+        frappe.log_error(title="Courier Fee Lookup", message=str(e))
+        try:
+            return frappe.get_single("Courier Guy Settings").default_rate or 99.00
+        except Exception:
+            return 99.00
+
+
+def get_courier_rate_info(patient):
+    """Get full courier rate info (fee + service level) for storing on quotation"""
+    try:
+        settings = frappe.get_single("Courier Guy Settings")
+        if not settings.enabled:
+            return None
+
+        from koraflow_core.utils.courier_guy_api import CourierGuyAPI
+        api = CourierGuyAPI()
+        result = api.get_rates_for_patient(patient)
+
+        if result.get("success") and result.get("selected_rate"):
+            return {
+                "courier_fee": result.get("courier_fee", 0),
+                "service_level_code": result.get("service_level_code", ""),
+                "service_level_name": result.get("service_level_name", ""),
+                "raw_response": result.get("raw_response", {})
+            }
+        return None
+    except Exception as e:
+        frappe.log_error(title="Courier Rate Info", message=str(e))
+        return None
 
 
 # ====================

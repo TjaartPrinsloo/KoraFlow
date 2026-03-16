@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "patient",
+  "prescription",
+  "allocation",
+  "invoice",
+  "status",
+  "section_batches",
+  "batch_availability"
+ ],
+ "fields": [
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient",
+   "options": "Patient",
+   "reqd": 1
+  },
+  {
+   "fieldname": "prescription",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Prescription",
+   "options": "GLP-1 Patient Prescription",
+   "reqd": 1
+  },
+  {
+   "fieldname": "allocation",
+   "fieldtype": "Link",
+   "label": "Allocation",
+   "options": "GLP-1 Dispense Allocation"
+  },
+  {
+   "fieldname": "invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nPending\nIn Progress\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_batches",
+   "fieldtype": "Section Break",
+   "label": "Batch Availability"
+  },
+  {
+   "fieldname": "batch_availability",
+   "fieldtype": "Table",
+   "label": "Available Batches",
+   "options": "GLP-1 Batch Availability"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2025-01-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "GLP-1 Pharmacy Dispense Task",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Pharmacist",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Compliance Officer"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

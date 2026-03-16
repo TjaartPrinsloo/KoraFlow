@@ -908,7 +908,9 @@ def format_shipments_for_display(shipments):
 			"collection_contact_name": coll_name,
 			"collection_contact_number": coll_phone,
 			"delivery_contact_name": del_name,
-			"delivery_contact_number": del_phone
+			"delivery_contact_number": del_phone,
+			# Pass raw API data for detailed shipment view
+			"raw_data": shipment.get("raw_data") or shipment
 		})
 	
 	return formatted

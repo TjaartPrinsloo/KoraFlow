@@ -20,9 +20,45 @@ def patient_has_permission(doc, ptype, user):
     
     return False
 
+def get_nurse_issue_conditions(user):
+    """Nurses can only see Issues for patients assigned to them."""
+    if "Nurse" not in frappe.get_roles(user):
+        return ""
+
+    # Get patients assigned to this nurse
+    patients = frappe.get_all(
+        "Patient",
+        filters={"custom_assigned_nurse": user},
+        pluck="name"
+    )
+
+    if not patients:
+        return "`tabIssue`.`custom_patient` = '__no_match__'"
+
+    patient_list = ", ".join([frappe.db.escape(p) for p in patients])
+    return f"`tabIssue`.`custom_patient` IN ({patient_list})"
+
+
+def issue_has_permission(doc, ptype, user):
+    if "Nurse" not in frappe.get_roles(user):
+        return True
+
+    if ptype in ("read", "write", "select"):
+        # Nurse can only access issues for her assigned patients
+        patients = frappe.get_all(
+            "Patient",
+            filters={"custom_assigned_nurse": user},
+            pluck="name"
+        )
+        return doc.custom_patient in patients
+
+    return False
+
+
 def block_nurse_submit(doc, method):
-    """Hard server-side block — nurses cannot submit encounters under any circumstance."""
-    if "Nurse" in frappe.get_roles(frappe.session.user):
+    """Hard server-side block — nurses cannot submit encounters unless they also have the Physician role."""
+    roles = frappe.get_roles(frappe.session.user)
+    if "Nurse" in roles and "Physician" not in roles:
         frappe.throw(
             _("Nurses can only save Patient Encounters as Draft. Only a Doctor can submit an encounter."),
             frappe.PermissionError

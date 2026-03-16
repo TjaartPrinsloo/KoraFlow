@@ -4,6 +4,7 @@ app_publisher = "KoraFlow Team"
 app_description = "KoraFlow Core - White-label modular enterprise platform"
 app_email = "team@koraflow.io"
 app_license = "MIT"
+app_logo_url = "/assets/koraflow_core/images/s2w_logo.png"
 
 # Apps
 # ------------------
