@@ -96,9 +96,6 @@ scheduler_events = {
 		"koraflow_core.utils.xero_connector.sync_xero_payments",
 		"koraflow_core.utils.xero_connector.sync_xero_quotes"
 	],
-	"daily": [
-		"koraflow_core.utils.xero_connector.sync_xero_contacts"
-	],
 }
 
 # After Install
