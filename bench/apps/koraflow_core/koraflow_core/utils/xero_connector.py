@@ -289,6 +289,9 @@ class XeroConnector:
         if not contact_name:
             return
 
+        # Clean name: strip whitespace and trailing dots
+        contact_name = contact_name.strip().rstrip('.').strip()
+
         # Check if already linked by Xero ID
         existing = frappe.db.get_value("Customer",
             {"custom_xero_contact_id": contact_id}, "name")
