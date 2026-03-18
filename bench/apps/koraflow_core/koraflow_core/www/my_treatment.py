@@ -22,10 +22,23 @@ def get_context(context):
 	
 	context.patient = frappe.get_doc("Patient", patient)
 
+	# Load linked shipping address
+	address_link = frappe.db.get_value("Dynamic Link",
+		{"link_doctype": "Patient", "link_name": patient, "parenttype": "Address"},
+		"parent")
+	if address_link:
+		context.address = frappe.get_doc("Address", address_link)
+	else:
+		context.address = frappe._dict()
+
 	# Google Maps Settings
-	google_settings = frappe.get_single("Google Settings")
-	context.google_maps_api_key = google_settings.maps_api_key
-	context.enable_google_maps = google_settings.enable_google_maps
+	try:
+		google_settings = frappe.get_single("Google Settings")
+		context.google_maps_api_key = getattr(google_settings, 'maps_api_key', '') or ''
+		context.enable_google_maps = getattr(google_settings, 'enable_google_maps', 0)
+	except Exception:
+		context.google_maps_api_key = ''
+		context.enable_google_maps = 0
 	
 	# Get Prescriptions - wrap in try-except for permission/schema issues
 	try:
@@ -105,7 +118,7 @@ def get_context(context):
 	context.refill_info = None
 
 	# Check intake status (replicate dashboard logic)
-	intake_forms = frappe.get_all("GLP-1 Intake Submission", filters={"parent": patient}, limit=1)
+	intake_forms = frappe.get_all("GLP-1 Intake Submission", filters={"patient": patient}, limit=1)
 	intake_completed = bool(intake_forms)
 
 	# Only proceed if patient is Active AND intake is complete
@@ -160,6 +173,27 @@ def get_context(context):
 			# If doctype doesn't exist or fields missing, skip gracefully
 			pass
 @frappe.whitelist()
+def get_branded_quote_pdf(quote_name):
+	"""Serve branded quotation PDF for patient portal"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Please login"), frappe.PermissionError)
+
+	# Verify patient owns this quotation
+	patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+	customer = frappe.db.get_value("Patient", patient_name, "customer")
+	party = frappe.db.get_value("Quotation", quote_name, "party_name")
+	if party != customer:
+		frappe.throw(_("Not authorized"), frappe.PermissionError)
+
+	from koraflow_core.utils.branded_templates import generate_branded_quotation_pdf
+	pdf = generate_branded_quotation_pdf(quote_name)
+
+	frappe.local.response.filename = f"{quote_name}.pdf"
+	frappe.local.response.filecontent = pdf
+	frappe.local.response.type = "pdf"
+
+
+@frappe.whitelist()
 def accept_quote(quote_name, address_data=None):
 	"""
 	Accepts the quotation and creates the sales chain.
@@ -170,25 +204,75 @@ def accept_quote(quote_name, address_data=None):
 
 	try:
 		# 1. Update Address if provided
-		if address_data:
-			patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
-			if patient_name:
-				patient = frappe.get_doc("Patient", patient_name)
-				if isinstance(address_data, str):
-					import json
-					address_data = json.loads(address_data)
-				
-				if address_data.get("address_line1"):
-					patient.address_line1 = address_data.get("address_line1")
-				if address_data.get("city"):
-					patient.city = address_data.get("city")
-				if address_data.get("zip_code"):
-					patient.zip_code = address_data.get("zip_code")
-				
-				patient.save(ignore_permissions=True)
+		patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+		if address_data and patient_name:
+			patient = frappe.get_doc("Patient", patient_name)
+			if isinstance(address_data, str):
+				import json
+				address_data = json.loads(address_data)
+
+			# Update linked Address document
+			from koraflow_core.utils.patient_sync import _sync_patient_address
+			_sync_patient_address(patient, {
+				"address_line1": address_data.get("address_line1"),
+				"city": address_data.get("city"),
+				"pincode": address_data.get("zip_code"),
+			})
 
 		# 2. Handle Quotation
 		quote = frappe.get_doc("Quotation", quote_name)
+
+		# Recalculate courier fee if address changed
+		if address_data and address_data.get("zip_code"):
+			try:
+				from koraflow_core.utils.courier_guy_api import CourierGuyAPI
+				settings = frappe.get_single("Courier Guy Settings")
+				if settings.enabled:
+					api = CourierGuyAPI()
+					rate_result = api.get_rates(
+						api.build_collection_address_from_settings(),
+						{
+							"type": "residential",
+							"street_address": address_data.get("address_line1", ""),
+							"local_area": address_data.get("city", ""),
+							"city": address_data.get("city", ""),
+							"zone": "",
+							"country": "ZA",
+							"code": address_data.get("zip_code", "")
+						}
+					)
+					new_fee = 0
+					if rate_result.get("success") and rate_result.get("selected_rate"):
+						new_fee = rate_result["selected_rate"].get("rate", 0)
+						service_code = rate_result["selected_rate"].get("service_level", {}).get("code", "")
+					else:
+						new_fee = getattr(settings, 'default_rate', 0) or 99
+
+					# Update courier fee line item on quotation
+					courier_updated = False
+					for item in quote.items:
+						if item.item_code == "COURIER-FEE":
+							item.rate = new_fee
+							courier_updated = True
+							break
+					if not courier_updated and new_fee > 0:
+						quote.append("items", {
+							"item_code": "COURIER-FEE",
+							"qty": 1,
+							"rate": new_fee,
+							"description": "Cold-chain courier delivery"
+						})
+
+					if hasattr(quote, 'custom_courier_rate'):
+						quote.custom_courier_rate = new_fee
+					if hasattr(quote, 'custom_courier_service_level') and rate_result.get("selected_rate"):
+						quote.custom_courier_service_level = service_code
+
+					quote.flags.ignore_permissions = True
+					quote.save()
+					frappe.db.commit()
+			except Exception as courier_err:
+				frappe.log_error(title="Courier Rate Update", message=f"Error updating courier rate: {courier_err}")
 		
 		# Save delivery notes to Quotation if provided
 		if address_data and address_data.get("delivery_notes"):

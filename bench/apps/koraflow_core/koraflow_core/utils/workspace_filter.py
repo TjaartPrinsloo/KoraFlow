@@ -35,6 +35,15 @@ def get_workspace_sidebar_items():
 
 		sidebar_items["pages"] = filtered_pages
 
+	# If user is a Pharmacist (and not a manager/admin), only show Pharmacy workspace
+	elif "Pharmacist" in roles and not is_manager:
+		filtered_pages = []
+		for page in sidebar_items.get("pages", []):
+			if page.get("name") == "Pharmacy":
+				filtered_pages.append(page)
+
+		sidebar_items["pages"] = filtered_pages
+
 	# For managers who are NOT System Manager/Administrator, hide internal-only workspaces
 	if is_manager and "System Manager" not in roles and "Administrator" not in roles:
 		hidden_workspaces = {"Xero", "Sales Agent Dashboard", "Sales Agent Workspace"}
@@ -57,31 +66,39 @@ def get_desktop_page(page):
 
 	result = original_get_desktop_page(page)
 
-	# Only filter Healthcare workspace for non-admin users
 	page_data = json.loads(page) if isinstance(page, str) else page
 	page_name = page_data.get("name", "")
-
-	if page_name != "Healthcare":
-		return result
 
 	roles = frappe.get_roles()
 	if "System Manager" in roles or "Administrator" in roles:
 		return result
 
-	# Filter shortcuts
-	if result.get("shortcuts") and result["shortcuts"].get("items"):
-		result["shortcuts"]["items"] = [
-			s for s in result["shortcuts"]["items"]
-			if s.get("label") not in HEALTHCARE_HIDDEN_SHORTCUTS
-			and s.get("link_to") not in HEALTHCARE_HIDDEN_SHORTCUTS
-		]
+	# Filter Healthcare workspace for non-admin users
+	if page_name == "Healthcare":
+		if result.get("shortcuts") and result["shortcuts"].get("items"):
+			result["shortcuts"]["items"] = [
+				s for s in result["shortcuts"]["items"]
+				if s.get("label") not in HEALTHCARE_HIDDEN_SHORTCUTS
+				and s.get("link_to") not in HEALTHCARE_HIDDEN_SHORTCUTS
+			]
+		if result.get("cards") and result["cards"].get("items"):
+			result["cards"]["items"] = [
+				c for c in result["cards"]["items"]
+				if c.get("label") not in HEALTHCARE_HIDDEN_CARDS
+			]
 
-	# Filter cards
-	if result.get("cards") and result["cards"].get("items"):
-		result["cards"]["items"] = [
-			c for c in result["cards"]["items"]
-			if c.get("label") not in HEALTHCARE_HIDDEN_CARDS
-		]
+	# Filter Accounting workspace - hide Subscription/Share sections and shortcuts for non-admin
+	if page_name == "Accounting":
+		if result.get("shortcuts") and result["shortcuts"].get("items"):
+			result["shortcuts"]["items"] = [
+				s for s in result["shortcuts"]["items"]
+				if s.get("label") not in ACCOUNTING_HIDDEN_SHORTCUTS
+			]
+		if result.get("cards") and result["cards"].get("items"):
+			result["cards"]["items"] = [
+				c for c in result["cards"]["items"]
+				if c.get("label") not in ACCOUNTING_HIDDEN_CARDS
+			]
 
 	return result
 
@@ -108,19 +125,38 @@ HEALTHCARE_HIDDEN_SHORTCUTS = {
 	"Healthcare Service Unit",
 }
 
+# Accounting cards/sections to hide for non-admin users
+ACCOUNTING_HIDDEN_CARDS = {
+	"Subscription Management", "Share Management",
+}
+
+ACCOUNTING_HIDDEN_LINKS = {
+	"Accounts Settings",
+}
+
+ACCOUNTING_HIDDEN_SHORTCUTS = {
+	"Learn Accounting",
+}
+
 
 def filter_healthcare_workspace(doc, method=None):
 	"""
-	Doc event hook on Workspace onload to filter Healthcare links,
+	Doc event hook on Workspace onload to filter workspace links,
 	shortcuts, and content blocks for non System Manager / Administrator users.
+	Handles Healthcare and Accounting workspaces.
 	"""
-	if doc.name != "Healthcare":
-		return
-
 	roles = frappe.get_roles()
 	if "System Manager" in roles or "Administrator" in roles:
 		return
 
+	if doc.name == "Healthcare":
+		_filter_workspace_sections(doc, HEALTHCARE_HIDDEN_CARDS, HEALTHCARE_HIDDEN_LINKS, HEALTHCARE_HIDDEN_SHORTCUTS)
+	elif doc.name == "Accounting":
+		_filter_workspace_sections(doc, ACCOUNTING_HIDDEN_CARDS, ACCOUNTING_HIDDEN_LINKS, ACCOUNTING_HIDDEN_SHORTCUTS)
+
+
+def _filter_workspace_sections(doc, hidden_cards, hidden_links, hidden_shortcuts):
+	"""Generic workspace section filter."""
 	# 1. Filter links child table
 	current_section = None
 	section_map = {}
@@ -132,15 +168,16 @@ def filter_healthcare_workspace(doc, method=None):
 
 	doc.links = [
 		link for link in doc.links
-		if not _should_hide_healthcare_link(link, section_map)
+		if not _should_hide_link(link, section_map, hidden_cards, hidden_links)
 	]
 
 	# 2. Filter shortcuts child table
-	doc.shortcuts = [
-		s for s in doc.shortcuts
-		if s.label not in HEALTHCARE_HIDDEN_SHORTCUTS
-		and s.link_to not in HEALTHCARE_HIDDEN_SHORTCUTS
-	]
+	if hidden_shortcuts:
+		doc.shortcuts = [
+			s for s in doc.shortcuts
+			if s.label not in hidden_shortcuts
+			and s.link_to not in hidden_shortcuts
+		]
 
 	# 3. Filter content JSON (controls what the frontend actually renders)
 	if doc.content:
@@ -148,7 +185,7 @@ def filter_healthcare_workspace(doc, method=None):
 			blocks = json.loads(doc.content)
 			filtered_blocks = []
 			for block in blocks:
-				if _should_hide_content_block(block):
+				if _should_hide_content_block_generic(block, hidden_cards, hidden_shortcuts):
 					continue
 				filtered_blocks.append(block)
 			doc.content = json.dumps(filtered_blocks)
@@ -156,32 +193,30 @@ def filter_healthcare_workspace(doc, method=None):
 			pass
 
 
-def _should_hide_healthcare_link(link, section_map):
-	if link.type == "Card Break" and link.label in HEALTHCARE_HIDDEN_CARDS:
+def _should_hide_link(link, section_map, hidden_cards, hidden_links):
+	if link.type == "Card Break" and link.label in hidden_cards:
 		return True
 	if link.type == "Link":
-		if link.label in HEALTHCARE_HIDDEN_LINKS or link.link_to in HEALTHCARE_HIDDEN_LINKS:
+		if hidden_links and (link.label in hidden_links or link.link_to in hidden_links):
 			return True
-		if section_map.get(link.name) in HEALTHCARE_HIDDEN_CARDS:
+		if section_map.get(link.name) in hidden_cards:
 			return True
 	return False
 
 
-def _should_hide_content_block(block):
+def _should_hide_content_block_generic(block, hidden_cards, hidden_shortcuts):
 	"""Check if a content JSON block should be hidden."""
 	block_type = block.get("type", "")
 	data = block.get("data", {})
 
-	# Hide shortcut blocks for hidden shortcuts
-	if block_type == "shortcut":
+	if block_type == "shortcut" and hidden_shortcuts:
 		shortcut_name = data.get("shortcut_name", "")
-		if shortcut_name in HEALTHCARE_HIDDEN_SHORTCUTS:
+		if shortcut_name in hidden_shortcuts:
 			return True
 
-	# Hide card blocks for hidden card sections
-	if block_type == "card":
+	if block_type == "card" and hidden_cards:
 		card_name = data.get("card_name", "")
-		if card_name in HEALTHCARE_HIDDEN_CARDS:
+		if card_name in hidden_cards:
 			return True
 
 	return False

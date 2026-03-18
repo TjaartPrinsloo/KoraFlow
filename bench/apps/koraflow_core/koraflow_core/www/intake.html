@@ -46,6 +46,68 @@
 		window["__"] = function (str) { return str; };
 	</script>
 
+	<!-- Google Places Autocomplete for address -->
+	{% if enable_google_maps and google_maps_api_key %}
+	<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&loading=async&callback=initAddressAutocomplete"></script>
+	<script>
+		function initAddressAutocomplete() {
+			const addressInput = document.querySelector('input[name="address_line1"]');
+			if (!addressInput || !window.google || !google.maps || !google.maps.places) {
+				console.warn('Google Places not ready, retrying in 500ms...');
+				setTimeout(initAddressAutocomplete, 500);
+				return;
+			}
+
+			const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+				types: ['address'],
+				componentRestrictions: { country: 'za' },
+				fields: ['address_components']
+			});
+
+			autocomplete.addListener('place_changed', function () {
+				const place = autocomplete.getPlace();
+				if (!place.address_components) return;
+
+				let streetNumber = '';
+				let route = '';
+				let suburb = '';
+				let city = '';
+				let state = '';
+				let zip = '';
+				let country = '';
+
+				for (const component of place.address_components) {
+					const type = component.types[0];
+					if (type === 'street_number') streetNumber = component.long_name;
+					else if (type === 'route') route = component.long_name;
+					else if (type === 'sublocality' || type === 'sublocality_level_1') suburb = component.long_name;
+					else if (type === 'locality') city = component.long_name;
+					else if (type === 'administrative_area_level_1') state = component.long_name;
+					else if (type === 'postal_code') zip = component.long_name;
+					else if (type === 'country') country = component.long_name;
+				}
+
+				const streetAddr = (streetNumber + ' ' + route).trim();
+				if (streetAddr) addressInput.value = streetAddr;
+
+				const suburbInput = document.querySelector('input[name="address_line2"]');
+				const cityInput = document.querySelector('input[name="city"]');
+				const stateInput = document.querySelector('input[name="state"]');
+				const zipInput = document.querySelector('input[name="pincode"]');
+				const countryInput = document.querySelector('input[name="country"]');
+
+				if (suburb && suburbInput) suburbInput.value = suburb;
+				if (city && cityInput) cityInput.value = city;
+				if (state && stateInput) stateInput.value = state;
+				if (zip && zipInput) zipInput.value = zip;
+				if (country && countryInput) countryInput.value = country;
+			});
+
+			console.log('Google Places autocomplete initialized');
+		}
+	</script>
+	{% endif %}
+
 	<!-- Styling: Tailwind + Fonts -->
 	<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -342,6 +404,53 @@
 							<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">Heart Rate</label>
 							<input type="number" name="intake_heart_rate"
 								class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+						</div>
+					</div>
+				</div>
+
+				<!-- Shipping Address -->
+				<div class="bg-primary/5 p-4 rounded-xl border border-primary/20 mt-6">
+					<h5 class="font-bold text-sm mb-1">{{ _("Delivery Address") }}</h5>
+					<p class="text-xs text-slate-400 mb-4">{{ _("Required for medication delivery and shipping quote calculation.") }}</p>
+					<div class="space-y-3">
+						<div>
+							<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">{{ _("Street Address") }} <span class="text-red-500">*</span></label>
+							<input type="text" name="address_line1" required
+								placeholder="e.g. 10 Main Road"
+								class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+						</div>
+						<div>
+							<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">{{ _("Suburb / Complex / Building") }}</label>
+							<input type="text" name="address_line2"
+								placeholder="e.g. Rosebank"
+								class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+						</div>
+						<div class="grid grid-cols-2 gap-3">
+							<div>
+								<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">{{ _("City / Town") }} <span class="text-red-500">*</span></label>
+								<input type="text" name="city" required
+									placeholder="e.g. Johannesburg"
+									class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+							</div>
+							<div>
+								<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">{{ _("Province") }}</label>
+								<input type="text" name="state"
+									placeholder="e.g. Gauteng"
+									class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+							</div>
+						</div>
+						<div class="grid grid-cols-2 gap-3">
+							<div>
+								<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">{{ _("Postal Code") }} <span class="text-red-500">*</span></label>
+								<input type="text" name="pincode" required
+									placeholder="e.g. 2196"
+									class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+							</div>
+							<div>
+								<label class="block text-[10px] uppercase text-slate-500 font-bold mb-1">{{ _("Country") }}</label>
+								<input type="text" name="country" value="South Africa"
+									class="w-full rounded-lg border-slate-300 bg-white text-sm p-2 focus:ring-primary focus:border-primary">
+							</div>
 						</div>
 					</div>
 				</div>
@@ -702,8 +811,12 @@
 					Continue
 				</button>
 				<button type="submit" id="submit-form"
-					class="hidden ml-auto px-8 py-3 rounded-xl bg-primary text-charcoal font-bold hover:bg-primary/90 transition-all shadow-lg">
-					Submit Assessment
+					class="hidden ml-auto px-8 py-3 rounded-xl bg-primary text-charcoal font-bold hover:bg-primary/90 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed items-center gap-2">
+					<svg id="submit-spinner" class="hidden animate-spin h-5 w-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+					</svg>
+					<span id="submit-text">Submit Assessment</span>
 				</button>
 			</div>
 		</form>
@@ -817,6 +930,15 @@
 					return;
 				}
 
+				// Disable button and show spinner
+				const submitBtn = document.getElementById('submit-form');
+				const submitSpinner = document.getElementById('submit-spinner');
+				const submitText = document.getElementById('submit-text');
+				if (submitBtn.disabled) return; // Prevent double submit
+				submitBtn.disabled = true;
+				submitSpinner.classList.remove('hidden');
+				submitText.textContent = 'Submitting...';
+
 				const formData = new FormData(this);
 				const data = {};
 				formData.forEach((value, key) => {
@@ -865,21 +987,30 @@
 					data.medications = medications;
 				}
 
+				const resetButton = () => {
+					submitBtn.disabled = false;
+					submitSpinner.classList.add('hidden');
+					submitText.textContent = 'Submit Assessment';
+				};
+
 				frappe.call({
 					method: 'koraflow_core.api.intake_review.create_intake_submission',
 					args: { intake_data: data },
 					callback: function (r) {
 						if (r.message && r.message.success) {
+							submitText.textContent = 'Submitted!';
 							frappe.show_alert({ message: __("Intake Submitted Successfully!"), indicator: 'green' });
 							setTimeout(() => window.location.href = '/patient_dashboard', 2000);
 						} else {
 							const msg = (r.message && r.message.message) || __("Failed to submit intake form.");
 							frappe.show_alert({ message: msg, indicator: 'red' });
+							resetButton();
 						}
 					},
 					error: (r) => {
 						const msg = (r.responseJSON && r.responseJSON.message) || __("Error submitting form.");
 						frappe.show_alert({ message: msg, indicator: 'red' });
+						resetButton();
 					}
 				});
 			});

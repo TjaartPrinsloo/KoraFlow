@@ -17,7 +17,7 @@ def notify_doctor_of_draft(doc, method):
 
     # Get doctor's user account
     doctor_user = frappe.db.get_value(
-        "Healthcare Practitioner", doc.practitioner, "user"
+        "Healthcare Practitioner", doc.practitioner, "user_id"
     )
     
     if not doctor_user:

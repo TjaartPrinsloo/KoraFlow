@@ -12,16 +12,19 @@ def sync_address_and_contact(doc, method=None):
     sync_contact(doc)
 
 def sync_address(doc):
-    # Determine the best address data
-    address_line1 = doc.address_line1 or doc.custom_address_line1
-    address_line2 = getattr(doc, 'address_line2', None) or doc.custom_address_line2
-    city = doc.city or doc.custom_city
-    state = doc.state or doc.custom_state
-    pincode = doc.zip_code or doc.custom_pincode
-    country = getattr(doc, 'country', None) or doc.custom_country or "South Africa"
+    """Sync address from Patient custom fields to a linked Address document.
+    Address data comes from the intake form and is stored via patient_sync._sync_patient_address.
+    This hook only syncs if custom address fields have data (e.g. updated via patient portal)."""
+    address_line1 = getattr(doc, 'custom_address_line1', None)
+    city = getattr(doc, 'custom_city', None)
 
     if not address_line1 and not city:
         return
+
+    address_line2 = getattr(doc, 'custom_address_line2', None)
+    state = getattr(doc, 'custom_state', None)
+    pincode = getattr(doc, 'custom_pincode', None)
+    country = getattr(doc, 'custom_country', None) or "South Africa"
 
     # Check if a primary address already exists for this patient
     existing_addresses = frappe.get_all("Dynamic Link", filters={
@@ -34,8 +37,8 @@ def sync_address(doc):
         address_doc = frappe.get_doc("Address", existing_addresses[0])
     else:
         address_doc = frappe.new_doc("Address")
-        address_doc.address_title = doc.get_title()
-        address_doc.address_type = "Personal"
+        address_doc.address_title = doc.patient_name or doc.first_name
+        address_doc.address_type = "Shipping"
         address_doc.append("links", {
             "link_doctype": "Patient",
             "link_name": doc.name
@@ -48,10 +51,10 @@ def sync_address(doc):
         "state": state,
         "pincode": pincode,
         "country": country,
-        "email_id": None,
-        "phone": None
+        "email_id": doc.email,
+        "phone": doc.mobile
     })
-    
+
     address_doc.flags.ignore_permissions = True
     address_doc.save()
 

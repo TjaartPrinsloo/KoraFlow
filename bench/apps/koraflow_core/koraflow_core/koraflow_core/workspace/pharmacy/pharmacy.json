@@ -1,0 +1,78 @@
+{
+ "charts": [],
+ "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Dashboard</b></span>\", \"col\": 12}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Dispense Tasks\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Dispensed Awaiting Courier\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Dispensing History\", \"col\": 4}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Dispensing Queue</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Pending Dispense Tasks\", \"col\": 4}}]",
+ "creation": "2026-03-18 09:17:22.578368",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "medkit",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Pharmacy",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Dispensing",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Dispense Tasks",
+   "link_count": 0,
+   "link_to": "GLP-1 Pharmacy Dispense Task",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Prescriptions",
+   "link_count": 0,
+   "link_to": "GLP-1 Patient Prescription",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-03-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "KoraFlow Core",
+ "name": "Pharmacy",
+ "number_cards": [
+  {
+   "number_card_name": "Pending Dispense Tasks"
+  },
+  {
+   "number_card_name": "Dispensed Awaiting Courier"
+  },
+  {
+   "number_card_name": "Dispensing History"
+  }
+ ],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Pharmacist"
+  }
+ ],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "doc_view": "",
+   "label": "Pending Dispense Tasks",
+   "link_to": "GLP-1 Pharmacy Dispense Task",
+   "type": "DocType"
+  }
+ ],
+ "title": "Pharmacy"
+}

@@ -330,6 +330,106 @@ def generate_pdf_from_template(encounter_doc, practitioner_doc):
 		raise
 
 
+def get_quantity_display(drug_name=None, strength=None, dosage=None, interval_days=7, duration_days=None, drug_code=None, medication=None):
+	"""
+	Calculate medication quantity and return formatted string with numerals and words.
+	E.g., "1 (one) vial (0.8 ml)" or "4 (four) cartridges"
+
+	Can be called from Jinja print formats via frappe.call().
+
+	Args:
+		drug_name: Name of the drug (for logging)
+		strength: Strength string (unused, for context)
+		dosage: Dosage string or Prescription Dosage name
+		interval_days: Days between doses (default 7 for weekly)
+		duration_days: Total duration in days
+		drug_code: Item code for the drug
+		medication: Medication doctype name
+
+	Returns:
+		str: Formatted quantity string, or empty string if calculation not possible
+	"""
+	import math
+	import re
+
+	if not duration_days:
+		return ''
+
+	# Parse dosage amount
+	dosage_amount = None
+	dosage_uom = 'ml'
+
+	if dosage:
+		try:
+			dosage_doc = frappe.get_doc('Prescription Dosage', dosage)
+			if hasattr(dosage_doc, 'dosage_strength') and dosage_doc.dosage_strength:
+				for ds in dosage_doc.dosage_strength:
+					if hasattr(ds, 'strength') and ds.strength:
+						dosage_amount = float(ds.strength)
+						if hasattr(ds, 'strength_uom') and ds.strength_uom:
+							dosage_uom = str(ds.strength_uom)
+						break
+		except Exception:
+			match = re.search(r'(\d+\.?\d*)\s*(ml|mg|g)', str(dosage), re.IGNORECASE)
+			if match:
+				dosage_amount = float(match.group(1))
+				dosage_uom = match.group(2).lower()
+
+	if not dosage_amount:
+		return ''
+
+	# Get item doc for vial volume
+	item_doc = None
+	if drug_code:
+		try:
+			item_doc = frappe.get_doc('Item', drug_code)
+		except Exception:
+			pass
+
+	if not item_doc and medication:
+		try:
+			medication_doc = frappe.get_doc('Medication', medication)
+			if hasattr(medication_doc, 'linked_items') and medication_doc.linked_items:
+				linked_item_code = medication_doc.linked_items[0].item
+				if linked_item_code:
+					item_doc = frappe.get_doc('Item', linked_item_code)
+		except Exception:
+			pass
+
+	if not item_doc:
+		return ''
+
+	vial_volume = getattr(item_doc, 'volume', None)
+	vial_volume_uom = getattr(item_doc, 'volume_uom', 'ml') or 'ml'
+
+	if not vial_volume:
+		return ''
+
+	try:
+		# Calculate doses
+		if interval_days == 7:
+			doses = int(duration_days / 7)
+		else:
+			doses = int(duration_days / interval_days) if interval_days > 0 else 1
+
+		if doses < 1:
+			doses = 1
+
+		total_volume = dosage_amount * doses
+		vials_needed = math.ceil(total_volume / vial_volume)
+
+		# Format with numerals and words
+		try:
+			vials_word = frappe.utils.in_words(vials_needed).strip()
+		except Exception:
+			vials_word = str(vials_needed)
+
+		unit = "vial" if vials_needed == 1 else "vials"
+		return f"{vials_needed} ({vials_word}) {unit} ({total_volume:.1f} {vial_volume_uom})"
+	except Exception:
+		return ''
+
+
 def get_prescription_coordinates(practitioner_doc, page_width, page_height):
 	"""
 	Get coordinate mapping for prescription fields.
@@ -407,17 +507,31 @@ def get_prescription_data_for_overlay(encounter_doc, practitioner_doc):
 		patient = frappe.get_doc("Patient", encounter_doc.patient)
 		data['patient_name'] = patient.patient_name or patient.name
 		data['patient_id'] = patient.uid or 'N/A'
+		data['patient_dob'] = frappe.utils.formatdate(patient.dob) if patient.dob else ''
 		data['patient_age'] = encounter_doc.patient_age or 'N/A'
 		data['patient_gender'] = encounter_doc.patient_sex or 'N/A'
-	
+
 	# Practitioner data
 	data['practitioner_name'] = practitioner_doc.practitioner_name or practitioner_doc.name
 	data['hpcsa_registration'] = getattr(practitioner_doc, 'hpcsa_registration_number', None) or ''
 	data['practice_number'] = getattr(practitioner_doc, 'practice_number', None) or ''
 	data['practice_address'] = getattr(practitioner_doc, 'practice_address', None) or ''
-	
+	data['practitioner_phone'] = getattr(practitioner_doc, 'mobile_phone', '') or getattr(practitioner_doc, 'office_phone', '') or ''
+	data['practitioner_email'] = getattr(practitioner_doc, 'email_id', '') or ''
+
 	# Encounter data
 	data['encounter_date'] = encounter_doc.encounter_date or frappe.utils.today()
+
+	# Diagnosis and ICD-10 codes
+	data['diagnosis'] = []
+	if encounter_doc.diagnosis:
+		for diag in encounter_doc.diagnosis:
+			data['diagnosis'].append(diag.diagnosis)
+
+	data['icd_codes'] = []
+	if hasattr(encounter_doc, 'codification_table') and encounter_doc.codification_table:
+		for code in encounter_doc.codification_table:
+			data['icd_codes'].append({'code': code.code, 'description': code.code_value})
 	
 	# Medications - format for SAHPRA narrative prescription
 	data['medications'] = []

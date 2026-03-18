@@ -132,6 +132,8 @@ def create_patient_from_intake(intake_data, user_email=None):
                 "O+": "O Positive", "O-": "O Negative"
             }
             patient.blood_group = bg_map.get(bg_val, bg_val)
+            # Also set custom_blood_group (short format for GLP-1 tab)
+            patient.custom_blood_group = bg_val
 
         # Vitals and Weights
         if intake_data.get("intake_height_cm"): 
@@ -238,10 +240,14 @@ def create_patient_from_intake(intake_data, user_email=None):
                 med_doc = frappe.get_doc(med_fields)
                 med_doc.insert(ignore_permissions=True)
                     
-        # 7. Save Patient and trigger sync
+        # 7. Link intake submission to patient
+        if submission_name and hasattr(patient, 'linked_intake_submission'):
+            patient.linked_intake_submission = submission_name
+
+        # 8. Save Patient and trigger sync
         patient.save(ignore_permissions=True)
         frappe.db.commit()
-        
+
         # Now trigger sync so patient profile fields get updated from this latest submission
         patient.reload()
         from koraflow_core.utils.patient_sync import sync_intake_to_patient
@@ -285,53 +291,14 @@ def create_patient_from_intake(intake_data, user_email=None):
         except Exception as vital_e:
              frappe.logger().error(f"Vital creation error: {str(vital_e)}")
         
-        # --- ADDRESS CREATION ---
+        # --- ADDRESS CREATION (Shipping address for quote calculation) ---
         try:
-            # Check if address data exists
             if intake_data.get("address_line1") or intake_data.get("city"):
-                address_name = frappe.db.get_value("Address", 
-                    {"email_id": user_email, "address_type": "Personal"}, "name")
-                
-                address_doc = None
-                if address_name:
-                    address_doc = frappe.get_doc("Address", address_name)
-                else:
-                    address_doc = frappe.new_doc("Address")
-                    address_doc.country = "South Africa" # Default
-                    
-                address_doc.update({
-                    "address_title": patient.get_title(),
-                    "address_type": "Personal",
-                    "address_line1": intake_data.get("address_line1"),
-                    "address_line2": intake_data.get("address_line2"),
-                    "city": intake_data.get("city"),
-                    "state": intake_data.get("state"),
-                    "pincode": intake_data.get("pincode"),
-                    "email_id": user_email,
-                    "phone": patient.mobile
-                })
-                
-                # Link to Patient
-                has_link = False
-                for link in address_doc.links:
-                    if link.link_doctype == "Patient" and link.link_name == patient.name:
-                        has_link = True
-                        break
-                
-                if not has_link:
-                    address_doc.append("links", {
-                        "link_doctype": "Patient",
-                        "link_name": patient.name
-                    })
-                    
-                address_doc.flags.ignore_permissions = True
-                address_doc.save()
-                frappe.db.commit()
-                frappe.logger().info(f"Address created/updated for patient {patient.name}")
-
+                from koraflow_core.utils.patient_sync import _sync_patient_address
+                _sync_patient_address(patient, intake_data)
+                frappe.logger().info(f"Shipping address created/updated for patient {patient.name}")
         except Exception as addr_e:
              frappe.logger().error(f"Address creation error: {str(addr_e)}")
-
         # --- END ADDRESS CREATION ---
 
         # Generate Summary
@@ -357,9 +324,10 @@ def create_patient_from_intake(intake_data, user_email=None):
         except Exception as summary_e:
             frappe.logger().error(f"Summary generation error for {patient.name}: {str(summary_e)}")
             
-        # User update
+        # User update - mark intake as completed if the custom field exists
         if user_email and frappe.db.exists("User", user_email):
-            frappe.db.set_value("User", user_email, "intake_completed", 1)
+            if frappe.db.has_column("User", "intake_completed"):
+                frappe.db.set_value("User", user_email, "intake_completed", 1)
             frappe.db.commit()
             
         return {

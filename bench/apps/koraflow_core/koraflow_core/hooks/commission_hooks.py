@@ -15,19 +15,34 @@ def on_invoice_paid(doc, method):
 
 	# Fetch patient's sales agent from Patient Referral
 	# Patient Referral 'sales_agent' field is a link to User (email)
-	sales_agent_user = frappe.db.get_value("Patient Referral", 
-		{"patient": doc.patient, "current_journey_status": ["!=", "Cancelled"]}, 
+	sales_agent_user = frappe.db.get_value("Patient Referral",
+		{"patient": doc.patient, "current_journey_status": ["!=", "Cancelled"]},
 		"sales_agent")
-	
+
 	sales_agent = None
 	if sales_agent_user:
 		sales_agent = frappe.db.get_value("Sales Agent", {"user": sales_agent_user}, "name")
 
 	if not sales_agent:
-		# Fallback: Check if field exists on Patient (legacy support or direct link)
+		# Fallback 1: Check referred_by_sales_agent on Patient
 		if frappe.db.has_column("Patient", "referred_by_sales_agent"):
 			sales_agent = frappe.db.get_value("Patient", doc.patient, "referred_by_sales_agent")
-	
+
+	if not sales_agent:
+		# Fallback 2: Check Sales Partner on Patient → find matching Sales Agent
+		sales_partner_field = "custom_ref_sales_partner" if frappe.db.has_column("Patient", "custom_ref_sales_partner") else "custom_sales_partner"
+		if frappe.db.has_column("Patient", sales_partner_field):
+			sales_partner = frappe.db.get_value("Patient", doc.patient, sales_partner_field)
+			if sales_partner:
+				# Find Sales Agent linked to this Sales Partner (by matching name)
+				sales_agent = frappe.db.get_value("Sales Agent",
+					{"first_name": sales_partner.split(" ")[0]}, "name")
+				if not sales_agent:
+					# Try matching by user email pattern
+					partner_user = frappe.db.get_value("Sales Partner", sales_partner, "user")
+					if partner_user:
+						sales_agent = frappe.db.get_value("Sales Agent", {"user": partner_user}, "name")
+
 	if not sales_agent:
 		return
 	
@@ -117,5 +132,24 @@ def on_invoice_paid(doc, method):
 			accruals_created = True
 
 	if accruals_created:
+		frappe.db.commit()
 		frappe.logger().info(f"Marketing fees accrued for Sales Agent: {sales_agent} on Invoice {doc.name}")
+
+
+def on_payment_entry_submit(doc, method):
+	"""
+	When a Payment Entry is submitted, check if any linked Sales Invoices
+	are now fully paid and trigger commission accrual.
+	"""
+	if doc.payment_type != "Receive":
+		return
+
+	for ref in doc.references:
+		if ref.reference_doctype == "Sales Invoice":
+			# Reload the invoice to get updated status after payment allocation
+			invoice = frappe.get_doc("Sales Invoice", ref.reference_name)
+			if invoice.status == "Paid" or invoice.outstanding_amount <= 0:
+				# Force status to Paid for the commission check
+				invoice.status = "Paid"
+				on_invoice_paid(invoice, "on_payment_submit")
 

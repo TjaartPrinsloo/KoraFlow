@@ -5,6 +5,40 @@ from frappe.utils import getdate
 from erpnext.selling.doctype.quotation.quotation import make_sales_order
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
+
+def _render_branded_doc(doctype, name, print_format_name):
+	"""Render a branded Jinja print format template directly."""
+	from jinja2 import Template
+
+	pf = frappe.get_doc("Print Format", print_format_name)
+	doc = frappe.get_doc(doctype, name)
+	template = Template(pf.html)
+	body = template.render(doc=doc, frappe=frappe)
+
+	return f"""<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<style>@page {{ size: A4; margin: 0; }} body {{ margin: 0; }}</style>
+</head><body>{body}</body></html>"""
+
+
+def _serve_pdf_or_html(html, name):
+	"""Try to serve as PDF, fall back to HTML with auto-print."""
+	try:
+		from frappe.utils.pdf import get_pdf
+		pdf_content = get_pdf(html)
+		frappe.local.response.filename = f"{name}.pdf"
+		frappe.local.response.filecontent = pdf_content
+		frappe.local.response.type = "download"
+		frappe.local.response.content_type = "application/pdf"
+		frappe.local.response.display_content_as = "inline"
+	except Exception:
+		frappe.local.response.filename = f"{name}.html"
+		frappe.local.response.filecontent = html
+		frappe.local.response.type = "download"
+		frappe.local.response.content_type = "text/html"
+		frappe.local.response.display_content_as = "inline"
+
 @frappe.whitelist()
 def accept_quotation(quotation_name):
 	"""
@@ -196,243 +230,56 @@ def reject_quotation(quotation_name):
 @frappe.whitelist()
 def download_quotation_pdf(quotation_name):
 	"""
-	Generates and returns the Quotation PDF.
-	Bypasses standard permission checks but verifies Patient ownership.
+	Generates and returns the branded Quotation PDF.
+	Verifies Patient ownership before serving.
 	"""
-	try:
-		if frappe.session.user == "Guest":
-			frappe.throw(_("Please log in to access this document"), frappe.PermissionError)
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Please log in to access this document"), frappe.PermissionError)
 
-		# 1. Validate Patient & Quotation Ownership
-		# 1. Validate Patient & Quotation Ownership
-		patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
-		
-		# Debug fallback for System Manager
-		if not patient_name and "System Manager" in frappe.get_roles():
-			patient_name = frappe.db.get_value("Patient", {"email": "lezel@koraflow.com"}, "name")
-			if not patient_name:
-				patient_name = frappe.db.get_value("Patient", {}, "name")
+	# Validate ownership
+	patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+	if not patient_name and "System Manager" in frappe.get_roles():
+		patient_name = frappe.db.get_value("Patient", {}, "name")
 
-		if not patient_name:
-			frappe.throw(_("Patient record not found"), frappe.PermissionError)
+	if not patient_name:
+		frappe.throw(_("Patient record not found"), frappe.PermissionError)
 
-		customer_name = frappe.db.get_value("Patient", patient_name, "customer")
-		if not customer_name:
-			frappe.throw(_("Customer record not found"), frappe.PermissionError)
+	customer_name = frappe.db.get_value("Patient", patient_name, "customer")
+	quotation_customer = frappe.db.get_value("Quotation", quotation_name, "party_name")
 
-		# Check if quotation exists and belongs to this customer
-		# We use get_value to avoid permission check on get_doc immediately
-		quotation_customer = frappe.db.get_value("Quotation", quotation_name, "party_name")
-		
-		if not quotation_customer or quotation_customer != customer_name:
-			frappe.throw(_("Access Denied: Document not found or unauthorized"), frappe.PermissionError)
+	if not quotation_customer or quotation_customer != customer_name:
+		frappe.throw(_("Access Denied"), frappe.PermissionError)
 
-		# 2. Generate PDF/HTML using system permissions
-		# Handle missing wkhtmltopdf by trying internal print format first, or a fallback
-		
-		from frappe.utils.pdf import get_pdf
-		
-		# Fetch content with ignored permissions to ensure we can read the doc
-		quotation_doc = frappe.get_doc("Quotation", quotation_name)
-		
-		# Temporarily ignore print permissions
-		frappe.flags.ignore_print_permissions = True
-		
-		try:
-			# Get HTML first
-			html = frappe.get_print(
-				doctype="Quotation",
-				name=quotation_name,
-				print_format="Slim 2 Well Quotation",
-				doc=quotation_doc,
-				as_pdf=False # Get HTML
-			)
-			
-			# Generate PDF from HTML
-			try:
-				# Try standard get_pdf (which might try wkhtmltopdf)
-				pdf_content = get_pdf(html)
-				
-				frappe.local.response.filename = f"{quotation_name}.pdf"
-				frappe.local.response.filecontent = pdf_content
-				frappe.local.response.type = "download"
-				frappe.local.response.content_type = "application/pdf"
-				frappe.local.response.display_content_as = "inline"
-				
-			except Exception:
-				# Fallback to HTML if PDF generation failure (e.g. missing wkhtmltopdf)
-				# Wrap in a minimal template to trigger print and hide UI
-				fallback_html = f"""
-				<html class="pdf-fallback">
-					<head>
-						<style>
-							@media print {{ @page {{ margin: 0; }} }}
-							.print-view-header, .navbar, .app-header, .action-banner {{ display: none !important; }}
-						</style>
-						<script>
-							window.onload = function() {{
-								setTimeout(function() {{
-									window.print();
-								}}, 500);
-							}};
-						</script>
-					</head>
-					<body>
-						{html}
-					</body>
-				</html>
-				"""
-				frappe.local.response.filename = f"{quotation_name}.html"
-				frappe.local.response.filecontent = fallback_html
-				frappe.local.response.type = "download"
-				frappe.local.response.content_type = "text/html"
-				frappe.local.response.display_content_as = "inline"
-
-		finally:
-			# Always reset the flag
-			frappe.flags.ignore_print_permissions = False
-
-	except Exception as e:
-		# Do not log error to avoid DB crash
-		print(f"Document generation error for {quotation_name}: {str(e)}")
-		
-		# Last resort fallback: try to return HTML one more time with forced permissions
-		original_user = frappe.session.user
-		try:
-			frappe.set_user("Administrator")
-			html = frappe.get_print(doctype="Quotation", name=quotation_name, print_format="Slim 2 Well Quotation")
-			
-			# Minimal fallback with auto-print
-			fallback_html = f"<html class='pdf-fallback'><head><script>window.onload = function() {{ window.print(); }};</script></head><body>{html}</body></html>"
-			
-			frappe.local.response.filename = f"{quotation_name}.html"
-			frappe.local.response.filecontent = fallback_html
-			frappe.local.response.type = "download"
-			frappe.local.response.content_type = "text/html"
-			frappe.local.response.display_content_as = "inline"
-		except Exception as fallback_error:
-			frappe.log_error(title="Quotation PDF Fallback Error", message=f"Fallback generation error for {quotation_name}: {str(fallback_error)}")
-			frappe.throw(_("Unable to generate document request."))
-		finally:
-			frappe.set_user(original_user)
+	# Generate branded PDF using Jinja print format
+	html = _render_branded_doc("Quotation", quotation_name, "Slim 2 Well Quotation")
+	_serve_pdf_or_html(html, quotation_name)
 
 @frappe.whitelist()
 def download_invoice_pdf(invoice_name):
 	"""
-	Generates and returns the Invoice PDF/HTML.
-	Bypasses standard permission checks but verifies Patient ownership.
+	Generates and returns the branded Invoice PDF.
+	Verifies Patient ownership before serving.
 	"""
-	try:
-		if frappe.session.user == "Guest":
-			frappe.throw(_("Please log in to access this document"), frappe.PermissionError)
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Please log in to access this document"), frappe.PermissionError)
 
-		# 1. Validate Patient & Invoice Ownership
-		patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
-		
-		# Debug fallback for System Manager
-		if not patient_name and "System Manager" in frappe.get_roles():
-			patient_name = frappe.db.get_value("Patient", {"email": "lezel@koraflow.com"}, "name")
-			if not patient_name:
-				patient_name = frappe.db.get_value("Patient", {}, "name")
+	# Validate ownership
+	patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+	if not patient_name and "System Manager" in frappe.get_roles():
+		patient_name = frappe.db.get_value("Patient", {}, "name")
 
-		if not patient_name:
-			frappe.throw(_("Patient record not found"), frappe.PermissionError)
+	if not patient_name:
+		frappe.throw(_("Patient record not found"), frappe.PermissionError)
 
-		customer_name = frappe.db.get_value("Patient", patient_name, "customer")
-		if not customer_name:
-			frappe.throw(_("Customer record not found"), frappe.PermissionError)
+	customer_name = frappe.db.get_value("Patient", patient_name, "customer")
+	invoice_customer = frappe.db.get_value("Sales Invoice", invoice_name, "customer")
 
-		# Check if invoice exists and belongs to this customer
-		invoice_customer = frappe.db.get_value("Sales Invoice", invoice_name, "customer")
-		
-		if not invoice_customer or invoice_customer != customer_name:
-			frappe.throw(_("Access Denied: Document not found or unauthorized"), frappe.PermissionError)
+	if not invoice_customer or invoice_customer != customer_name:
+		frappe.throw(_("Access Denied"), frappe.PermissionError)
 
-		# 2. Generate PDF/HTML using system permissions
-		from frappe.utils.pdf import get_pdf
-		
-		# Fetch content with ignored permissions to ensure we can read the doc
-		invoice_doc = frappe.get_doc("Sales Invoice", invoice_name)
-		
-		# Temporarily ignore print permissions
-		frappe.flags.ignore_print_permissions = True
-		
-		try:
-			# Get HTML first
-			html = frappe.get_print(
-				doctype="Sales Invoice",
-				name=invoice_name,
-				print_format="Slim 2 Well Invoice",
-				doc=invoice_doc,
-				as_pdf=False # Get HTML
-			)
-			
-			# Generate PDF from HTML
-			try:
-				# Try standard get_pdf (which might try wkhtmltopdf)
-				pdf_content = get_pdf(html)
-				
-				frappe.local.response.filename = f"{invoice_name}.pdf"
-				frappe.local.response.filecontent = pdf_content
-				frappe.local.response.type = "download"
-				frappe.local.response.content_type = "application/pdf"
-				frappe.local.response.display_content_as = "inline"
-				
-			except Exception:
-				# Fallback to HTML if PDF generation failure (e.g. missing wkhtmltopdf)
-				# Wrap in a minimal template to trigger print and hide UI
-				fallback_html = f"""
-				<html class="pdf-fallback">
-					<head>
-						<style>
-							@media print {{ @page {{ margin: 0; }} }}
-							.print-view-header, .navbar, .app-header, .action-banner {{ display: none !important; }}
-						</style>
-						<script>
-							window.onload = function() {{
-								setTimeout(function() {{
-									window.print();
-								}}, 500);
-							}};
-						</script>
-					</head>
-					<body>
-						{html}
-					</body>
-				</html>
-				"""
-				frappe.local.response.filename = f"{invoice_name}.html"
-				frappe.local.response.filecontent = fallback_html
-				frappe.local.response.type = "download"
-				frappe.local.response.content_type = "text/html"
-				frappe.local.response.display_content_as = "inline"
-
-		finally:
-			# Always reset the flag
-			frappe.flags.ignore_print_permissions = False
-
-	except Exception as e:
-		# Do not log error to avoid DB crash
-		print(f"Document generation error for {invoice_name}: {str(e)}")
-		
-		# Last resort fallback
-		try:
-			frappe.flags.ignore_print_permissions = True
-			html = frappe.get_print(doctype="Sales Invoice", name=invoice_name, print_format="Slim 2 Well Invoice")
-			
-			# Minimal fallback with auto-print
-			fallback_html = f"<html class='pdf-fallback'><head><script>window.onload = function() {{ window.print(); }};</script></head><body>{html}</body></html>"
-			
-			frappe.local.response.filename = f"{invoice_name}.html"
-			frappe.local.response.filecontent = fallback_html
-			frappe.local.response.type = "download"
-			frappe.local.response.content_type = "text/html"
-			frappe.local.response.display_content_as = "inline"
-		except Exception as fallback_error:
-			frappe.flags.ignore_print_permissions = False
-			frappe.throw(_("Unable to generate document request."))
-		finally:
-			frappe.flags.ignore_print_permissions = False
+	# Generate branded PDF using Jinja print format
+	html = _render_branded_doc("Sales Invoice", invoice_name, "Slim 2 Well Invoice")
+	_serve_pdf_or_html(html, invoice_name)
 
 @frappe.whitelist()
 def download_prescription_pdf(prescription_name):

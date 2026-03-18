@@ -126,7 +126,7 @@ def sync_intake_to_patient(doc, method):
     for f in endo_fields:
         if latest_intake.get(f): endo.append(f.replace("intake_", "").replace("_", " ").title())
     if endo: med_history.append("Endocrine/Metabolic: " + ", ".join(endo))
-    if latest_intake.get("intake_endocrine_details"): med_history.append(f"Endocrine Details: {latest_intake.intake_endocrine_details}")
+    if latest_intake.get("intake_endocrine_details"): med_history.append(f"Endocrine Details: {latest_intake.get('intake_endocrine_details')}")
 
     # LKD
     lkd = []
@@ -134,7 +134,7 @@ def sync_intake_to_patient(doc, method):
     for f in lkd_fields:
         if latest_intake.get(f): lkd.append(f.replace("intake_", "").replace("_", " ").title())
     if lkd: med_history.append("Liver/Kidney/Digestive: " + ", ".join(lkd))
-    if latest_intake.get("intake_lkd_details"): med_history.append(f"LKD Details: {latest_intake.intake_lkd_details}")
+    if latest_intake.get("intake_lkd_details"): med_history.append(f"LKD Details: {latest_intake.get('intake_lkd_details')}")
 
     # Mental Health
     mental = []
@@ -153,32 +153,23 @@ def sync_intake_to_patient(doc, method):
     if med_history:
         doc.medical_history = "\n".join(med_history)
 
-    if surg_history:
-        doc.surgical_history = "\n".join(surg_history)
-
     # Surgical History sync
     surg_history = []
-    if latest_intake.get("intake_recent_gp_visit") == "Yes": surg_history.append("Recent GP Visit")
-    if latest_intake.get("intake_abnormal_labs_recent") == "Yes": surg_history.append(f"Abnormal Labs: {latest_intake.intake_abnormal_labs_details}")
-    if latest_intake.get("intake_recent_op") == "Yes": surg_history.append(f"Recent Op: {latest_intake.intake_recent_op_details}")
-    if latest_intake.get("intake_planned_op") == "Yes": surg_history.append(f"Planned Op: {latest_intake.intake_planned_op_details}")
-    
+    if latest_intake.get("intake_recent_gp_visit") == "Yes":
+        surg_history.append("Recent GP Visit")
+    if latest_intake.get("intake_abnormal_labs_recent") == "Yes":
+        surg_history.append(f"Abnormal Labs: {latest_intake.get('intake_abnormal_labs_details', '')}")
+    if latest_intake.get("intake_recent_op") == "Yes":
+        surg_history.append(f"Recent Op: {latest_intake.get('intake_recent_op_details', '')}")
+    if latest_intake.get("intake_planned_op") == "Yes":
+        surg_history.append(f"Planned Op: {latest_intake.get('intake_planned_op_details', '')}")
+
     if surg_history:
         doc.surgical_history = "\n".join(surg_history)
 
-    # 5. Sync Address
-    if latest_intake.get("address_line1"):
-        doc.address_line1 = latest_intake.get("address_line1")
-    if latest_intake.get("address_line2"):
-        doc.address_line2 = latest_intake.get("address_line2")
-    if latest_intake.get("city"):
-        doc.city = latest_intake.get("city")
-    if latest_intake.get("state"):
-        doc.state = latest_intake.get("state")
-    if latest_intake.get("pincode"):
-        doc.zip_code = latest_intake.get("pincode")
-    if latest_intake.get("country"):
-        doc.custom_country = latest_intake.get("country")
+    # 5. Sync Address — create/update a linked Address document
+    if latest_intake.get("address_line1") or latest_intake.get("city"):
+        _sync_patient_address(doc, latest_intake)
 
     # 6. Sync Medication History
     # Medications might not be loaded on the row object if it's a child row
@@ -200,4 +191,67 @@ def sync_intake_to_patient(doc, method):
                 "stopped_date": med.get("stopped_date"),
                 "reason_for_stopping": med.get("reason_for_stopping")
             })
+
+
+def _sync_patient_address(patient_doc, intake):
+    """Create or update a linked Address document from intake data."""
+    user_email = patient_doc.email or patient_doc.user_id
+
+    # Find existing address linked to this patient
+    address_name = None
+    if user_email:
+        address_name = frappe.db.get_value("Address",
+            {"email_id": user_email, "address_type": "Shipping"}, "name")
+    if not address_name:
+        # Check via Dynamic Link
+        linked = frappe.db.get_value("Dynamic Link",
+            {"link_doctype": "Patient", "link_name": patient_doc.name, "parenttype": "Address"},
+            "parent")
+        if linked:
+            address_name = linked
+
+    if address_name:
+        address_doc = frappe.get_doc("Address", address_name)
+    else:
+        address_doc = frappe.new_doc("Address")
+
+    address_doc.update({
+        "address_title": patient_doc.patient_name or patient_doc.first_name,
+        "address_type": "Shipping",
+        "address_line1": intake.get("address_line1") or "",
+        "address_line2": intake.get("address_line2") or "",
+        "city": intake.get("city") or "",
+        "state": intake.get("state") or "",
+        "pincode": intake.get("pincode") or "",
+        "country": intake.get("country") or "South Africa",
+        "email_id": user_email,
+        "phone": patient_doc.mobile,
+    })
+
+    # Ensure Patient link exists
+    has_link = any(
+        l.link_doctype == "Patient" and l.link_name == patient_doc.name
+        for l in address_doc.links
+    )
+    if not has_link:
+        address_doc.append("links", {
+            "link_doctype": "Patient",
+            "link_name": patient_doc.name
+        })
+
+    # Also link to Customer if patient has one
+    if patient_doc.customer:
+        has_cust_link = any(
+            l.link_doctype == "Customer" and l.link_name == patient_doc.customer
+            for l in address_doc.links
+        )
+        if not has_cust_link:
+            address_doc.append("links", {
+                "link_doctype": "Customer",
+                "link_name": patient_doc.customer
+            })
+
+    address_doc.flags.ignore_permissions = True
+    address_doc.save()
+    frappe.db.commit()
 

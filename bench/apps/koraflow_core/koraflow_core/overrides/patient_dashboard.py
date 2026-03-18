@@ -37,16 +37,17 @@ def get_data(data=None):
         }
         data["transactions"].append(glp1_group)
         
-    for item in ["GLP-1 Intake Form", "GLP-1 Intake Submission"]:
-        if item not in glp1_group["items"]:
-            glp1_group["items"].append(item)
+    # Only show GLP-1 Intake Submission (the active doctype)
+    if "GLP-1 Intake Submission" not in glp1_group["items"]:
+        glp1_group["items"].append("GLP-1 Intake Submission")
+
+    # Remove old GLP-1 Intake Form if present
+    if "GLP-1 Intake Form" in glp1_group["items"]:
+        glp1_group["items"].remove("GLP-1 Intake Form")
 
     if "non_standard_fieldnames" not in data:
         data["non_standard_fieldnames"] = {}
 
-    data["non_standard_fieldnames"].update({
-        "GLP-1 Intake Form": "patient",
-        "GLP-1 Intake Submission": "patient"
-    })
+    data["non_standard_fieldnames"]["GLP-1 Intake Submission"] = "patient"
 
     return data

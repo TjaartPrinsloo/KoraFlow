@@ -93,18 +93,27 @@ def handle_quotation_accepted(doc, method):
 def create_sales_chain_from_quotation(quotation):
 	"""Step 9-10: Auto-create Sales Order, Delivery Note, Invoice"""
 	try:
+		frappe.flags.in_accept_quotation = True
 		from erpnext.selling.doctype.quotation.quotation import make_sales_order
 		
 		# Create Sales Order
 		sales_order = make_sales_order(quotation.name)
 		sales_order.delivery_date = frappe.utils.add_days(frappe.utils.nowdate(), 1)
-		
-		# Set Warehouse
+
+		# Set Warehouse and carry prescription link
 		pharm_warehouse = frappe.db.get_value("Pharmacy Warehouse", {"warehouse_name": "PHARM-CENTRAL-COLD"}, "erpnext_warehouse")
-		if pharm_warehouse:
-			for item in sales_order.items:
-				if not item.warehouse:
-					item.warehouse = pharm_warehouse
+		prescription_name = getattr(quotation, 'custom_prescription', None)
+
+		for item in sales_order.items:
+			if not item.warehouse and pharm_warehouse:
+				item.warehouse = pharm_warehouse
+			# Carry prescription link from quotation items
+			if prescription_name and hasattr(item, 'custom_prescription'):
+				item.custom_prescription = prescription_name
+
+		# Link prescription at SO level too
+		if prescription_name and hasattr(sales_order, 'custom_prescription'):
+			sales_order.custom_prescription = prescription_name
 
 		if hasattr(quotation, 'custom_delivery_notes'):
 			sales_order.custom_delivery_notes = quotation.custom_delivery_notes
@@ -143,6 +152,8 @@ def create_sales_chain_from_quotation(quotation):
 		return sales_invoice.name
 	except Exception as e:
 		frappe.log_error(title="GLP-1 Workflow", message=f"Error creating sales chain: {str(e)}")
+	finally:
+		frappe.flags.in_accept_quotation = False
 
 
 def create_dispense_allocation_from_invoice(invoice):

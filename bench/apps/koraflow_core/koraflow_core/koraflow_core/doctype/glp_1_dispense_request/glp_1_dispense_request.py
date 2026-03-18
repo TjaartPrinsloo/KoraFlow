@@ -11,8 +11,10 @@ class GLP1DispenseRequest(Document):
 		"""Validate dispense request - this is a signal only, not stock movement"""
 		if self.prescription:
 			prescription = frappe.get_doc("GLP-1 Patient Prescription", self.prescription)
-			if prescription.status != "Doctor Approved":
-				frappe.throw(_("Prescription must be approved before dispense request"))
+			# Allow any post-approval status in the workflow
+			approved_statuses = ("Doctor Approved", "Quoted", "Dispense Queued", "Dispensed", "Shipped", "Delivered", "Closed")
+			if prescription.status not in approved_statuses:
+				frappe.throw(_("Prescription must be approved before dispense request. Current status: {0}").format(prescription.status))
 		
 		# Ensure this does not trigger stock movement
 		# This is just a signal to pharmacy

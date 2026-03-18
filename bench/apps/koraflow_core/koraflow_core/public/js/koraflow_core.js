@@ -490,6 +490,89 @@ koraflow.modules = {
 })();
 
 // ======================================================
+// HIDE HELP BUTTON FOR NON-ADMIN USERS
+// Only System Manager / Administrator can see the Help dropdown
+// ======================================================
+(function () {
+	function hideHelpForNonAdmin() {
+		if (typeof frappe === 'undefined' || !frappe.boot || !frappe.boot.user) {
+			setTimeout(hideHelpForNonAdmin, 200);
+			return;
+		}
+
+		var roles = frappe.boot.user.roles || [];
+		var isAdmin = roles.includes('System Manager') || roles.includes('Administrator');
+
+		if (!isAdmin && !document.getElementById('s2w-hide-help')) {
+			var style = document.createElement('style');
+			style.id = 's2w-hide-help';
+			style.textContent = '.dropdown-help { display: none !important; } #navbar-search, .search-bar { display: none !important; }';
+			document.head.appendChild(style);
+
+			// Hide specific profile dropdown items
+			var hiddenLabels = ['My Profile', 'Session Defaults', 'Reload', 'View Website', 'Toggle Theme'];
+			var userMenu = document.getElementById('toolbar-user');
+			if (userMenu) {
+				hideProfileItems(userMenu, hiddenLabels);
+			}
+			// Also observe for late-rendered menus
+			var observer = new MutationObserver(function () {
+				var menu = document.getElementById('toolbar-user');
+				if (menu) {
+					hideProfileItems(menu, hiddenLabels);
+				}
+			});
+			observer.observe(document.body, { childList: true, subtree: true });
+		}
+	}
+
+	function hideProfileItems(menu, hiddenLabels) {
+		var items = menu.querySelectorAll('.dropdown-item');
+		items.forEach(function (item) {
+			var label = item.textContent.trim();
+			if (hiddenLabels.indexOf(label) !== -1) {
+				item.style.display = 'none';
+			}
+		});
+	}
+
+	hideHelpForNonAdmin();
+})();
+
+// ======================================================
+// BLOCK DASHBOARD VIEW FOR NON-ADMIN USERS
+// Redirect away from /app/dashboard-view/* pages
+// ======================================================
+(function () {
+	function blockDashboardView() {
+		if (typeof frappe === 'undefined' || !frappe.boot || !frappe.boot.user) {
+			setTimeout(blockDashboardView, 200);
+			return;
+		}
+
+		var roles = frappe.boot.user.roles || [];
+		var isAdmin = roles.includes('System Manager') || roles.includes('Administrator');
+
+		if (!isAdmin && window.location.pathname.indexOf('/app/dashboard-view') === 0) {
+			frappe.msgprint(__('You do not have access to this page.'));
+			frappe.set_route('/app');
+		}
+	}
+
+	// Run on page load and on route change
+	blockDashboardView();
+	if (typeof frappe !== 'undefined' && frappe.router) {
+		frappe.router.on('change', blockDashboardView);
+	} else {
+		document.addEventListener('DOMContentLoaded', function () {
+			if (frappe.router) {
+				frappe.router.on('change', blockDashboardView);
+			}
+		});
+	}
+})();
+
+// ======================================================
 // OVERRIDE LOGOUT TO REDIRECT TO CUSTOM LOGIN PAGE
 // ======================================================
 (function () {
@@ -500,11 +583,13 @@ koraflow.modules = {
 		}
 
 		frappe.app.logout = function () {
-			frappe.call({
-				method: 'logout',
-				callback: function () {
-					window.location.href = '/s2w_login';
-				}
+			// Use fetch to call logout, then always redirect to s2w_login
+			// regardless of what the server responds with
+			fetch('/api/method/logout', {
+				method: 'GET',
+				headers: { 'X-Frappe-CSRF-Token': frappe.csrf_token }
+			}).finally(function () {
+				window.location.href = '/s2w_login';
 			});
 		};
 	}

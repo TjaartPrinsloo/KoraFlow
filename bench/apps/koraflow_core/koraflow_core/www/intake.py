@@ -16,6 +16,15 @@ def get_context(context):
 	# Always set intake_status to prevent template errors
 	context.intake_status = {"status": "pending"}
 	context.patient = None
+
+	# Google Maps Places API for address autocomplete
+	try:
+		google_settings = frappe.get_single("Google Settings")
+		context.google_maps_api_key = getattr(google_settings, 'maps_api_key', '') or ''
+		context.enable_google_maps = getattr(google_settings, 'enable_google_maps', 0)
+	except Exception:
+		context.google_maps_api_key = ''
+		context.enable_google_maps = 0
 	
 	# Check if user is logged in
 	if frappe.session.user == "Guest":

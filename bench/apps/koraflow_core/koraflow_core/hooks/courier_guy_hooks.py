@@ -66,25 +66,11 @@ def create_waybill_on_delivery_note_submit(doc, method):
 
 def on_payment_entry_submit(doc, method):
 	"""
-	On Payment Entry submit: If invoice is fully paid, book the linked waybill via TCG API.
+	On Payment Entry submit — waybill booking is now handled by the pharmacist
+	dispense action, not on payment. This hook is kept as a no-op for backward
+	compatibility with the hook registration.
 	"""
-	if doc.payment_type != "Receive":
-		return
-
-	for ref in doc.references:
-		if ref.reference_doctype != "Sales Invoice":
-			continue
-
-		try:
-			si = frappe.get_doc("Sales Invoice", ref.reference_name)
-			# Check if invoice is now fully paid (outstanding_amount is updated after PE submit)
-			if si.outstanding_amount <= 0:
-				book_waybill_for_invoice(si)
-		except Exception as e:
-			frappe.log_error(
-				title="Courier Guy Payment Hook",
-				message=f"Error checking invoice {ref.reference_name}: {str(e)}"
-			)
+	pass
 
 
 def book_waybill_for_invoice(invoice):

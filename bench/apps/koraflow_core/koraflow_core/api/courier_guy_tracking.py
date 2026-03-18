@@ -7,6 +7,78 @@ from frappe import _
 from koraflow_core.koraflow_core.doctype.courier_guy_waybill.courier_guy_waybill import CourierGuyWaybill
 
 
+@frappe.whitelist()
+def get_shipping_rate(postal_code, city=None, street_address=None):
+	"""
+	Calculate shipping rate for a given address.
+	Used by the quote acceptance modal to recalculate when address changes.
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Please login"), frappe.AuthenticationError)
+
+	try:
+		settings = frappe.get_single("Courier Guy Settings")
+		if not settings.enabled:
+			return {"success": False, "courier_fee": getattr(settings, 'default_rate', 0) or 99, "message": "Courier integration disabled"}
+
+		from koraflow_core.utils.courier_guy_api import CourierGuyAPI
+		api = CourierGuyAPI()
+
+		collection_address = api.build_collection_address_from_settings()
+
+		# If no street address provided, try to get from patient's linked address
+		if not street_address:
+			patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+			if patient_name:
+				addr = api.build_delivery_address_from_patient(patient_name)
+				if addr:
+					# Override postal code and city with provided values
+					addr["code"] = postal_code or addr.get("code", "")
+					if city:
+						addr["city"] = city
+						addr["local_area"] = city
+					result = api.get_rates(collection_address, addr)
+					if result.get("success") and result.get("selected_rate"):
+						selected = result["selected_rate"]
+						return {
+							"success": True,
+							"courier_fee": selected.get("rate", 0),
+							"service_level": selected.get("service_level", {}).get("code", ""),
+							"service_name": selected.get("service_level", {}).get("name", ""),
+						}
+
+		# Build delivery address from provided data
+		delivery_address = {
+			"type": "residential",
+			"street_address": street_address or "1 Main Road",
+			"local_area": city or "",
+			"city": city or "",
+			"zone": "",
+			"country": "ZA",
+			"code": postal_code or ""
+		}
+
+		result = api.get_rates(collection_address, delivery_address)
+
+		if result.get("success") and result.get("selected_rate"):
+			selected = result["selected_rate"]
+			return {
+				"success": True,
+				"courier_fee": selected.get("rate", 0),
+				"service_level": selected.get("service_level", {}).get("code", ""),
+				"service_name": selected.get("service_level", {}).get("name", ""),
+			}
+		else:
+			return {
+				"success": False,
+				"courier_fee": getattr(settings, 'default_rate', 0) or 99,
+				"message": result.get("error", result.get("raw_response", {}).get("message", "Could not calculate rate"))
+			}
+	except Exception as e:
+		frappe.log_error(title="Shipping Rate Error", message=str(e))
+		return {"success": False, "courier_fee": 99, "message": str(e)}
+
+
 @frappe.whitelist(allow_guest=True)
 def get_tracking_by_number(tracking_number):
 	"""

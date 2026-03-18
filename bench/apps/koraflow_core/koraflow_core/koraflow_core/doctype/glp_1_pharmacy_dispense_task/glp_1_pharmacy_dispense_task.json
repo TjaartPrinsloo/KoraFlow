@@ -49,7 +49,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "\nPending\nIn Progress\nCompleted\nCancelled",
+   "options": "\nPending\nIn Progress\nDispensed\nCompleted\nCancelled",
    "reqd": 1
   },
   {

@@ -31,12 +31,13 @@ class GLP1PatientPrescription(Document):
 			details={"status": self.status, "medication": self.medication}
 		)
 		
-		# Auto-create Quotation
-		self.create_quotation()
+		# Quotation is created by prescription_hooks.generate_quotation_from_encounter
 
 	def on_update(self):
 		"""Handle updates (e.g. status change on save)"""
-		self.create_quotation()
+		# Quotation is created by prescription_hooks.generate_quotation_from_encounter
+		# on Patient Encounter submit. Don't create a duplicate here.
+		pass
 
 	def create_quotation(self):
 		"""Create a quotation for the prescribed medication"""

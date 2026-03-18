@@ -104,9 +104,9 @@ class CourierGuyAPI:
 			"type": "business",
 			"company": self.settings.pickup_contact_name or "",
 			"street_address": self.settings.default_pickup_address or "",
-			"local_area": self.settings.pickup_local_area or self.settings.pickup_suburb or "",
+			"local_area": getattr(self.settings, 'pickup_local_area', '') or getattr(self.settings, 'pickup_suburb', '') or "",
 			"city": self.settings.pickup_city or "",
-			"zone": self.settings.pickup_zone or "",
+			"zone": getattr(self.settings, 'pickup_zone', '') or "",
 			"country": "ZA",
 			"code": self.settings.pickup_postal_code or ""
 		}
@@ -174,10 +174,10 @@ class CourierGuyAPI:
 	def _get_default_parcels(self) -> List[Dict]:
 		"""Get default parcel dimensions from Settings"""
 		return [{
-			"submitted_length_cm": float(self.settings.default_parcel_length_cm or 20),
-			"submitted_width_cm": float(self.settings.default_parcel_width_cm or 20),
-			"submitted_height_cm": float(self.settings.default_parcel_height_cm or 10),
-			"submitted_weight_kg": float(self.settings.default_parcel_weight_kg or 2)
+			"submitted_length_cm": float(getattr(self.settings, 'default_parcel_length_cm', 0) or 20),
+			"submitted_width_cm": float(getattr(self.settings, 'default_parcel_width_cm', 0) or 20),
+			"submitted_height_cm": float(getattr(self.settings, 'default_parcel_height_cm', 0) or 10),
+			"submitted_weight_kg": float(getattr(self.settings, 'default_parcel_weight_kg', 0) or 2)
 		}]
 
 	def _get_preferred_codes(self, service_type: Optional[str] = None) -> List[str]:
@@ -290,7 +290,7 @@ class CourierGuyAPI:
 			result["service_level_code"] = service_level.get("code", "")
 			result["service_level_name"] = service_level.get("name", "")
 		else:
-			result["courier_fee"] = self.settings.default_rate or 99.00
+			result["courier_fee"] = getattr(self.settings, 'default_rate', 0) or 99.00
 
 		return result
 

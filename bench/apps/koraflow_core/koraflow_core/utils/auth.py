@@ -29,6 +29,9 @@ def on_login(login_manager):
 		except Exception as e:
 			frappe.log_error(title="Workspace Reset Error", message=f"Error clearing default workspace for {user}: {str(e)}")
 
+	elif "Pharmacist" in roles and "System Manager" not in roles:
+		frappe.local.response["default_route"] = "/app/pharmacy"
+
 	elif "Nurse" in roles and "System Manager" not in roles:
 		frappe.local.response["default_route"] = "/app/nurse-view"
 
@@ -51,6 +54,9 @@ def on_session_creation(login_manager=None):
 	if "Sales Agent" in roles and "Sales Agent Manager" not in roles and "System Manager" not in roles:
 		frappe.local.response["home_page"] = "/sales_agent_dashboard"
 		frappe.local.response["default_route"] = "/sales_agent_dashboard"
+	elif "Pharmacist" in roles and "System Manager" not in roles:
+		frappe.local.response["home_page"] = "/app/pharmacy"
+		frappe.local.response["default_route"] = "/app/pharmacy"
 	elif "Nurse" in roles and "System Manager" not in roles:
 		frappe.local.response["home_page"] = "/app/nurse-view"
 		frappe.local.response["default_route"] = "/app/nurse-view"
@@ -104,6 +110,41 @@ def redirect_sales_agents():
 
 		# Also override home_page on every request so Frappe SPA doesn't route elsewhere
 		frappe.local.response["home_page"] = "/sales_agent_dashboard"
+
+
+def redirect_patients():
+	"""
+	Before request hook to redirect Patients from /app routes to the patient dashboard.
+	Patients should only see the patient portal, not the Frappe desk.
+	"""
+	if frappe.session.user == "Guest":
+		return
+
+	roles = frappe.get_roles()
+	if "Patient" in roles and "System Manager" not in roles and "Healthcare Administrator" not in roles:
+		path = frappe.local.request.path if hasattr(frappe.local, "request") and frappe.local.request else ""
+
+		# Allow these paths for patients
+		allowed_prefixes = (
+			"/dashboard",
+			"/me",
+			"/glp1",
+			"/intake",
+			"/patient",
+			"/api/",
+			"/assets/",
+			"/s2w_login",
+			"/login",
+			"/logout",
+		)
+
+		if path and path.startswith("/app/") and not path.startswith(allowed_prefixes):
+			frappe.response["type"] = "redirect"
+			frappe.response["location"] = "/dashboard"
+			raise frappe.Redirect
+
+		# Override home_page on every request
+		frappe.local.response["home_page"] = "/dashboard"
 
 
 def on_logout(login_manager):

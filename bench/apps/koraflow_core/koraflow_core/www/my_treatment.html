@@ -214,11 +214,6 @@
                 <span class="font-semibold text-sm">{{ _("Billing") }}</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
-                href="/resources">
-                <span class="material-symbols-outlined">menu_book</span>
-                <span class="font-semibold text-sm">{{ _("Resources") }}</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:text-primary"
                 href="/patient_profile">
                 <span class="material-symbols-outlined">settings_suggest</span>
                 <span class="font-semibold text-sm">{{ _("Profile") }}</span>
@@ -405,7 +400,12 @@
                                 <span class="size-2 bg-primary rounded-full animate-pulse"></span>
                                 {{ _("Action Required: Awaiting Acceptance") }}
                             </span>
-                            {# Removed quotation download for compliance #}
+                            <a href="/api/method/koraflow_core.www.my_treatment.get_branded_quote_pdf?quote_name={{ quote.name }}"
+                                target="_blank"
+                                class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">description</span>
+                                {{ _("View Quote PDF") }}
+                            </a>
                         </div>
                     </div>
                     <div class="p-8">
@@ -505,7 +505,8 @@
                         <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
                             _("Street Address") }}</label>
                         <input type="text" name="address_line1" id="modal-address"
-                            value="{{ patient.address_line1 or '' }}" required
+                            value="{{ address.address_line1 or '' }}" required
+                            placeholder="{{ _('Enter a location') }}"
                             class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white placeholder:text-slate-400">
                     </div>
 
@@ -513,13 +514,13 @@
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
                                 _("City") }}</label>
-                            <input type="text" name="city" id="modal-city" value="{{ patient.city or '' }}" required
+                            <input type="text" name="city" id="modal-city" value="{{ address.city or '' }}" required
                                 class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-2 tracking-wide">{{
                                 _("Postal Code") }}</label>
-                            <input type="text" name="zip_code" id="modal-zip" value="{{ patient.zip_code or '' }}"
+                            <input type="text" name="zip_code" id="modal-zip" value="{{ address.pincode or '' }}"
                                 required
                                 class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-primary focus:border-transparent transition-all px-4 py-3 font-medium text-charcoal dark:text-white">
                         </div>
@@ -535,7 +536,18 @@
                             passed to our courier.") }}</p>
                     </div>
 
-                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
+                        <div class="flex items-center justify-between text-sm mb-4 px-1">
+                            <span class="text-slate-500 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-base">local_shipping</span>
+                                {{ _("Cold-Chain Delivery") }}
+                            </span>
+                            <span id="modal-shipping-display" class="font-semibold text-charcoal dark:text-white">
+                                {% if address.pincode %}Included{% else %}Enter postal code{% endif %}
+                            </span>
+                        </div>
+                        <p id="modal-service-level" class="text-[10px] text-slate-400 text-right mb-4"></p>
+
                         <button type="submit"
                             class="w-full py-4 bg-primary text-charcoal font-black rounded-xl hover:brightness-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                             {{ _("Confirm Order") }} • <span id="modal-total" class="font-mono"></span>
@@ -592,18 +604,105 @@
                 setTimeout(() => toast.remove(), 4500);
             }
 
+            // Track original medication total and current courier fee
+            let _medicationTotal = 0;
+            let _courierFee = 0;
+            let _originalPostalCode = '';
+
             function openAcceptModal(quoteName, total) {
                 document.getElementById('modal-quote-name').value = quoteName;
+                _medicationTotal = parseFloat(total) || 0;
+                _courierFee = 0;
+                _originalPostalCode = document.getElementById('modal-zip').value;
+
+                // Fetch current courier fee from quotation
+                fetch('/api/resource/Quotation/' + quoteName + '?fields=["custom_courier_rate","grand_total"]', {
+                    headers: { 'X-Frappe-CSRF-Token': frappe.csrf_token }
+                }).then(r => r.json()).then(data => {
+                    if (data.data) {
+                        _courierFee = parseFloat(data.data.custom_courier_rate) || 0;
+                        _medicationTotal = parseFloat(data.data.grand_total) - _courierFee;
+                        updateModalTotal();
+                    }
+                }).catch(() => {});
+
                 document.getElementById('modal-total').innerText = "R " + total;
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
 
-                // Re-init autocomplete if needed for modal input
                 if (typeof initAutocomplete === 'function') {
                     initAutocomplete();
                 }
+
+                // Auto-calculate shipping on modal open
+                setTimeout(recalculateShipping, 500);
             }
+
+            function updateModalTotal() {
+                const total = _medicationTotal + _courierFee;
+                const totalEl = document.getElementById('modal-total');
+                totalEl.innerText = 'R ' + total.toFixed(0);
+
+                // Update shipping display
+                const shippingEl = document.getElementById('modal-shipping-display');
+                if (shippingEl) {
+                    if (_courierFee > 0) {
+                        shippingEl.innerHTML = '<span class="text-primary font-bold">R ' + _courierFee.toFixed(0) + '</span> delivery';
+                    } else {
+                        shippingEl.innerHTML = 'Calculating...';
+                    }
+                }
+            }
+
+            function recalculateShipping() {
+                const postalCode = document.getElementById('modal-zip').value.trim();
+                const city = document.getElementById('modal-city').value.trim();
+                const streetAddress = document.getElementById('modal-address').value.trim();
+                if (!postalCode || postalCode.length < 4) return;
+
+                const shippingEl = document.getElementById('modal-shipping-display');
+                if (shippingEl) shippingEl.innerHTML = '<span class="animate-pulse text-slate-400">Recalculating...</span>';
+
+                fetch('/api/method/koraflow_core.api.courier_guy_tracking.get_shipping_rate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': frappe.csrf_token
+                    },
+                    body: JSON.stringify({ postal_code: postalCode, city: city, street_address: streetAddress })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.message) {
+                        _courierFee = parseFloat(data.message.courier_fee) || 0;
+                        updateModalTotal();
+                        if (data.message.service_name) {
+                            const serviceEl = document.getElementById('modal-service-level');
+                            if (serviceEl) serviceEl.textContent = data.message.service_name;
+                        }
+                    }
+                })
+                .catch(() => {
+                    if (shippingEl) shippingEl.innerHTML = 'Could not calculate';
+                });
+            }
+
+            // Recalculate when any address field changes (debounced)
+            let _shippingTimer = null;
+            ['modal-zip', 'modal-city', 'modal-address'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', function() {
+                        clearTimeout(_shippingTimer);
+                        _shippingTimer = setTimeout(recalculateShipping, 800);
+                    });
+                    el.addEventListener('change', function() {
+                        clearTimeout(_shippingTimer);
+                        _shippingTimer = setTimeout(recalculateShipping, 300);
+                    });
+                }
+            });
 
             function closeAcceptModal() {
                 modal.style.display = 'none';

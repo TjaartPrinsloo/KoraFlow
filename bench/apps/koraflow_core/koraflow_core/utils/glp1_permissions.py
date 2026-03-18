@@ -29,8 +29,10 @@ def get_glp1_prescription_permission_query_conditions(user):
 	return ""
 
 
-def has_glp1_prescription_permission(doc, user, permission_type="read"):
+def has_glp1_prescription_permission(doc, ptype=None, user=None):
 	"""Check if user has permission for prescription"""
+	if not user:
+		user = frappe.session.user
 	user_roles = frappe.get_roles(user)
 	
 	# Sales/Promoters: NO ACCESS
@@ -63,8 +65,10 @@ def get_glp1_stock_permission_query_conditions(user):
 	return ""
 
 
-def has_glp1_stock_permission(doc, user, permission_type="read"):
+def has_glp1_stock_permission(doc, ptype=None, user=None):
 	"""Check if user can access stock"""
+	if not user:
+		user = frappe.session.user
 	user_roles = frappe.get_roles(user)
 	
 	# Doctors and Sales: NO ACCESS
@@ -89,8 +93,10 @@ def get_glp1_dispense_task_permission_query_conditions(user):
 	return ""
 
 
-def has_glp1_dispense_task_permission(doc, user, permission_type="read"):
+def has_glp1_dispense_task_permission(doc, ptype=None, user=None):
 	"""Check if user can access dispense tasks"""
+	if not user:
+		user = frappe.session.user
 	user_roles = frappe.get_roles(user)
 	
 	# Only Pharmacists

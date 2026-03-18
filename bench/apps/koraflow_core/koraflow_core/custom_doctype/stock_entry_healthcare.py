@@ -20,7 +20,12 @@ def validate_stock_entry_healthcare(doc, method):
 	3. Must have pharmacist role
 	4. Virtual warehouses cannot reduce stock
 	5. Must have patient reference
+
+	Material Receipt is exempt - receiving stock doesn't need prescriptions.
 	"""
+	# Material Receipt (receiving inventory) is exempt from S4 dispensing rules
+	if doc.stock_entry_type == "Material Receipt" or doc.purpose == "Material Receipt":
+		return
 	
 	# Check if any items are S4 medications
 	s4_items = []

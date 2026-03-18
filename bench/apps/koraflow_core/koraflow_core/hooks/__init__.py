@@ -78,7 +78,7 @@ app_logo_url = "/assets/koraflow_core/images/s2w_logo.png"
 
 # Include JS, CSS files in bundle
 app_include_js = [
-	"/assets/koraflow_core/js/koraflow_core.js",
+	"/assets/koraflow_core/js/koraflow_core.js?v=20260318e",
 	"/assets/koraflow_core/js/sales_agent_dashboard.js",
 	"/assets/koraflow_core/js/courier_guy_delivery_note.js",
 	"/assets/koraflow_core/js/courier_guy_patient.js",
@@ -152,7 +152,10 @@ doc_events = {
 		"on_submit": "koraflow_core.hooks.courier_guy_hooks.create_waybill_on_delivery_note_submit"
 	},
 	"Payment Entry": {
-		"on_submit": "koraflow_core.hooks.courier_guy_hooks.on_payment_entry_submit"
+		"on_submit": [
+			"koraflow_core.hooks.commission_hooks.on_payment_entry_submit",
+			"koraflow_core.hooks.fulfilment_hooks.on_payment_received"
+		]
 	},
     "Quotation": {
         "on_submit": "koraflow_core.utils.xero_connector.sync_quotation",
@@ -262,38 +265,18 @@ on_session_creation = "koraflow_core.utils.auth.on_session_creation"
 # Website user home page hook - determines home page for Website Users (Patients)
 get_website_user_home_page = "koraflow_core.utils.auth.get_website_user_home_page"
 
-# Before request hook - redirect Sales Agents from /app routes to dashboard
-before_request_methods = [
-	"koraflow_core.utils.auth.redirect_sales_agents"
+# Before request hook - redirect Sales Agents and Patients from /app routes
+before_request = [
+	"koraflow_core.utils.auth.redirect_sales_agents",
+	"koraflow_core.utils.auth.redirect_patients"
 ]
 
 # Override default signup
 after_migrate = [
 	"koraflow_core.utils.user_override.override_sign_up",
-	"koraflow_core.utils.app_path_fix.fix_app_path"
+	"koraflow_core.utils.app_path_fix.fix_app_path",
+	"koraflow_core.install.apply_property_setters"
 ]
-
-def before_request():
-	"""Apply fixes that need to be applied on every request"""
-	from koraflow_core.utils.app_path_fix import fix_app_path
-	fix_app_path()
-	
-	import frappe
-	# Clear hooks cache intermittently if needed, but not every request for performance
-	# frappe.cache.delete_value("app_hooks")
-	
-	# Execute other before_request methods
-	for method in before_request_methods:
-		frappe.get_attr(method)()
-	
-	# Ensure signup override is applied (in case it was reset)
-	try:
-		from koraflow_core.koraflow_core.doctype.user.user_override import override_sign_up
-		override_sign_up()
-	except:
-		pass
-
-before_request = before_request
 
 # Custom Fields
 custom_fields = {
@@ -521,6 +504,15 @@ custom_fields = {
 			"fieldtype": "Check",
 			"insert_after": "custom_patient",
 			"default": 0
+		}
+	],
+	"Healthcare Practitioner": [
+		{
+			"fieldname": "custom_signature_image",
+			"label": "Digital Signature",
+			"fieldtype": "Attach Image",
+			"insert_after": "prescription_print_format",
+			"description": "Upload a scanned or digital signature for prescriptions (SAHPRA compliance)"
 		}
 	]
 }

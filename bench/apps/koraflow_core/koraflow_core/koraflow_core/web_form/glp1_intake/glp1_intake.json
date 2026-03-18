@@ -146,63 +146,6 @@
             "reqd": 0
         },
         {
-            "fieldname": "section_address",
-            "fieldtype": "Section Break",
-            "hidden": 0,
-            "label": "Address Details",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
-            "fieldname": "address_line1",
-            "fieldtype": "Data",
-            "hidden": 0,
-            "label": "Address Line 1",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
-            "fieldname": "address_line2",
-            "fieldtype": "Data",
-            "hidden": 0,
-            "label": "Address Line 2",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
-            "fieldname": "city",
-            "fieldtype": "Data",
-            "hidden": 0,
-            "label": "City",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
-            "fieldname": "state",
-            "fieldtype": "Data",
-            "hidden": 0,
-            "label": "State/Province",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
-            "fieldname": "pincode",
-            "fieldtype": "Data",
-            "hidden": 0,
-            "label": "Postal Code",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
-            "fieldname": "country",
-            "fieldtype": "Link",
-            "hidden": 0,
-            "label": "Country",
-            "options": "Country",
-            "read_only": 0,
-            "reqd": 0
-        },
-        {
             "fieldname": "section_intake_vitals",
             "fieldtype": "Section Break",
             "hidden": 0,
@@ -298,6 +241,65 @@
             "label": "Resting Heart Rate (BPM)",
             "read_only": 0,
             "reqd": 0
+        },
+        {
+            "fieldname": "section_address",
+            "fieldtype": "Section Break",
+            "hidden": 0,
+            "label": "Shipping Address",
+            "description": "Required for medication delivery. Please provide your delivery address.",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "address_line1",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Street Address",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "address_line2",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Suburb / Complex / Building",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "city",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "City / Town",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "state",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Province",
+            "read_only": 0,
+            "reqd": 0
+        },
+        {
+            "fieldname": "pincode",
+            "fieldtype": "Data",
+            "hidden": 0,
+            "label": "Postal Code",
+            "read_only": 0,
+            "reqd": 1
+        },
+        {
+            "fieldname": "country",
+            "fieldtype": "Link",
+            "hidden": 0,
+            "label": "Country",
+            "options": "Country",
+            "read_only": 0,
+            "reqd": 0,
+            "default": "South Africa"
         },
         {
             "fieldname": "section_endocrine",

@@ -209,6 +209,44 @@ def generate_quotation_from_encounter(doc):
 		if not items:
 			return
 
+		# Get courier shipping rate from TCG API
+		courier_fee = 0
+		courier_service = ""
+		try:
+			from koraflow_core.utils.courier_guy_api import CourierGuyAPI
+			settings = frappe.get_single("Courier Guy Settings")
+			if settings.enabled:
+				api = CourierGuyAPI()
+				rate_result = api.get_rates_for_patient(doc.patient)
+				courier_fee = rate_result.get("courier_fee", 0)
+				courier_service = rate_result.get("service_level_code", "")
+				frappe.logger().info(f"TCG rate for {doc.patient}: R{courier_fee} ({courier_service})")
+		except Exception as courier_err:
+			frappe.logger().warning(f"Courier rate lookup failed, using default: {courier_err}")
+			courier_fee = 99  # Fallback
+
+		# Add courier fee as line item if we got a rate
+		if courier_fee and courier_fee > 0:
+			# Check if COURIER-FEE item exists, create if not
+			if not frappe.db.exists("Item", "COURIER-FEE"):
+				courier_item = frappe.get_doc({
+					"doctype": "Item",
+					"item_code": "COURIER-FEE",
+					"item_name": "Cold-Chain Delivery Fee",
+					"item_group": "Services",
+					"stock_uom": "Nos",
+					"is_stock_item": 0,
+					"description": "Cold-chain courier delivery via The Courier Guy"
+				})
+				courier_item.insert(ignore_permissions=True)
+
+			items.append({
+				"item_code": "COURIER-FEE",
+				"qty": 1,
+				"rate": courier_fee,
+				"description": "Cold-chain courier delivery"
+			})
+
 		# Create Quotation
 		qt = frappe.new_doc("Quotation")
 		qt.quotation_to = "Customer"
@@ -216,25 +254,27 @@ def generate_quotation_from_encounter(doc):
 		qt.transaction_date = frappe.utils.today()
 		qt.order_type = "Sales"
 		qt.company = doc.company or frappe.defaults.get_user_default("Company")
-		
+
 		# Add items
 		for item in items:
 			qt.append("items", item)
-			
-		# Link to Encounter (using title as fallback if custom field doesn't exist)
+
+		# Link to Encounter
 		qt.title = f"Prescription: {doc.name}"
-		
-		# Set Custom Fields for Referral and Prescription Link
-		# Link the PRIMARY prescription to the main doc field (for backward compatibility/main validation)
+
+		# Set Custom Fields
 		if primary_prescription:
 			qt.custom_prescription = primary_prescription
-		else:
-			# Fallback: DO NOT link encounter here as it causes validation error
-			pass
-			
+
 		if hasattr(patient, 'custom_referrer_name') and patient.custom_referrer_name:
 			qt.custom_referrer_name = patient.custom_referrer_name
-		
+
+		# Store courier rate metadata
+		if hasattr(qt, 'custom_courier_rate'):
+			qt.custom_courier_rate = courier_fee
+		if hasattr(qt, 'custom_courier_service_level'):
+			qt.custom_courier_service_level = courier_service
+
 		# Bypass link validation to allow linking to the encounter currently being submitted
 		qt.flags.ignore_links = True
 		qt.save(ignore_permissions=True)

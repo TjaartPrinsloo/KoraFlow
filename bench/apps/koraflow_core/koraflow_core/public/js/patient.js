@@ -175,63 +175,114 @@ frappe.ui.form.on('Patient', {
             const applyUI = () => {
                 if (frm.doc.__islocal) return;
 
-                // 1. UNIVERSAL: ALWAYS REVEAL AGENT DROP-DOWNS
-                // Force section visibility first
-                frm.set_df_property('customer_details_section', 'hidden', 0);
-                frm.toggle_display('customer_details_section', true);
-                
-                // jQuery override for the section itself
-                let section = frm.get_field('customer_details_section');
-                if (section && section.$wrapper) {
-                    section.$wrapper.attr('style', 'display: block !important;');
+                // 1. UNIVERSAL: Hide Customer Details (now replaced by Referrals tab)
+                frm.set_df_property('customer_details_section', 'hidden', 1);
+                frm.toggle_display('customer_details_section', false);
+
+                // Hide __newname rename field
+                $(frm.wrapper).find('[data-fieldname="__newname"]').closest('.form-section').hide();
+
+                // Ensure form is always in edit mode for users with write permission
+                if (!frm.is_new() && frm.perm[0] && frm.perm[0].write) {
+                    // This is the Frappe way to force edit mode
+                    frm.amend_doc = false;
+                    frm.page.set_primary_action(__('Save'), () => frm.save());
+                    frm.enable_save();
+
+                    // Force all fields into write/input mode
+                    frm.fields.forEach(field => {
+                        if (field.df && field.df.fieldtype !== 'Section Break' &&
+                            field.df.fieldtype !== 'Column Break' &&
+                            field.df.fieldtype !== 'Tab Break' &&
+                            field.df.fieldtype !== 'HTML' &&
+                            !field.df.read_only) {
+                            field.disp_status = 'Write';
+                            if (field.$wrapper) {
+                                field.$wrapper.removeClass('hide-control');
+                                field.$wrapper.find('.control-value').hide();
+                                field.$wrapper.find('.control-input').show();
+                            }
+                            if (!field.has_input && field.make_input) {
+                                field.make_input();
+                            }
+                        }
+                    });
+
+                    // Persistent save button
+                    $(frm.wrapper).off('dirty.kf').on('dirty.kf', () => {
+                        setTimeout(() => {
+                            frm.enable_save();
+                            frm.page.set_primary_action(__('Save'), () => frm.save());
+                        }, 100);
+                    });
                 }
 
-                ['referred_by_sales_agent', 'custom_sales_agent', 'custom_referrer_name'].forEach(fieldname => {
-                    let field = frm.get_field(fieldname);
-                    if (field) {
-                        console.log(`KoraFlow: Forcing visibility for field: ${fieldname}`);
+                // Force Referrals tab - Sales Partner field visible with input
+                let spField = frm.get_field('custom_ref_sales_partner');
+                if (spField) {
+                    frm.set_df_property('custom_ref_sales_partner', 'hidden', 0);
+                    frm.toggle_display('custom_ref_sales_partner', true);
+                    if (!spField.has_input && spField.make_input) {
+                        spField.make_input();
+                    }
+                    if (spField.$wrapper) {
+                        spField.$wrapper.show().removeClass('hide-control').attr('style', 'display: block !important;');
+                        spField.$wrapper.find('.control-label').text('Linked Sales Partner');
+                        spField.$wrapper.find('.control-input').show();
+                        spField.$wrapper.closest('.form-column').show().attr('style', 'display: block !important;');
+                        spField.$wrapper.closest('.section-body').show().attr('style', 'display: block !important;');
+                    }
+                    frm.refresh_field('custom_ref_sales_partner');
 
-                        frm.set_df_property(fieldname, 'hidden', 0);
-                        frm.set_df_property(fieldname, 'read_only', 0);
-                        frm.toggle_display(fieldname, true);
-                        frm.toggle_enable(fieldname, true);
+                    // Override awesomplete to show all partners alphabetically
+                    frm.set_query('custom_ref_sales_partner', function() {
+                        return {
+                            page_length: 0,
+                            order_by: 'name asc'
+                        };
+                    });
 
-                        if (field.df) {
-                            field.df.hidden = 0;
-                            field.df.read_only = 0;
-                            field.refresh();
+                    // Pre-load all partners into the dropdown
+                    frappe.call({
+                        method: 'frappe.client.get_list',
+                        args: {
+                            doctype: 'Sales Partner',
+                            fields: ['name'],
+                            order_by: 'name asc',
+                            limit_page_length: 0
+                        },
+                        async: false,
+                        callback: function(r) {
+                            if (r.message && spField.awesomplete) {
+                                spField._all_partners = r.message.map(p => p.name);
+                            }
                         }
-                        frm.refresh_field(fieldname);
+                    });
 
-                        // AGGRESSIVE jQuery OVERRIDE - Targeting the wrapper specifically
-                        if (field.$wrapper) {
-                            field.$wrapper.show().attr('style', 'display: block !important;');
-                            // Also ensure the parent columns are visible
-                            field.$wrapper.closest('.form-column').show().attr('style', 'display: block !important;');
-                            field.$wrapper.closest('.section-body').show().attr('style', 'display: block !important;');
+                    // Override get_query_results to always show full list
+                    if (spField.awesomplete) {
+                        let origInput = spField.$input;
+                        if (origInput) {
+                            origInput.on('focus', function() {
+                                if (spField._all_partners && spField.awesomplete) {
+                                    let list = spField._all_partners.map(name => ({
+                                        label: name,
+                                        value: name
+                                    }));
+                                    spField.awesomplete.list = list;
+                                    spField.awesomplete.evaluate();
+                                    spField.awesomplete.open();
+                                }
+                            });
                         }
                     }
-                });
+                }
 
                 // 2. ROLE-SPECIFIC: NURSE / ADMIN TAILORING
                 if (frappe.user_roles && (frappe.user_roles.includes('Nurse') || frappe.user_roles.includes('System Manager'))) {
-                    // Hide bloated sections BUT NOT customer_details_section anymore
+                    // Hide bloated sections
                     ['activity_section', 'stats_section', 'billing_section', 'connections_section'].forEach(s => {
-                        if (s !== 'customer_details_section') {
-                            frm.set_df_property(s, 'hidden', 1);
-                        }
-                    });
-
-                    // Hide standard fields that nurses don't use
-                    ['customer', 'customer_group', 'territory', 'default_currency', 'default_price_list', 'language'].forEach(f => {
-                        frm.set_df_property(f, 'hidden', 1);
-                        frm.toggle_display(f, false);
-                    });
-
-                    // Explicitly ensure the fields we want ARE shown for these roles
-                    ['referred_by_sales_agent', 'custom_sales_agent', 'custom_referrer_name'].forEach(fieldname => {
-                        frm.set_df_property(fieldname, 'hidden', 0);
-                        frm.toggle_display(fieldname, true);
+                        frm.set_df_property(s, 'hidden', 1);
                     });
 
                     // Ensure Encounter button exists

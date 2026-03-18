@@ -43,9 +43,32 @@ def create_sales_agent_roles():
 		frappe.msgprint(_("Created Sales Agent Manager role"))
 
 
-# Workspace creation removed - Sales Agents now use custom Page (/app/sales-agent-dash) instead
-# def create_sales_agent_workspace():
-# 	"""Create Sales Agent Dashboard Workspace"""
-# 	# No longer needed - using custom Page instead
-# 	pass
+def apply_property_setters():
+	"""Apply property setters for core DocType field overrides.
+	Runs after every migrate to ensure options stay in sync."""
+	setters = {
+		("Patient", "status", "options"): "Active\nDisabled\nUnder Review",
+	}
+
+	for (dt, field, prop), value in setters.items():
+		existing = frappe.db.get_value("Property Setter", {
+			"doc_type": dt,
+			"field_name": field,
+			"property": prop
+		})
+		if existing:
+			frappe.db.set_value("Property Setter", existing, "value", value)
+		else:
+			frappe.get_doc({
+				"doctype": "Property Setter",
+				"doctype_or_field": "DocField",
+				"doc_type": dt,
+				"field_name": field,
+				"property": prop,
+				"value": value,
+				"property_type": "Small Text",
+			}).insert(ignore_permissions=True)
+
+	frappe.db.commit()
+	frappe.clear_cache(doctype="Patient")
 
