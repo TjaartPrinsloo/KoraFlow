@@ -13,6 +13,7 @@
         "sex",
         "blood_group",
         "custom_referrer_name",
+        "is_existing_patient",
         "column_break_1",
         "email",
         "mobile",
@@ -268,6 +269,13 @@
             "in_preview": false,
             "unique": false,
             "columns": 0
+        },
+        {
+            "fieldname": "is_existing_patient",
+            "fieldtype": "Check",
+            "label": "Is Existing Patient",
+            "default": 0,
+            "description": "Patient indicated they are a returning Slim2Well patient"
         },
         {
             "fieldname": "column_break_1",

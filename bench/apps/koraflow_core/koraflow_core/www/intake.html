@@ -333,6 +333,24 @@
 					</div>
 				</div>
 
+
+				<!-- Existing Patient Flag -->
+				<div class="mt-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+					<label class="flex items-center gap-3 cursor-pointer group">
+						<div class="relative">
+							<input type="checkbox" name="is_existing_patient" value="1"
+								class="sr-only peer" id="is-existing-patient-cb">
+							<div class="w-11 h-6 bg-slate-300 peer-focus:ring-2 peer-focus:ring-primary rounded-full
+								peer-checked:bg-primary transition-colors"></div>
+							<div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow
+								peer-checked:translate-x-5 transition-transform"></div>
+						</div>
+						<div>
+							<span class="text-sm font-bold text-charcoal dark:text-white">{{ _("I am an existing Slim2Well patient") }}</span>
+							<p class="text-xs text-slate-500 mt-0.5">{{ _("Check this if you have previously been treated by Slim2Well and are returning for continued care.") }}</p>
+						</div>
+					</label>
+				</div>
 				<div class="border-t border-slate-100 dark:border-slate-800 my-4 pt-4">
 					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{
 						_("Identification") }}</label>

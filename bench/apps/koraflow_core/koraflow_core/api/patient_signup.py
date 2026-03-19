@@ -105,6 +105,7 @@ def create_patient_from_intake(intake_data, user_email=None):
         if intake_data.get("first_name"): patient.first_name = intake_data.get("first_name")
         if intake_data.get("last_name"): patient.last_name = intake_data.get("last_name")
         if intake_data.get("custom_referrer_name"): patient.custom_referrer_name = intake_data.get("custom_referrer_name")
+        if intake_data.get("is_existing_patient"): patient.custom_is_existing_patient = 1
         
         mobile_val = intake_data.get("mobile") or intake_data.get("intake_mobile")
         if mobile_val: patient.mobile = mobile_val

@@ -299,6 +299,16 @@ custom_fields = {
 			"insert_after": "referred_by_sales_agent"
 		},
 		{
+			"fieldname": "custom_is_existing_patient",
+			"label": "Existing Patient (Returning)",
+			"fieldtype": "Check",
+			"insert_after": "custom_referrer_name",
+			"default": 0,
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"description": "Patient self-identified as a returning Slim2Well patient during intake"
+		},
+		{
 			"fieldname": "custom_address_line1",
 			"label": "Address Line 1",
 			"fieldtype": "Data",
