@@ -110,21 +110,91 @@ def dispense_and_ship(task_name):
 
 	errors = []
 
-	# 1. Submit the Delivery Note (this deducts stock)
-	dn_name = getattr(task, 'delivery_note', None)
-	if dn_name:
-		try:
-			dn = frappe.get_doc("Delivery Note", dn_name)
-			if dn.docstatus == 0:
-				dn.flags.ignore_permissions = True
-				dn.submit()
-				frappe.db.commit()
-				frappe.logger().info(f"Dispense: DN {dn_name} submitted")
-		except Exception as e:
-			errors.append(f"Delivery Note: {str(e)}")
-			frappe.log_error(title="Dispense DN Error", message=str(e))
+	# Resolve prescription and item details
+	prescription = frappe.get_doc("GLP-1 Patient Prescription", task.prescription)
+	linked_items = frappe.get_all("Medication Linked Item",
+		{"parent": prescription.medication}, ["item"], limit=1)
+	medication_item = linked_items[0].item if linked_items else None
 
-	# 2. Create Dispense Confirmation
+	if not medication_item:
+		frappe.throw(_("No item linked to medication {0}").format(prescription.medication))
+
+	# Resolve warehouse
+	pharm_warehouse = frappe.db.get_value(
+		"Pharmacy Warehouse", {"warehouse_name": "PHARM-CENTRAL-COLD"}, "erpnext_warehouse"
+	) or "PHARM-CENTRAL-COLD - S2W"
+
+	# 1. Find or create the Delivery Note
+	dn_name = frappe.db.get_value("Delivery Note",
+		{"customer": task.patient, "docstatus": 0, "is_return": 0}, "name")
+
+	if not dn_name:
+		# Resolve batch if item is batch-tracked
+		item_doc = frappe.get_doc("Item", medication_item)
+		batch_no = None
+		if item_doc.has_batch_no:
+			# Find an existing batch with stock, or create one
+			batch_no = frappe.db.sql("""
+				SELECT sle.batch_no
+				FROM `tabStock Ledger Entry` sle
+				WHERE sle.item_code = %s AND sle.warehouse = %s
+				AND sle.is_cancelled = 0 AND sle.batch_no IS NOT NULL AND sle.batch_no != ''
+				GROUP BY sle.batch_no
+				HAVING SUM(sle.actual_qty) > 0
+				ORDER BY sle.batch_no ASC LIMIT 1
+			""", (medication_item, pharm_warehouse))
+			batch_no = batch_no[0][0] if batch_no else None
+
+			if not batch_no:
+				# Use existing batch or create one
+				existing_batch = frappe.db.get_value("Batch",
+					{"item": medication_item}, "name", order_by="creation desc")
+				if existing_batch:
+					batch_no = existing_batch
+				else:
+					batch = frappe.get_doc({
+						"doctype": "Batch",
+						"item": medication_item,
+						"batch_id": f"{medication_item}-{frappe.utils.nowdate()}",
+					})
+					batch.flags.ignore_permissions = True
+					batch.insert()
+					batch_no = batch.name
+					frappe.db.commit()
+
+		dn_item = {
+			"item_code": medication_item,
+			"qty": prescription.quantity or 1,
+			"warehouse": pharm_warehouse,
+		}
+		if batch_no:
+			dn_item["batch_no"] = batch_no
+
+		dn = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": task.patient,
+			"set_warehouse": pharm_warehouse,
+			"items": [dn_item]
+		})
+		dn.flags.ignore_permissions = True
+		dn.insert()
+		dn_name = dn.name
+		frappe.db.commit()
+		frappe.logger().info(f"Dispense: Created DN {dn_name}")
+
+	# Submit the Delivery Note (deducts stock)
+	try:
+		dn = frappe.get_doc("Delivery Note", dn_name)
+		if dn.docstatus == 0:
+			dn.flags.ignore_permissions = True
+			dn.submit()
+			frappe.db.commit()
+			frappe.logger().info(f"Dispense: DN {dn_name} submitted")
+	except Exception as e:
+		errors.append(f"Delivery Note: {str(e)}")
+		frappe.log_error(title="Dispense DN Error", message=str(e))
+
+	# 2. Create Dispense Confirmation (patient acknowledged at quote acceptance)
 	try:
 		if not frappe.db.exists("GLP-1 Dispense Confirmation", {"prescription": task.prescription}):
 			confirmation = frappe.get_doc({
@@ -132,6 +202,7 @@ def dispense_and_ship(task_name):
 				"prescription": task.prescription,
 				"patient": task.patient,
 				"pharmacist": frappe.session.user,
+				"patient_acknowledgment": 1,
 			})
 			confirmation.insert(ignore_permissions=True)
 			frappe.db.commit()
@@ -139,21 +210,29 @@ def dispense_and_ship(task_name):
 		errors.append(f"Dispense Confirmation: {str(e)}")
 		frappe.log_error(title="Dispense Confirmation Error", message=str(e))
 
-	# 3. Book waybill with TCG API
-	waybill_name = getattr(task, 'waybill', None)
+	# 3. Create waybill and book with TCG API
+	waybill_name = frappe.db.get_value("Courier Guy Waybill",
+		{"delivery_note": dn_name}, "name")
+
+	if not waybill_name:
+		try:
+			from koraflow_core.hooks.courier_guy_hooks import create_waybill_on_delivery_note_submit
+			dn_doc = frappe.get_doc("Delivery Note", dn_name)
+			create_waybill_on_delivery_note_submit(dn_doc, None)
+			waybill_name = frappe.db.get_value("Courier Guy Waybill",
+				{"delivery_note": dn_name}, "name")
+		except Exception as e:
+			errors.append(f"Waybill creation: {str(e)}")
+			frappe.log_error(title="Dispense Waybill Create Error", message=str(e))
+
 	if waybill_name:
 		try:
 			waybill = frappe.get_doc("Courier Guy Waybill", waybill_name)
-			if waybill.status == "Draft":
-				frappe.enqueue(
-					"koraflow_core.hooks.courier_guy_hooks.book_waybill_async",
-					waybill_name=waybill_name,
-					invoice_name=task.invoice,
-					queue="short"
-				)
-				frappe.logger().info(f"Dispense: Waybill {waybill_name} booking enqueued")
+			if waybill.status in ("Draft", "Created"):
+				waybill.create_waybill()
+				frappe.logger().info(f"Dispense: Waybill {waybill_name} booked")
 		except Exception as e:
-			errors.append(f"Waybill: {str(e)}")
+			errors.append(f"Waybill booking: {str(e)}")
 			frappe.log_error(title="Dispense Waybill Error", message=str(e))
 
 	# 4. Update prescription status

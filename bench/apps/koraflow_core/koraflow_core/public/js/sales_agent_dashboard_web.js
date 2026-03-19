@@ -46,8 +46,8 @@ function updateDashboardUI(data) {
         if (totalEarned) totalEarned.innerText = formatCurrency(summary.total_earned || 0);
 
         const availBalance = document.getElementById('available-balance');
-        // Using pending as available for now based on logic
-        const balanceValue = summary.pending || 0;
+        // Available = accrued minus pending payout requests (use ?? to handle 0 correctly)
+        const balanceValue = summary.available ?? summary.pending ?? 0;
         if (availBalance) availBalance.innerText = formatCurrency(balanceValue);
 
         // Update modal balance as well
@@ -146,7 +146,10 @@ function updateDashboardUI(data) {
                 </div>
                 <div class="text-right">
                     <p class="text-sm font-bold text-primary filter brightness-90">${formatCurrency(comm.accrued_amount)}</p>
-                    <span class="text-[10px] font-bold uppercase tracking-wider ${comm.status === 'Paid' ? 'text-green-600' : 'text-slate-400'}">${comm.status}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider ${
+                        comm.display_status === 'Paid Out' ? 'text-green-600' :
+                        comm.display_status === 'In Wallet' ? 'text-primary' : 'text-slate-400'
+                    }">${comm.display_status || comm.status}</span>
                 </div>
             </div>
         `).join('');
@@ -263,31 +266,29 @@ async function submitPayoutRequest() {
 
     if (!amountEl) return;
 
-    const amount = amountEl.value;
+    const amount = parseFloat(amountEl.value);
     const notes = notesEl ? notesEl.value : '';
 
-    if (amount <= 0) {
+    if (!amount || amount <= 0) {
         alert('Please enter a valid amount');
         return;
     }
 
+    // Disable button to prevent double-clicks
+    const submitBtn = document.querySelector('#payout-modal button[onclick="submitPayoutRequest()"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">refresh</span> Processing...';
+    }
+
     try {
-        const response = await fetch('/api/method/frappe.client.insert', {
+        const response = await fetch('/api/method/koraflow_core.api.agent_portal.request_payout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Frappe-CSRF-Token': window.csrf_token
             },
-            body: JSON.stringify({
-                doc: {
-                    doctype: "Sales Agent Payout Request",
-                    amount: amount,
-                    // withdrawal_amount: amount, // obsolete field
-                    notes: notes,
-                    sales_agent: window.sales_agent_doc_name || window.sales_agent_id,
-                    status: "Pending"
-                }
-            })
+            body: JSON.stringify({ amount: amount })
         });
 
         const result = await response.json();
@@ -303,18 +304,32 @@ async function submitPayoutRequest() {
             const reqId = document.getElementById('request-id');
             const reqAmt = document.getElementById('request-amount');
 
-            if (reqId && result.message) reqId.innerText = result.message.name;
+            if (reqId && result.message) reqId.innerText = result.message.name || '---';
             if (reqAmt) reqAmt.innerText = formatCurrency(amount);
 
             // Refresh dashboard data
             loadDashboardData();
         } else {
             console.error('Error submitting payout:', result);
-            alert('Failed to submit payout request. ' + (result._server_messages ? 'Server error.' : ''));
+            let errorMsg = 'Failed to submit payout request.';
+            if (result._server_messages) {
+                try {
+                    const msgs = JSON.parse(result._server_messages);
+                    errorMsg = msgs.map(m => {
+                        try { return JSON.parse(m).message; } catch(e) { return m; }
+                    }).join('\n');
+                } catch(e) { /* use default */ }
+            }
+            alert(errorMsg);
         }
     } catch (error) {
         console.error('Error submitting payout:', error);
         alert('An error occurred. Please check your connection.');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm">send</span> Submit Request';
+        }
     }
 }
 // ... existing code ...

@@ -170,6 +170,26 @@ frappe.ui.form.on('Patient', {
             render_tickets();
         }
 
+        // --- FIX: Blood Group - hide standard field via CSS (immune to applyUI loop) ---
+        if (!document.getElementById('kf-hide-blood-group')) {
+            let style = document.createElement('style');
+            style.id = 'kf-hide-blood-group';
+            style.textContent = '[data-fieldname="blood_group"] { display: none !important; }';
+            document.head.appendChild(style);
+        }
+
+        // --- FIX: Filter Assigned Nurse to only show users with Nurse role ---
+        frm.set_query('custom_assigned_nurse', function () {
+            return {
+                query: 'koraflow_core.api.nurse_query.get_nurses'
+            };
+        });
+
+        // --- FIX: Remove help text from height and BMI fields ---
+        frm.set_df_property('intake_height_cm', 'description', '');
+        frm.set_df_property('custom_bmi', 'description', '');
+        frm.set_df_property('bmi', 'description', '');
+
         // --- UI CUSTOMIZATION ENGINE ---
         if (!frm.doc.__islocal) {
             const applyUI = () => {
@@ -189,13 +209,14 @@ frappe.ui.form.on('Patient', {
                     frm.page.set_primary_action(__('Save'), () => frm.save());
                     frm.enable_save();
 
-                    // Force all fields into write/input mode
+                    // Force all fields into write/input mode (skip hidden fields)
                     frm.fields.forEach(field => {
                         if (field.df && field.df.fieldtype !== 'Section Break' &&
                             field.df.fieldtype !== 'Column Break' &&
                             field.df.fieldtype !== 'Tab Break' &&
                             field.df.fieldtype !== 'HTML' &&
-                            !field.df.read_only) {
+                            !field.df.read_only &&
+                            !field.df.hidden) {
                             field.disp_status = 'Write';
                             if (field.$wrapper) {
                                 field.$wrapper.removeClass('hide-control');

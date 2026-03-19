@@ -87,7 +87,7 @@ def get_desktop_page(page):
 				if c.get("label") not in HEALTHCARE_HIDDEN_CARDS
 			]
 
-	# Filter Accounting workspace - hide Subscription/Share sections and shortcuts for non-admin
+	# Filter Accounting workspace
 	if page_name == "Accounting":
 		if result.get("shortcuts") and result["shortcuts"].get("items"):
 			result["shortcuts"]["items"] = [
@@ -98,6 +98,22 @@ def get_desktop_page(page):
 			result["cards"]["items"] = [
 				c for c in result["cards"]["items"]
 				if c.get("label") not in ACCOUNTING_HIDDEN_CARDS
+			]
+
+	# Filter Stock workspace
+	if page_name == "Stock":
+		if result.get("shortcuts") and result["shortcuts"].get("items"):
+			result["shortcuts"]["items"] = [
+				s for s in result["shortcuts"]["items"]
+				if s.get("label") not in STOCK_HIDDEN_SHORTCUTS
+			]
+
+	# Filter Selling workspace
+	if page_name == "Selling":
+		if result.get("shortcuts") and result["shortcuts"].get("items"):
+			result["shortcuts"]["items"] = [
+				s for s in result["shortcuts"]["items"]
+				if s.get("label") not in SELLING_HIDDEN_SHORTCUTS
 			]
 
 	return result
@@ -135,7 +151,17 @@ ACCOUNTING_HIDDEN_LINKS = {
 }
 
 ACCOUNTING_HIDDEN_SHORTCUTS = {
-	"Learn Accounting",
+	"Learn Accounting", "Dashboard",
+}
+
+# Shortcuts to hide from Stock workspace for non-admin users
+STOCK_HIDDEN_SHORTCUTS = {
+	"Learn Inventory Management", "Dashboard",
+}
+
+# Shortcuts to hide from Selling workspace for non-admin users
+SELLING_HIDDEN_SHORTCUTS = {
+	"Learn Sales Management", "Dashboard",
 }
 
 
@@ -153,6 +179,10 @@ def filter_healthcare_workspace(doc, method=None):
 		_filter_workspace_sections(doc, HEALTHCARE_HIDDEN_CARDS, HEALTHCARE_HIDDEN_LINKS, HEALTHCARE_HIDDEN_SHORTCUTS)
 	elif doc.name == "Accounting":
 		_filter_workspace_sections(doc, ACCOUNTING_HIDDEN_CARDS, ACCOUNTING_HIDDEN_LINKS, ACCOUNTING_HIDDEN_SHORTCUTS)
+	elif doc.name == "Stock":
+		_filter_workspace_sections(doc, set(), set(), STOCK_HIDDEN_SHORTCUTS)
+	elif doc.name == "Selling":
+		_filter_workspace_sections(doc, set(), set(), SELLING_HIDDEN_SHORTCUTS)
 
 
 def _filter_workspace_sections(doc, hidden_cards, hidden_links, hidden_shortcuts):

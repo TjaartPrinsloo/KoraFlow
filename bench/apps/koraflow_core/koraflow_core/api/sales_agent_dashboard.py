@@ -7,6 +7,80 @@ from frappe.utils import getdate, add_months, get_first_day, get_last_day, today
 from datetime import datetime
 
 
+def _build_patient_pipeline(agent, user):
+	"""Build referral pipeline entries from patients linked via custom_ref_sales_partner.
+
+	Determines each patient's journey status by checking their quotation/invoice state.
+	"""
+	from frappe.utils import formatdate
+
+	patients = frappe.get_all(
+		"Patient",
+		filters={"custom_ref_sales_partner": agent},
+		fields=["name", "first_name", "last_name", "creation"],
+	)
+
+	pipeline = []
+	for p in patients:
+		# Determine status by checking invoices then quotations
+		status = "Lead Received"
+
+		invoices = frappe.get_all(
+			"Sales Invoice",
+			filters={"patient": p.name, "docstatus": 1},
+			fields=["name", "status", "grand_total"],
+			order_by="posting_date desc",
+			limit=1,
+		)
+
+		if invoices:
+			inv = invoices[0]
+			if inv.status == "Paid":
+				status = "Invoice Paid"
+			elif inv.status in ("Unpaid", "Overdue"):
+				status = "Awaiting Payment"
+			else:
+				status = "Invoice Created"
+		else:
+			quotations = frappe.get_all(
+				"Quotation",
+				filters={"party_name": p.name},
+				fields=["name", "status"],
+				order_by="transaction_date desc",
+				limit=1,
+			)
+			if quotations:
+				q = quotations[0]
+				if q.status == "Ordered":
+					status = "Quote Accepted"
+				elif q.status in ("Open", "Draft"):
+					status = "Quoted"
+				elif q.status == "Lost":
+					status = "Quote Declined"
+				else:
+					status = "Quoted"
+			else:
+				# Patient exists but no quote yet
+				status = "Intake Complete"
+
+		# Mask patient name: "Test P."
+		masked = f"{p.first_name} {(p.last_name or '')[0]}." if p.last_name else p.first_name
+
+		pipeline.append({
+			"name": p.name,
+			"referral_id": "",
+			"patient_first_name": p.first_name,
+			"patient_last_name": p.last_name,
+			"patient_name_display": masked,
+			"referral_date": str(p.creation.date()) if p.creation else "",
+			"current_journey_status": status,
+			"last_status_update": "",
+			"assigned_sales_team_member": "",
+		})
+
+	return pipeline
+
+
 @frappe.whitelist()
 def get_dashboard_data():
 	"""Get comprehensive dashboard data for Sales Agent"""
@@ -16,14 +90,14 @@ def get_dashboard_data():
 	if not agent:
 		return {"message": "No Sales Agent profile found for this user."}
 	
-	# Get referrals
-	# Patient Referral uses User (email) for sales_agent link
+	# Get referrals from Patient Referral doctype
 	referrals = frappe.get_all(
 		"Patient Referral",
 		filters={"sales_agent": user},
 		fields=[
 			"name",
 			"referral_id",
+			"patient",
 			"patient_first_name",
 			"patient_last_name",
 			"patient_name_display",
@@ -35,6 +109,30 @@ def get_dashboard_data():
 		order_by="referral_date desc",
 		limit=10
 	)
+
+	# Also build pipeline from patients linked via Sales Partner
+	# This catches patients referred through custom_ref_sales_partner
+	pipeline = _build_patient_pipeline(agent, user)
+	# Build lookup of dynamically computed statuses by patient ID
+	pipeline_status_by_patient = {
+		e.get("name"): e.get("current_journey_status")
+		for e in pipeline if e.get("name")
+	}
+	# Update stale Patient Referral statuses with dynamically computed ones
+	referral_patient_names = set()
+	for r in referrals:
+		patient_id = r.get("patient")
+		if patient_id and patient_id in pipeline_status_by_patient:
+			r["current_journey_status"] = pipeline_status_by_patient[patient_id]
+		referral_patient_names.add(r.get("patient_first_name", "") + " " + r.get("patient_last_name", ""))
+	# Add pipeline entries that aren't already in referrals
+	for entry in pipeline:
+		display = entry.get("patient_name_display", "")
+		if display not in referral_patient_names:
+			referrals.append(entry)
+
+	# Sort combined list by date descending
+	referrals.sort(key=lambda r: r.get("referral_date") or "", reverse=True)
 	
 	# Get commission summary
 	commission_summary = get_commission_summary(agent)
@@ -55,7 +153,7 @@ def get_dashboard_data():
 	# Get KPI Stats
 	kpi_stats = get_kpi_stats(agent)
 	
-	# Get Commission History
+	# Get Commission History with user-friendly display status
 	commission_history = frappe.get_all(
 		"Sales Agent Accrual",
 		filters={"sales_agent": agent},
@@ -63,6 +161,45 @@ def get_dashboard_data():
 		order_by="creation desc",
 		limit=10
 	)
+
+	# Calculate how much has been paid out to determine display status
+	paid_payouts = frappe.get_all(
+		"Sales Agent Payout Request",
+		filters={"sales_agent": agent, "status": "Paid", "docstatus": 1},
+		fields=["amount"]
+	)
+	total_paid_out = sum(p.amount or 0 for p in paid_payouts)
+
+	pending_payouts = frappe.get_all(
+		"Sales Agent Payout Request",
+		filters={"sales_agent": agent, "status": ["in", ["Pending", "Approved"]], "docstatus": 1},
+		fields=["amount"]
+	)
+	total_pending_payout = sum(p.amount or 0 for p in pending_payouts)
+
+	# Walk accruals in FIFO order to assign display status
+	accruals_fifo = frappe.get_all(
+		"Sales Agent Accrual",
+		filters={"sales_agent": agent},
+		fields=["name", "accrued_amount"],
+		order_by="creation asc"
+	)
+	display_status_map = {}
+	paid_remaining = total_paid_out
+	pending_remaining = total_pending_payout
+	for acc in accruals_fifo:
+		amt = acc.accrued_amount or 0
+		if paid_remaining >= amt:
+			display_status_map[acc.name] = "Paid Out"
+			paid_remaining -= amt
+		elif pending_remaining > 0:
+			display_status_map[acc.name] = "Payout Requested"
+			pending_remaining -= amt
+		else:
+			display_status_map[acc.name] = "In Wallet"
+
+	for comm in commission_history:
+		comm["display_status"] = display_status_map.get(comm.name, "In Wallet")
 	
 	# Check for banking details
 	bank_details_configured = frappe.db.exists("Sales Agent Bank Details", {"sales_agent": user})
@@ -97,9 +234,21 @@ def get_commission_summary(agent=None):
 	
 	# Calculate totals
 	# Status: Accrued, Requested, Paid
-	total_earned = sum(c.accrued_amount or 0 for c in commissions if c.status == "Paid")
-	pending = sum(c.accrued_amount or 0 for c in commissions if c.status in ["Accrued", "Requested"])
+	total_earned = sum(c.accrued_amount or 0 for c in commissions)
+	total_accrued_and_requested = sum(
+		c.accrued_amount or 0 for c in commissions if c.status in ["Accrued", "Requested"]
+	)
 	paid = sum(c.accrued_amount or 0 for c in commissions if c.status == "Paid")
+
+	# Available = total unpaid commissions minus pending/approved payout requests
+	pending_payouts = frappe.get_all(
+		"Sales Agent Payout Request",
+		filters={"sales_agent": agent, "status": ["in", ["Pending", "Approved"]], "docstatus": 1},
+		fields=["amount"]
+	)
+	total_pending_payouts = sum(p.amount or 0 for p in pending_payouts)
+	available = max(total_accrued_and_requested - total_pending_payouts, 0)
+	pending = total_accrued_and_requested
 	
 	# This month vs last month
 	today = getdate()
@@ -132,6 +281,7 @@ def get_commission_summary(agent=None):
 	
 	return {
 		"total_earned": total_earned,
+		"available": available,
 		"pending": pending,
 		"paid": paid,
 		"this_month": this_month,
@@ -142,22 +292,31 @@ def get_commission_summary(agent=None):
 
 @frappe.whitelist()
 def get_status_distribution(agent=None):
-	"""Get distribution of referral statuses"""
+	"""Get distribution of referral statuses (from both Patient Referral and Sales Partner patients)"""
 	if not agent:
 		user = frappe.session.user
 		agent = frappe.db.get_value("Sales Agent", {"user": user}, "name")
-	
+
+	user = frappe.db.get_value("Sales Agent", agent, "user") or frappe.session.user
+
+	# From Patient Referral
 	referrals = frappe.get_all(
 		"Patient Referral",
-		filters={"sales_agent": agent},
+		filters={"sales_agent": user},
 		fields=["current_journey_status"]
 	)
-	
+
 	status_counts = {}
 	for ref in referrals:
 		status = ref.current_journey_status or "Unknown"
 		status_counts[status] = status_counts.get(status, 0) + 1
-	
+
+	# Also include pipeline patients
+	pipeline = _build_patient_pipeline(agent, user)
+	for entry in pipeline:
+		status = entry.get("current_journey_status", "Unknown")
+		status_counts[status] = status_counts.get(status, 0) + 1
+
 	return status_counts
 
 
@@ -371,10 +530,8 @@ def create_referral(first_name, last_name, email, mobile_no, sex=None, dob=None)
 @frappe.whitelist()
 def get_kpi_stats(agent):
 	"""Calculate KPI statistics for the agent"""
-	# Agent passed is the Name. Patient Referral links to User Email.
-	# We need to get the user email for this agent.
 	user_email = frappe.db.get_value("Sales Agent", agent, "user")
-	
+
 	if not user_email:
 		return {
 			"total_referrals": 0,
@@ -383,37 +540,38 @@ def get_kpi_stats(agent):
 			"avg_ticket": 0
 		}
 
-	# 1. New Referrals (This Week)
-	total_referrals = frappe.db.count("Patient Referral", {"sales_agent": user_email})
-	
-	# 2. Conversion Rate
-	converted_count = frappe.db.count("Patient Referral", {
-		"sales_agent": user_email,
-		"current_journey_status": ["in", ["Prescription Issued", "Invoice Paid", "Medication Dispatched", "Completed", "Converted"]]
-	})
-	
-	conversion_rate = 0
-	if total_referrals > 0:
-		conversion_rate = (converted_count / total_referrals) * 100
-		
-	# 3. Total Patients
-	total_patients = frappe.db.count("Patient Referral", {"sales_agent": user_email}) 
-	
-	# 4. Avg Ticket
+	# Collect patient names from both sources
+	referral_patients = frappe.get_all(
+		"Patient Referral", filters={"sales_agent": user_email}, pluck="patient"
+	)
+	partner_patients = frappe.get_all(
+		"Patient", filters={"custom_ref_sales_partner": agent}, pluck="name"
+	)
+	all_patients = list(set(referral_patients + partner_patients))
+
+	total_referrals = len(all_patients)
+
+	# Conversion = patients with a paid invoice
+	converted_count = 0
+	if all_patients:
+		converted_count = frappe.db.count(
+			"Sales Invoice",
+			{"patient": ["in", all_patients], "status": "Paid", "docstatus": 1},
+		)
+
+	conversion_rate = (converted_count / total_referrals * 100) if total_referrals else 0
+
+	total_patients = total_referrals
+
+	# Avg ticket from paid invoices
 	avg_ticket = 0
-	
-	# Get all patient names for this agent
-	patient_names = frappe.get_all("Patient Referral", filters={"sales_agent": user_email}, pluck="patient")
-	
-	if patient_names:
-		# Get average invoice amount for these patients
+	if all_patients:
 		result = frappe.db.sql("""
-			SELECT AVG(grand_total) 
-			FROM `tabSales Invoice` 
-			WHERE patient IN %(patients)s 
-			AND status = 'Paid'
-		""", {"patients": patient_names})
-		
+			SELECT AVG(grand_total)
+			FROM `tabSales Invoice`
+			WHERE patient IN %(patients)s
+			AND status = 'Paid' AND docstatus = 1
+		""", {"patients": all_patients})
 		if result and result[0][0]:
 			avg_ticket = result[0][0]
 			

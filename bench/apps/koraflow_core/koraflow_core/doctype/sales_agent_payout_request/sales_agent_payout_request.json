@@ -92,12 +92,7 @@
             "create": 1,
             "read": 1,
             "role": "Sales Agent Portal",
-            "write": 1
-        },
-        {
-            "create": 1,
-            "read": 1,
-            "role": "Sales Agent",
+            "submit": 1,
             "write": 1
         }
     ],

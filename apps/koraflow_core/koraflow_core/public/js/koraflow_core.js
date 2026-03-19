@@ -459,5 +459,36 @@ koraflow.modules = {
 	}
 };
 
+// Hide form sidebar elements for non-Administrator users
+(function() {
+	function hideSidebarElements() {
+		if (typeof frappe === 'undefined' || !frappe.session) {
+			setTimeout(hideSidebarElements, 100);
+			return;
+		}
 
+		if (frappe.session.user === "Administrator") {
+			return;
+		}
+
+		const style = document.createElement('style');
+		style.textContent = `
+			.form-assignments,
+			.form-tags,
+			.form-shared,
+			.form-reviews,
+			.followed-by-section,
+			.form-sidebar-stats,
+			.form-sidebar-stats + hr,
+			.sidebar-menu .modified-by,
+			.sidebar-menu .created-by,
+			.sidebar-menu .pageview-count {
+				display: none !important;
+			}
+		`;
+		document.head.appendChild(style);
+	}
+
+	hideSidebarElements();
+})();
 

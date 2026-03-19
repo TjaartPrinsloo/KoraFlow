@@ -458,7 +458,33 @@ koraflow.modules = {
 			}
 		});
 	}
-};// ======================================================
+};
+
+// ======================================================
+// HIDE SIDEBAR CLUTTER (Assigned To, Tags, Share, etc.)
+// Hidden for ALL users including Administrator
+// ======================================================
+(function () {
+	if (!document.getElementById('s2w-hide-sidebar-clutter')) {
+		var style = document.createElement('style');
+		style.id = 's2w-hide-sidebar-clutter';
+		style.textContent =
+			'.form-assignments { display: none !important; }' +
+			'.form-tags { display: none !important; }' +
+			'.form-shared { display: none !important; }' +
+			'.form-reviews { display: none !important; }' +
+			'.followed-by-section { display: none !important; }' +
+			'.form-sidebar-stats { display: none !important; }' +
+			'.form-sidebar hr { display: none !important; }' +
+			'.sidebar-menu .modified-by { display: none !important; }' +
+			'.sidebar-menu .created-by { display: none !important; }' +
+			'.sidebar-menu .pageview-count { display: none !important; }' +
+			'.sidebar-menu.text-muted { display: none !important; }';
+		document.head.appendChild(style);
+	}
+})();
+
+// ======================================================
 // HIDE TIMELINE (AUDIT TRAIL) FOR NON-ADMIN USERS
 // Only System Manager / Administrator can see the timeline
 // ======================================================
@@ -506,7 +532,7 @@ koraflow.modules = {
 		if (!isAdmin && !document.getElementById('s2w-hide-help')) {
 			var style = document.createElement('style');
 			style.id = 's2w-hide-help';
-			style.textContent = '.dropdown-help { display: none !important; } #navbar-search, .search-bar { display: none !important; }';
+			style.textContent = '.dropdown-help { display: none !important; } #navbar-search, .search-bar { display: none !important; } .onboarding-widget-box { display: none !important; } .print-preview-sidebar { display: none !important; } a[href*="print_designer"] { display: none !important; } .form-page .layout-side-section .form-sidebar { display: none !important; } .form-page .layout-side-section { display: none !important; } .form-page .layout-main-section { flex: 0 0 100% !important; max-width: 100% !important; }';
 			document.head.appendChild(style);
 
 			// Hide specific profile dropdown items

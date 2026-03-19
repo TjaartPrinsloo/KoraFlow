@@ -16,8 +16,12 @@ class GLP1PharmacyDispenseTask(Document):
 
 	def on_update(self):
 		"""Update batch availability when task is opened"""
-		if self.status == "Pending" and not self.batch_availability:
+		if self.status in ("Pending", "In Progress") and not self.batch_availability:
 			self.populate_batch_availability()
+			if self.batch_availability:
+				self.db_update()
+				for row in self.batch_availability:
+					row.db_insert()
 
 	@frappe.whitelist()
 	def dispense_and_ship(self):
@@ -54,6 +58,7 @@ class GLP1PharmacyDispenseTask(Document):
 		if not pharm_warehouse:
 			return
 
+		# Try batched stock first
 		batches = frappe.db.sql("""
 			SELECT
 				b.name as batch,
@@ -70,9 +75,28 @@ class GLP1PharmacyDispenseTask(Document):
 			ORDER BY b.expiry_date ASC
 		""", (medication_item, pharm_warehouse), as_dict=True)
 
-		for batch in batches:
-			self.append("batch_availability", {
-				"batch": batch.batch,
-				"expiry_date": batch.expiry_date,
-				"available_quantity": batch.available_qty
-			})
+		if batches:
+			for batch in batches:
+				self.append("batch_availability", {
+					"batch": batch.batch,
+					"expiry_date": batch.expiry_date,
+					"available_quantity": batch.available_qty
+				})
+		else:
+			# Fallback: check unbatched stock (no batch_no)
+			unbatched = frappe.db.sql("""
+				SELECT SUM(actual_qty) as available_qty
+				FROM `tabStock Ledger Entry`
+				WHERE item_code = %s
+				AND warehouse = %s
+				AND is_cancelled = 0
+				AND (batch_no IS NULL OR batch_no = '')
+				HAVING available_qty > 0
+			""", (medication_item, pharm_warehouse), as_dict=True)
+
+			if unbatched and unbatched[0].available_qty:
+				self.append("batch_availability", {
+					"batch": None,
+					"expiry_date": None,
+					"available_quantity": unbatched[0].available_qty
+				})

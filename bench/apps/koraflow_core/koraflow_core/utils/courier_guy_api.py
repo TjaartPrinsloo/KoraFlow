@@ -323,7 +323,7 @@ class CourierGuyAPI:
 				"street_address": waybill_doc.pickup_address or "",
 				"local_area": waybill_doc.pickup_suburb or "",
 				"city": waybill_doc.pickup_city or "",
-				"zone": self.settings.pickup_zone or "",
+				"zone": getattr(self.settings, 'pickup_zone', '') or "",
 				"country": country_code(waybill_doc.pickup_country),
 				"code": waybill_doc.pickup_postal_code or ""
 			},
@@ -349,10 +349,10 @@ class CourierGuyAPI:
 			},
 			"parcels": [{
 				"parcel_description": "Medication",
-				"submitted_length_cm": float(self.settings.default_parcel_length_cm or 20),
-				"submitted_width_cm": float(self.settings.default_parcel_width_cm or 20),
-				"submitted_height_cm": float(self.settings.default_parcel_height_cm or 10),
-				"submitted_weight_kg": float(waybill_doc.total_weight or self.settings.default_parcel_weight_kg or 2)
+				"submitted_length_cm": float(getattr(self.settings, 'default_parcel_length_cm', 0) or 20),
+				"submitted_width_cm": float(getattr(self.settings, 'default_parcel_width_cm', 0) or 20),
+				"submitted_height_cm": float(getattr(self.settings, 'default_parcel_height_cm', 0) or 10),
+				"submitted_weight_kg": float(waybill_doc.total_weight or getattr(self.settings, 'default_parcel_weight_kg', 0) or 2)
 			}],
 			"service_level_code": waybill_doc.service_level_code or self._get_service_level_code(waybill_doc.service_type),
 			"declared_value": float(waybill_doc.total_value or 0),
@@ -393,26 +393,37 @@ class CourierGuyAPI:
 
 	def get_tracking(self, tracking_number: str) -> Dict:
 		"""
-		Get tracking information for a waybill
+		Get tracking information for a waybill.
+
+		Shiplogic has no dedicated /tracking endpoint. We fetch the shipment
+		by tracking reference and extract status + tracking events from it.
 
 		Args:
-			tracking_number: Tracking number
+			tracking_number: Short tracking reference (e.g. MB6T3N)
 
 		Returns:
 			Tracking information dictionary
 		"""
-		response = self._make_request("GET", f"/tracking/{tracking_number}")
+		# Fetch shipment by tracking reference
+		response = self._make_request("GET", "/shipments", {"tracking_reference": tracking_number})
 
 		if response.get("success"):
 			data = response.get("data", {})
+			shipments = data if isinstance(data, list) else data.get("shipments", [])
+
+			if not shipments:
+				return {"success": False, "error": f"No shipment found for tracking reference {tracking_number}"}
+
+			shipment = shipments[0]
+			events = shipment.get("tracking_events") or []
 
 			return {
 				"success": True,
-				"status": data.get("status", ""),
-				"history": data.get("history", data.get("tracking_history", data.get("tracking_events", []))),
-				"current_location": data.get("current_location", ""),
-				"estimated_delivery": data.get("estimated_delivery", ""),
-				"raw_response": data
+				"status": shipment.get("status", ""),
+				"history": events,
+				"current_location": "",
+				"estimated_delivery": "",
+				"raw_response": shipment
 			}
 		else:
 			return {
@@ -423,24 +434,26 @@ class CourierGuyAPI:
 
 	def get_waybill_print(self, waybill_number: str) -> Dict:
 		"""
-		Get waybill print URL or PDF
+		Get waybill label PDF URL.
+
+		Shiplogic endpoint: GET /shipments/label?tracking_reference=X
 
 		Args:
-			waybill_number: Waybill number
+			waybill_number: Short tracking reference (e.g. MB6T3N)
 
 		Returns:
 			Print URL or PDF data
 		"""
-		response = self._make_request("GET", f"/shipments/{waybill_number}/label")
+		response = self._make_request("GET", "/shipments/label", {"tracking_reference": waybill_number})
 
 		if response.get("success"):
 			data = response.get("data", {})
 
 			return {
 				"success": True,
-				"print_url": data.get("print_url") or data.get("url"),
-				"pdf_url": data.get("pdf_url") or data.get("pdf"),
-				"pdf_data": data.get("pdf_data") or data.get("base64_pdf"),
+				"print_url": data.get("url") or data.get("print_url"),
+				"pdf_url": data.get("url") or data.get("pdf_url"),
+				"filename": data.get("filename"),
 				"raw_response": data
 			}
 		else:

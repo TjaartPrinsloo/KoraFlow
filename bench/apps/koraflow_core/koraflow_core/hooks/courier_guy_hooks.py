@@ -47,8 +47,9 @@ def create_waybill_on_delivery_note_submit(doc, method):
 		})
 		waybill.insert(ignore_permissions=True)
 
-		# Link waybill to delivery note
-		frappe.db.set_value("Delivery Note", doc.name, "courier_guy_waybill", waybill.name)
+		# Link waybill to delivery note (if custom field exists)
+		if frappe.db.has_column("Delivery Note", "courier_guy_waybill"):
+			frappe.db.set_value("Delivery Note", doc.name, "courier_guy_waybill", waybill.name)
 		frappe.db.commit()
 
 		frappe.msgprint(

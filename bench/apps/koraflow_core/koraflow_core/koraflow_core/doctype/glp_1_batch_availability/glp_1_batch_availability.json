@@ -16,7 +16,7 @@
    "in_list_view": 1,
    "label": "Batch",
    "options": "Batch",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "fieldname": "expiry_date",

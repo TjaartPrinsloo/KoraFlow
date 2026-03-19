@@ -171,8 +171,9 @@ override_whitelisted_methods = {
 
 # Login hooks
 on_login = "koraflow_core.koraflow_core.utils.auth.on_login"
+on_session_creation = "koraflow_core.koraflow_core.utils.auth.on_session_creation"
+get_website_user_home_page = "koraflow_core.koraflow_core.utils.auth.get_website_user_home_page"
 
-# Before request hook - redirect Sales Agents from /app/build to dashboard
 # Before request hook - redirect Sales Agents from /app/build to dashboard
 before_request = [
 	"koraflow_core.koraflow_core.utils.auth.redirect_sales_agents"
