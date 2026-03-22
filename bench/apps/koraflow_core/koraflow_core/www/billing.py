@@ -65,8 +65,17 @@ def get_context(context):
 			ignore_permissions=True
 		)
 
-	# Safety: Ensure defaults
+	# Check for POP attachments on each invoice
 	for inv in context.invoices:
 		if not inv.currency: inv.currency = "ZAR"
+		pop_file = frappe.db.get_value(
+			"File",
+			{"attached_to_doctype": "Sales Invoice", "attached_to_name": inv.name, "attached_to_field": "pop_attachment"},
+			["name", "file_name", "file_url"],
+			as_dict=True
+		)
+		inv.has_pop = bool(pop_file)
+		inv.pop_file_name = pop_file.file_name if pop_file else None
+
 	for qt in context.quotations:
 		if not qt.currency: qt.currency = "ZAR"

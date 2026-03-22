@@ -228,6 +228,67 @@ def reject_quotation(quotation_name):
 		}
 
 @frappe.whitelist()
+def upload_pop(invoice_name):
+	"""
+	Upload Proof of Payment for a Sales Invoice.
+	Validates patient ownership, then attaches the uploaded file to the invoice.
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Please log in to perform this action"), frappe.PermissionError)
+
+	# Validate ownership
+	patient_name = frappe.db.get_value("Patient", {"email": frappe.session.user}, "name")
+	if not patient_name and "System Manager" in frappe.get_roles():
+		patient_name = frappe.db.get_value("Patient", {"email": "lezel@koraflow.com"}, "name")
+		if not patient_name:
+			patient_name = frappe.db.get_value("Patient", {}, "name")
+
+	if not patient_name:
+		frappe.throw(_("Patient record not found"), frappe.PermissionError)
+
+	customer_name = frappe.db.get_value("Patient", patient_name, "customer")
+	invoice_customer = frappe.db.get_value("Sales Invoice", invoice_name, "customer")
+
+	if not invoice_customer or invoice_customer != customer_name:
+		frappe.throw(_("Access Denied"), frappe.PermissionError)
+
+	# Get the uploaded file from the request
+	filedata = frappe.request.files.get("file")
+	if not filedata:
+		frappe.throw(_("No file uploaded"))
+
+	# Remove any existing POP attachment for this invoice
+	existing = frappe.db.get_value(
+		"File",
+		{"attached_to_doctype": "Sales Invoice", "attached_to_name": invoice_name, "attached_to_field": "pop_attachment"},
+		"name"
+	)
+	if existing:
+		frappe.delete_doc("File", existing, ignore_permissions=True)
+
+	# Save the file and attach to the invoice
+	from frappe.utils.file_manager import save_file
+	file_doc = save_file(
+		fname=filedata.filename,
+		content=filedata.read(),
+		dt="Sales Invoice",
+		dn=invoice_name,
+		folder="Home/Attachments",
+		is_private=1
+	)
+	# Tag it so we can identify POP attachments specifically
+	file_doc.attached_to_field = "pop_attachment"
+	file_doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {
+		"success": True,
+		"message": _("Proof of Payment uploaded successfully."),
+		"file_name": file_doc.file_name
+	}
+
+
+@frappe.whitelist()
 def download_quotation_pdf(quotation_name):
 	"""
 	Generates and returns the branded Quotation PDF.
