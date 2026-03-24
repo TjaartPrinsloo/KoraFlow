@@ -18,6 +18,11 @@
         window.csrf_token = "{{ frappe.session.csrf_token }}";
         window.sales_agent_id = "{{ frappe.session.user }}";
 
+        // Server-rendered data (avoids AJAX auth issues for initial load)
+        window._dashboardData = {{ dashboard_data }};
+        window._crmData = {{ crm_data }};
+        window._followupsData = {{ followups_data }};
+
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -87,6 +92,21 @@
         .modal-overlay.active {
             display: flex;
         }
+
+        .active-activity-type {
+            background-color: #2D2D2D !important;
+            color: #C1E12F !important;
+            border-color: #2D2D2D !important;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 19px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
     </style>
 </head>
 
@@ -108,9 +128,13 @@
             </div>
         </div>
         <nav class="flex-1 px-4 py-4 space-y-2">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group" href="/sales_agent_dashboard">
+            <a id="nav-dashboard" href="javascript:void(0)" class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav group cursor-pointer" onclick="switchTab('dashboard')">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-semibold text-sm">Dashboard</span>
+            </a>
+            <a id="nav-crm" href="javascript:void(0)" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group cursor-pointer" onclick="switchTab('crm')">
+                <span class="material-symbols-outlined">contact_phone</span>
+                <span class="font-semibold text-sm">CRM</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                 href="/sales_agent_profile">
@@ -153,6 +177,9 @@
         </header>
 
         <div class="p-8 max-w-7xl mx-auto space-y-8 flex-grow w-full">
+
+            <!-- Tab Content: Dashboard -->
+            <div id="tab-dashboard">
 
             <!-- Welcome Section -->
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -370,6 +397,153 @@
                     <p id="stat-ticket" class="text-3xl font-black text-charcoal dark:text-white font-display">R 0</p>
                 </div>
             </footer>
+
+            </div><!-- end tab-dashboard -->
+
+            <!-- Tab Content: CRM -->
+            <div id="tab-crm" class="hidden space-y-8">
+
+                <!-- Admin Agent Filter (only visible to System Managers) -->
+                <div id="crm-agent-filter" class="hidden">
+                    <div class="flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+                        <span class="material-symbols-outlined text-slate-400">filter_alt</span>
+                        <label class="text-sm font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">View Agent:</label>
+                        <select id="crm-agent-select"
+                            onchange="onAgentFilterChange()"
+                            class="flex-1 bg-slate-50 border border-slate-200 text-slate-700 py-2 px-3 rounded-lg text-sm focus:ring-primary focus:border-primary">
+                            <option value="">Select an agent...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CRM Header -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 class="text-4xl font-black font-display tracking-tight text-charcoal dark:text-white mb-2">
+                            CRM Overview
+                        </h1>
+                        <p class="text-slate-500 dark:text-slate-400 max-w-xl">
+                            Track outstanding quotes and invoices. Follow up with patients to drive conversions.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CRM Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-amber-500 text-lg">description</span>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Outstanding Quotes</p>
+                        </div>
+                        <p id="crm-stat-quotes-count" class="text-3xl font-black text-charcoal dark:text-white font-display">0</p>
+                        <p id="crm-stat-quotes-value" class="text-xs text-slate-500 font-bold mt-1">R 0.00</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-red-500 text-lg">warning</span>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Overdue Invoices</p>
+                        </div>
+                        <p id="crm-stat-invoices-count" class="text-3xl font-black text-charcoal dark:text-white font-display">0</p>
+                        <p id="crm-stat-invoices-value" class="text-xs text-slate-500 font-bold mt-1">R 0.00</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-blue-500 text-lg">send</span>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Reminders This Month</p>
+                        </div>
+                        <p id="crm-stat-reminders" class="text-3xl font-black text-charcoal dark:text-white font-display">0</p>
+                    </div>
+                </div>
+
+                <!-- Follow-ups Due Section -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-black/20">
+                        <h2 class="text-lg font-bold text-charcoal dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-purple-500">event</span>
+                            Follow-ups Due
+                        </h2>
+                        <span id="followup-count-badge" class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded uppercase tracking-wider">0 Pending</span>
+                    </div>
+                    <div id="followups-container" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <div class="px-6 py-8 text-center text-slate-400 font-medium">Loading follow-ups...</div>
+                    </div>
+                </section>
+
+                <!-- Outstanding Quotes Table -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-black/20">
+                        <h2 class="text-lg font-bold text-charcoal dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-500">description</span>
+                            Outstanding Quotes
+                        </h2>
+                        <span class="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded uppercase tracking-wider">Pending Acceptance</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-black/40 border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Patient</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Status</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Amount</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Date</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Waiting</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crm-quotes-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-slate-400 font-medium">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Outstanding Invoices Table -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-black/20">
+                        <h2 class="text-lg font-bold text-charcoal dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-red-500">receipt_long</span>
+                            Outstanding Invoices
+                        </h2>
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-bold rounded uppercase tracking-wider">Unpaid / Overdue</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-black/40 border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Patient</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Status</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Amount</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Due Date</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Overdue</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crm-invoices-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-slate-400 font-medium">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Reminder Log -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-black/20">
+                        <h2 class="text-lg font-bold text-charcoal dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-blue-500">history</span>
+                            Reminder Log
+                        </h2>
+                    </div>
+                    <div id="crm-reminder-log" class="p-6 space-y-3 min-h-[80px]">
+                        <div class="text-center text-slate-400 font-medium py-4">No reminders sent yet.</div>
+                    </div>
+                </section>
+
+            </div><!-- end tab-crm -->
+
         </div>
     </main>
 
@@ -619,7 +793,163 @@
         </div>
     </div>
 
-    <script src="/assets/koraflow_core/js/sales_agent_dashboard_web.js?v=11"></script>
+    <!-- Reminder Confirmation Modal -->
+    <div id="reminder-modal" class="modal-overlay">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all scale-100">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-black/20">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-primary">Reminder</span>
+                    <button onclick="closeReminderModal()" class="text-slate-400 hover:text-charcoal transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <h2 class="text-2xl font-black text-charcoal dark:text-white font-display">Send Reminder</h2>
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="flex items-center gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-charcoal font-bold">
+                        <span class="material-symbols-outlined">person</span>
+                    </div>
+                    <div>
+                        <p id="reminder-patient-name" class="font-bold text-charcoal dark:text-white">Patient Name</p>
+                        <p id="reminder-type-label" class="text-sm text-slate-500">Reminder Type</p>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    A POPIA-compliant reminder email will be sent to this patient. The email contains no medical information - only a prompt to log in and review their pending item.
+                </p>
+                <input type="hidden" id="reminder-referral" value="" />
+                <input type="hidden" id="reminder-type" value="" />
+                <div class="flex gap-4">
+                    <button onclick="closeReminderModal()"
+                        class="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                        Cancel
+                    </button>
+                    <button id="confirm-reminder-btn" onclick="confirmSendReminder()"
+                        class="flex-[2] bg-primary hover:bg-primary/90 text-charcoal py-3 rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">send</span>
+                        Send Reminder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Activity Modal -->
+    <div id="activity-modal" class="modal-overlay">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all scale-100">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-black/20">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-primary">Activity</span>
+                    <button onclick="closeActivityModal()" class="text-slate-400 hover:text-charcoal transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <h2 class="text-2xl font-black text-charcoal dark:text-white font-display">Log Activity</h2>
+                <p id="activity-patient-label" class="text-sm text-slate-500 font-medium mt-1">Patient Name</p>
+            </div>
+            <div class="px-8 py-6 space-y-5">
+                <input type="hidden" id="activity-referral" value="" />
+
+                <!-- Activity Type -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Activity Type</label>
+                    <div class="grid grid-cols-3 gap-2" id="activity-type-grid">
+                        <button type="button" onclick="selectActivityType(this, 'Call')"
+                            class="activity-type-btn px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">call</span> Call
+                        </button>
+                        <button type="button" onclick="selectActivityType(this, 'WhatsApp')"
+                            class="activity-type-btn px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">chat</span> WhatsApp
+                        </button>
+                        <button type="button" onclick="selectActivityType(this, 'Email')"
+                            class="activity-type-btn px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">mail</span> Email
+                        </button>
+                        <button type="button" onclick="selectActivityType(this, 'Meeting')"
+                            class="activity-type-btn px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">groups</span> Meeting
+                        </button>
+                        <button type="button" onclick="selectActivityType(this, 'Note')"
+                            class="activity-type-btn active-activity-type px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">edit_note</span> Note
+                        </button>
+                        <button type="button" onclick="selectActivityType(this, 'Other')"
+                            class="activity-type-btn px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">more_horiz</span> Other
+                        </button>
+                    </div>
+                    <input type="hidden" id="activity-type-value" value="Note" />
+                </div>
+
+                <!-- Note -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Note</label>
+                    <textarea id="activity-note" rows="3"
+                        class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium text-charcoal focus:ring-2 focus:ring-primary"
+                        placeholder="e.g. Called patient, will pay on Friday..."></textarea>
+                </div>
+
+                <!-- Follow-up Date (Optional) -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                        Schedule Follow-up <span class="text-slate-400 normal-case">(optional)</span>
+                    </label>
+                    <input type="date" id="activity-followup-date"
+                        class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium text-charcoal focus:ring-2 focus:ring-primary" />
+                    <p class="text-[10px] text-slate-400 mt-1">Set a date to be reminded to follow up with this patient.</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 pt-2">
+                    <button onclick="closeActivityModal()"
+                        class="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                        Cancel
+                    </button>
+                    <button id="submit-activity-btn" onclick="submitActivity()"
+                        class="flex-[2] bg-primary hover:bg-primary/90 text-charcoal py-3 rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">check</span>
+                        Log Activity
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Timeline Modal -->
+    <div id="timeline-modal" class="modal-overlay">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all scale-100">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-black/20">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-primary">Timeline</span>
+                    <button onclick="closeTimelineModal()" class="text-slate-400 hover:text-charcoal transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <h2 id="timeline-patient-name" class="text-2xl font-black text-charcoal dark:text-white font-display">Patient Activity</h2>
+                <div class="flex items-center gap-3 mt-2">
+                    <span id="timeline-status-badge" class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-bold rounded uppercase tracking-wider">Status</span>
+                    <span id="timeline-followup-badge" class="hidden px-2 py-0.5 bg-purple-100 text-purple-800 text-xs font-bold rounded uppercase tracking-wider">Follow-up: --</span>
+                </div>
+            </div>
+            <div class="px-8 py-6">
+                <!-- Log Activity Button at top -->
+                <button id="timeline-log-btn" onclick="openActivityFromTimeline()"
+                    class="w-full mb-6 px-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">add</span>
+                    Log New Activity
+                </button>
+
+                <!-- Timeline Entries -->
+                <div id="timeline-entries" class="space-y-0 relative">
+                    <div class="text-center text-slate-400 font-medium py-4">Loading timeline...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/koraflow_core/js/sales_agent_dashboard_web.js?v=13"></script>
 </body>
 
 </html>

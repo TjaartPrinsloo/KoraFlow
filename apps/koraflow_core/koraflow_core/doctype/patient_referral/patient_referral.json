@@ -22,6 +22,9 @@
   "patient_last_name",
   "column_break_2",
   "patient_name_display",
+  "followup_section",
+  "next_followup_date",
+  "followup_note",
   "notes_section",
   "agent_notes",
   "column_break_3",
@@ -160,6 +163,24 @@
    "description": "Internal notes for sales team. Hidden from sales agents."
   },
   {
+   "fieldname": "followup_section",
+   "fieldtype": "Section Break",
+   "label": "Follow-up",
+   "options": "fa fa-clock-o"
+  },
+  {
+   "fieldname": "next_followup_date",
+   "fieldtype": "Date",
+   "label": "Next Follow-up Date",
+   "description": "When should this referral be followed up?"
+  },
+  {
+   "fieldname": "followup_note",
+   "fieldtype": "Small Text",
+   "label": "Follow-up Note",
+   "description": "Brief note about what the follow-up is for."
+  },
+  {
    "fieldname": "commission_section",
    "fieldtype": "Section Break",
    "label": "Commission Information",
@@ -196,7 +217,19 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
+ "links": [
+  {
+   "group": "Activity",
+   "link_doctype": "Referral Message",
+   "link_fieldname": "referral"
+  },
+  {
+   "group": "Activity",
+   "link_doctype": "Comment",
+   "link_fieldname": "reference_name",
+   "parent_doctype": "Patient Referral"
+  }
+ ],
  "modified": "2024-01-01 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "KoraFlow Core",
