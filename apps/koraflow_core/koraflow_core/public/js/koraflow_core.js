@@ -459,6 +459,22 @@ koraflow.modules = {
 	}
 };
 
+// Remove "Create" button group from Patient Encounter form
+frappe.ui.form.on('Patient Encounter', {
+	refresh: function(frm) {
+		// Use setTimeout so this runs after the base form's refresh handler has added its buttons
+		setTimeout(function() {
+			frm.remove_custom_button(__('Vital Signs'), __('Create'));
+			frm.remove_custom_button(__('Medical Record'), __('Create'));
+			frm.remove_custom_button(__('Clinical Procedure'), __('Create'));
+			frm.remove_custom_button(__('Nursing Tasks'), __('Create'));
+			frm.remove_custom_button(__('Inpatient Medication Order'), __('Create'));
+			frm.remove_custom_button(__('Refer Patient'), __('Create'));
+			frm.remove_custom_button(__('Clinical Note'), __('Create'));
+		}, 0);
+	}
+});
+
 // Hide form sidebar elements for non-Administrator users
 (function() {
 	function hideSidebarElements() {
