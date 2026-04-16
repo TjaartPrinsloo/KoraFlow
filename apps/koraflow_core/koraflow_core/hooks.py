@@ -182,6 +182,8 @@ before_request = [
 # User hooks
 
 
+after_migrate = ["koraflow_core.api.setup.create_encounter_rejection_fields"]
+
 # Custom Fields
 custom_fields = {
 	"Patient": [
