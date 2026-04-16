@@ -3,19 +3,27 @@
  * Frontend branding and module management
  */
 
+// IMMEDIATE CSS: Hide menu/print buttons by default, admin JS will re-show them
+(function() {
+	var s = document.createElement('style');
+	s.id = 's2w-immediate-hide';
+	s.textContent = '.menu-btn-group { display: none !important; } .page-icon-group { display: none !important; } .btn-modal-secondary { display: none !important; } .notification-settings { display: none !important; }';
+	document.head.appendChild(s);
+})();
+
 // IMMEDIATE redirect check - must run BEFORE Frappe initializes
 // This runs as soon as the script loads, before frappe.ready
-(function() {
+(function () {
 	if (typeof window !== 'undefined' && window.location) {
 		const path = window.location.pathname;
-		
+
 		// Check if we're on a route that should redirect
 		if (path === "/app/build" || path === "/app/home" || path === "/app/user-profile" || path === "/app/sales-agent-dashboard") {
 			// Function to check if user is Sales Agent
 			function isSalesAgentUser() {
 				// Debug logging
 				console.log('[KoraFlow] Checking if user is Sales Agent, path:', path);
-				
+
 				// Try to get user info from localStorage (Frappe stores boot info there)
 				try {
 					const bootInfo = localStorage.getItem('bootinfo');
@@ -32,7 +40,7 @@
 				} catch (e) {
 					console.log('[KoraFlow] Error reading bootinfo from localStorage:', e);
 				}
-				
+
 				// Also check if boot info is in window (sometimes Frappe puts it there)
 				if (typeof window !== 'undefined' && window.boot && window.boot.user && window.boot.user.roles) {
 					const roles = window.boot.user.roles || [];
@@ -40,7 +48,7 @@
 					const isAgent = roles.includes("Sales Agent") && !roles.includes("Sales Agent Manager") && !roles.includes("System Manager");
 					if (isAgent) return true;
 				}
-				
+
 				// Check frappe.boot if available
 				if (typeof frappe !== 'undefined' && frappe.boot && frappe.boot.user && frappe.boot.user.roles) {
 					const roles = frappe.boot.user.roles || [];
@@ -48,68 +56,68 @@
 					const isAgent = roles.includes("Sales Agent") && !roles.includes("Sales Agent Manager") && !roles.includes("System Manager");
 					if (isAgent) return true;
 				}
-				
+
 				// Fallback: Check page title (if it contains "Sales Agent")
 				if (document.title && document.title.toLowerCase().includes("sales agent")) {
 					console.log('[KoraFlow] Detected Sales Agent from page title:', document.title);
 					return true;
 				}
-				
+
 				console.log('[KoraFlow] User is NOT a Sales Agent');
 				return false;
 			}
-			
+
 			// Function to redirect if user is Sales Agent
 			function checkAndRedirect() {
 				if (isSalesAgentUser()) {
-					console.log('[KoraFlow] User is Sales Agent, redirecting to /app/sales-agent-dash');
-					window.location.replace("/app/sales-agent-dash");
+					console.log('[KoraFlow] User is Sales Agent, redirecting to /sales_agent_dashboard');
+					window.location.replace("/sales_agent_dashboard");
 					return true;
 				}
 				return false;
 			}
-			
+
 			// Check immediately
 			if (checkAndRedirect()) {
 				return;
 			}
-			
+
 			// Check multiple times with increasing delays
 			var checkDelays = [50, 100, 200, 500, 1000, 1500, 2000];
-			checkDelays.forEach(function(delay) {
-				setTimeout(function() {
+			checkDelays.forEach(function (delay) {
+				setTimeout(function () {
 					checkAndRedirect();
 				}, delay);
 			});
-			
+
 			// Also check when frappe.boot becomes available
 			if (typeof frappe !== 'undefined') {
-				const checkInterval = setInterval(function() {
+				const checkInterval = setInterval(function () {
 					if (checkAndRedirect()) {
 						clearInterval(checkInterval);
 					}
 				}, 100);
-				
+
 				// Stop checking after 5 seconds
-				setTimeout(function() {
+				setTimeout(function () {
 					clearInterval(checkInterval);
 				}, 5000);
 			} else {
 				// Wait for frappe to load
-				var frappeCheckInterval = setInterval(function() {
+				var frappeCheckInterval = setInterval(function () {
 					if (typeof frappe !== 'undefined') {
 						clearInterval(frappeCheckInterval);
-						const checkInterval = setInterval(function() {
+						const checkInterval = setInterval(function () {
 							if (checkAndRedirect()) {
 								clearInterval(checkInterval);
 							}
 						}, 100);
-						setTimeout(function() {
+						setTimeout(function () {
 							clearInterval(checkInterval);
 						}, 5000);
 					}
 				}, 50);
-				setTimeout(function() {
+				setTimeout(function () {
 					clearInterval(frappeCheckInterval);
 				}, 5000);
 			}
@@ -131,9 +139,9 @@ koraflow.branding = {
 };
 
 // Apply branding to text
-koraflow.applyBranding = function(text) {
+koraflow.applyBranding = function (text) {
 	if (!text) return text;
-	
+
 	let branded = text;
 	for (const [original, branded_name] of Object.entries(koraflow.branding)) {
 		branded = branded.replace(new RegExp(original, 'g'), branded_name);
@@ -143,14 +151,14 @@ koraflow.applyBranding = function(text) {
 
 // Disable app logo link for Sales Agents (but keep it visible)
 // This must run IMMEDIATELY, not in frappe.ready, to catch clicks before Frappe's router
-(function() {
+(function () {
 	function isSalesAgent() {
 		// Check frappe.boot if available
 		if (typeof frappe !== 'undefined' && frappe.boot && frappe.boot.user) {
 			const roles = frappe.boot.user.roles || [];
 			return roles.includes("Sales Agent") && !roles.includes("Sales Agent Manager") && !roles.includes("System Manager");
 		}
-		
+
 		// Check localStorage bootinfo
 		try {
 			const bootInfo = localStorage.getItem('bootinfo');
@@ -164,20 +172,20 @@ koraflow.applyBranding = function(text) {
 		} catch (e) {
 			// Ignore
 		}
-		
+
 		// Check window.boot
 		if (typeof window !== 'undefined' && window.boot && window.boot.user && window.boot.user.roles) {
 			const roles = window.boot.user.roles || [];
 			return roles.includes("Sales Agent") && !roles.includes("Sales Agent Manager") && !roles.includes("System Manager");
 		}
-		
+
 		return false;
 	}
-	
+
 	if (!isSalesAgent()) {
 		return; // Not a Sales Agent, exit early
 	}
-	
+
 	// Disable the app logo link - make it non-clickable but still visible
 	function disableAppLogo() {
 		// Try multiple selectors to find the app logo link
@@ -192,7 +200,7 @@ koraflow.applyBranding = function(text) {
 			'header a.navbar-brand',
 			'.navbar a.navbar-brand'
 		];
-		
+
 		let appLogoLink = null;
 		for (const selector of selectors) {
 			appLogoLink = document.querySelector(selector);
@@ -201,7 +209,7 @@ koraflow.applyBranding = function(text) {
 			}
 			if (appLogoLink) break;
 		}
-		
+
 		if (appLogoLink && appLogoLink.tagName === 'A') {
 			// Remove href to make it non-clickable
 			appLogoLink.removeAttribute('href');
@@ -210,29 +218,29 @@ koraflow.applyBranding = function(text) {
 			appLogoLink.style.pointerEvents = 'none';
 			appLogoLink.style.textDecoration = 'none';
 			// Prevent any click events (capture phase to catch early)
-			appLogoLink.addEventListener('click', function(e) {
+			appLogoLink.addEventListener('click', function (e) {
 				e.preventDefault();
 				e.stopPropagation();
 				e.stopImmediatePropagation();
 				return false;
 			}, true);
 			// Also prevent on mousedown
-			appLogoLink.addEventListener('mousedown', function(e) {
+			appLogoLink.addEventListener('mousedown', function (e) {
 				e.preventDefault();
 				e.stopPropagation();
 				return false;
 			}, true);
-			
+
 			// Add a class to mark it as disabled
 			appLogoLink.classList.add('koraflow-logo-disabled');
 		}
 	}
-	
+
 	// Intercept ALL clicks on the logo link at document level (capture phase)
 	// This runs BEFORE Frappe's router handlers
-	document.addEventListener('click', function(e) {
+	document.addEventListener('click', function (e) {
 		if (!isSalesAgent()) return;
-		
+
 		const target = e.target.closest('a.navbar-brand.navbar-home, a.navbar-brand[href="/app"], a.navbar-brand[href*="/app"]');
 		if (target && target.href && target.href.includes('/app')) {
 			e.preventDefault();
@@ -241,35 +249,38 @@ koraflow.applyBranding = function(text) {
 			return false;
 		}
 	}, true); // Capture phase - runs before Frappe's handlers
-	
+
 	// Try to disable immediately
 	if (document.body) {
 		disableAppLogo();
 	}
-	
+
 	// Also try after DOM is ready (in case navbar loads later)
 	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', disableAppLogo);
 	}
-	
+
 	// Also try after delays to catch dynamically loaded navbars
 	setTimeout(disableAppLogo, 100);
 	setTimeout(disableAppLogo, 500);
 	setTimeout(disableAppLogo, 1000);
 	setTimeout(disableAppLogo, 2000);
-	
+
 	// Use MutationObserver to catch when navbar is added dynamically
 	if (document.body) {
-		const observer = new MutationObserver(function(mutations) {
+		const observer = new MutationObserver(function (mutations) {
 			disableAppLogo();
 		});
-		
+
 		observer.observe(document.body, {
 			childList: true,
 			subtree: true
 		});
+
+		// Disconnect after 10 seconds - navbar will be loaded by then
+		setTimeout(function () { observer.disconnect(); }, 10000);
 	}
-	
+
 	// Override Frappe's router to redirect Sales Agents from /app/build, /app/user-profile to dashboard
 	// This runs immediately when frappe is available
 	function setupRouterInterception() {
@@ -278,16 +289,16 @@ koraflow.applyBranding = function(text) {
 			setTimeout(setupRouterInterception, 100);
 			return;
 		}
-		
+
 		const originalRoute = frappe.router.route;
 		if (originalRoute && !originalRoute._koraflow_wrapped) {
-			frappe.router.route = function(path) {
+			frappe.router.route = function (path) {
 				if (isSalesAgent() && (path === '/app' || path === '/app/' || path.startsWith('/app/build') || path.startsWith('/app/home') || path.startsWith('/app/user-profile'))) {
 					// Redirect to dashboard instead of blocking
 					if (frappe.set_route) {
-						frappe.set_route('sales-agent-dash');
+						window.location.href = '/sales_agent_dashboard';
 					} else {
-						window.location.replace('/app/sales-agent-dash');
+						window.location.replace('/sales_agent_dashboard');
 					}
 					return; // Block original navigation
 				}
@@ -295,17 +306,18 @@ koraflow.applyBranding = function(text) {
 			};
 			frappe.router.route._koraflow_wrapped = true;
 		}
-		
+
 		const originalSetRoute = frappe.set_route;
 		if (originalSetRoute && !originalSetRoute._koraflow_wrapped) {
-			frappe.set_route = function() {
+			frappe.set_route = function () {
 				const args = Array.from(arguments);
 				if (isSalesAgent() && args.length > 0) {
 					const route = args[0];
 					if (route === '/app' || route === '/app/' || route === 'app' || route === 'build' || route === 'home' || route === 'user-profile' ||
 						route.startsWith('/app/build') || route.startsWith('/app/home') || route.startsWith('/app/user-profile')) {
 						// Redirect to dashboard instead of blocking
-						return originalSetRoute.call(this, 'sales-agent-dash');
+						window.location.href = '/sales_agent_dashboard';
+						return;
 					}
 				}
 				return originalSetRoute.apply(this, arguments);
@@ -313,19 +325,19 @@ koraflow.applyBranding = function(text) {
 			frappe.set_route._koraflow_wrapped = true;
 		}
 	}
-	
+
 	// Start router interception immediately
 	if (typeof frappe !== 'undefined') {
 		setupRouterInterception();
 	} else {
 		// Wait for frappe to load
-		var frappeWaitInterval = setInterval(function() {
+		var frappeWaitInterval = setInterval(function () {
 			if (typeof frappe !== 'undefined') {
 				clearInterval(frappeWaitInterval);
 				setupRouterInterception();
 			}
 		}, 50);
-		setTimeout(function() {
+		setTimeout(function () {
 			clearInterval(frappeWaitInterval);
 		}, 5000);
 	}
@@ -333,16 +345,16 @@ koraflow.applyBranding = function(text) {
 
 // Apply branding on page load
 // Wait for frappe to be available, with fallback
-(function() {
+(function () {
 	function initBranding() {
 		if (typeof frappe === 'undefined') {
 			// Wait for frappe to load
 			setTimeout(initBranding, 100);
 			return;
 		}
-		
+
 		if (typeof frappe.ready === 'function') {
-			frappe.ready(function() {
+			frappe.ready(function () {
 				runBrandingCode();
 			});
 		} else {
@@ -354,90 +366,90 @@ koraflow.applyBranding = function(text) {
 			}
 		}
 	}
-	
+
 	function runBrandingCode() {
 		// Apply branding to page title
 		if (document.title) {
 			document.title = koraflow.applyBranding(document.title);
 		}
-	
+
 		// Apply branding to workspace labels
 		frappe.call({
-		method: 'koraflow_core.koraflow_core.branding.get_branding_info',
-		callback: function(r) {
-			if (r.message) {
-				// Update branding map with server-side values
-				if (r.message.branding_map) {
-					Object.assign(koraflow.branding, r.message.branding_map);
-				}
-			}
-		}
-	});
-	
-	// Override get_default_route for Sales Agents and check current route
-	if (frappe.boot && frappe.boot.user) {
-		const roles = frappe.boot.user.roles || [];
-		if (roles.includes("Sales Agent") && !roles.includes("Sales Agent Manager") && !roles.includes("System Manager")) {
-			// Override get_default_route to return custom dashboard
-			if (frappe.router && frappe.router.get_default_route) {
-				const originalGetDefaultRoute = frappe.router.get_default_route;
-				frappe.router.get_default_route = function() {
-					return "/app/sales-agent-dash";
-				};
-			}
-			
-			// Function to check and redirect
-			function checkRouteAndRedirect() {
-				if (frappe.get_route) {
-					const route = frappe.get_route();
-					const path = window.location.pathname;
-					// Check if we're on /app, /app/home, /app/build, /app/user-profile, or workspace route
-					if (route.length === 0 || 
-						(route.length === 1 && (route[0] === "Workspaces" || route[0] === "" || route[0] === "home" || route[0] === "build" || route[0] === "user-profile")) ||
-						path === "/app" || 
-						path === "/app/home" ||
-						path === "/app/build" ||
-						path === "/app/user-profile" ||
-						path === "/app/sales-agent-dashboard" || 
-						path.startsWith("/app/sales-agent-dashboard")) {
-						if (frappe.set_route) {
-							frappe.set_route("sales-agent-dash");
-							return true;
-						}
+			method: 'koraflow_core.branding.get_branding_info',
+			callback: function (r) {
+				if (r.message) {
+					// Update branding map with server-side values
+					if (r.message.branding_map) {
+						Object.assign(koraflow.branding, r.message.branding_map);
 					}
 				}
-				return false;
 			}
-			
-			// Check current route on page load and redirect if needed
-			setTimeout(checkRouteAndRedirect, 100);
-			setTimeout(checkRouteAndRedirect, 300);
-			setTimeout(checkRouteAndRedirect, 500);
-			
-			// Also intercept route changes
-			if (frappe.router && frappe.router.on) {
-				frappe.router.on('change', function() {
-					setTimeout(checkRouteAndRedirect, 50);
-				});
+		});
+
+		// Override get_default_route for Sales Agents and check current route
+		if (frappe.boot && frappe.boot.user) {
+			const roles = frappe.boot.user.roles || [];
+			if (roles.includes("Sales Agent") && !roles.includes("Sales Agent Manager") && !roles.includes("System Manager")) {
+				// Override get_default_route to return custom dashboard
+				if (frappe.router && frappe.router.get_default_route) {
+					const originalGetDefaultRoute = frappe.router.get_default_route;
+					frappe.router.get_default_route = function () {
+						return "/sales_agent_dashboard";
+					};
+				}
+
+				// Function to check and redirect
+				function checkRouteAndRedirect() {
+					if (frappe.get_route) {
+						const route = frappe.get_route();
+						const path = window.location.pathname;
+						// Check if we're on /app, /app/home, /app/build, /app/user-profile, or workspace route
+						if (route.length === 0 ||
+							(route.length === 1 && (route[0] === "Workspaces" || route[0] === "" || route[0] === "home" || route[0] === "build" || route[0] === "user-profile")) ||
+							path === "/app" ||
+							path === "/app/home" ||
+							path === "/app/build" ||
+							path === "/app/user-profile" ||
+							path === "/app/sales-agent-dashboard" ||
+							path.startsWith("/app/sales-agent-dashboard")) {
+							if (frappe.set_route) {
+								window.location.href = "/sales_agent_dashboard";
+								return true;
+							}
+						}
+					}
+					return false;
+				}
+
+				// Check current route on page load and redirect if needed
+				setTimeout(checkRouteAndRedirect, 100);
+				setTimeout(checkRouteAndRedirect, 300);
+				setTimeout(checkRouteAndRedirect, 500);
+
+				// Also intercept route changes
+				if (frappe.router && frappe.router.on) {
+					frappe.router.on('change', function () {
+						setTimeout(checkRouteAndRedirect, 50);
+					});
+				}
 			}
 		}
 	}
-	}
-	
+
 	// Start initialization
 	initBranding();
 })();
 
 // Module management
 koraflow.modules = {
-	toggle: function(module_name, enable, callback) {
+	toggle: function (module_name, enable, callback) {
 		frappe.call({
-			method: 'koraflow_core.koraflow_core.module_registry.toggle_module',
+			method: 'koraflow_core.module_registry.toggle_module',
 			args: {
 				module_name: module_name,
 				enable: enable
 			},
-			callback: function(r) {
+			callback: function (r) {
 				if (r.message && r.message.status === 'success') {
 					frappe.show_alert({
 						message: __(enable ? 'Module enabled' : 'Module disabled'),
@@ -448,63 +460,348 @@ koraflow.modules = {
 			}
 		});
 	},
-	
-	getStatus: function(callback) {
+
+	getStatus: function (callback) {
 		frappe.call({
-			method: 'koraflow_core.koraflow_core.module_registry.get_all_modules_status',
-			callback: function(r) {
+			method: 'koraflow_core.module_registry.get_all_modules_status',
+			callback: function (r) {
 				if (callback) callback(r.message);
 			}
 		});
 	}
 };
 
-// Remove "Create" button group from Patient Encounter form
-frappe.ui.form.on('Patient Encounter', {
-	refresh: function(frm) {
-		// Use setTimeout so this runs after the base form's refresh handler has added its buttons
-		setTimeout(function() {
-			frm.remove_custom_button(__('Vital Signs'), __('Create'));
-			frm.remove_custom_button(__('Medical Record'), __('Create'));
-			frm.remove_custom_button(__('Clinical Procedure'), __('Create'));
-			frm.remove_custom_button(__('Nursing Tasks'), __('Create'));
-			frm.remove_custom_button(__('Inpatient Medication Order'), __('Create'));
-			frm.remove_custom_button(__('Refer Patient'), __('Create'));
-			frm.remove_custom_button(__('Clinical Note'), __('Create'));
-		}, 0);
-	}
-});
-
-// Hide form sidebar elements for non-Administrator users
-(function() {
-	function hideSidebarElements() {
-		if (typeof frappe === 'undefined' || !frappe.session) {
-			setTimeout(hideSidebarElements, 100);
-			return;
-		}
-
-		if (frappe.session.user === "Administrator") {
-			return;
-		}
-
-		const style = document.createElement('style');
-		style.textContent = `
-			.form-assignments,
-			.form-tags,
-			.form-shared,
-			.form-reviews,
-			.followed-by-section,
-			.form-sidebar-stats,
-			.form-sidebar-stats + hr,
-			.sidebar-menu .modified-by,
-			.sidebar-menu .created-by,
-			.sidebar-menu .pageview-count {
-				display: none !important;
-			}
-		`;
+// ======================================================
+// HIDE SIDEBAR CLUTTER (Assigned To, Tags, Share, etc.)
+// Hidden for ALL users including Administrator
+// ======================================================
+(function () {
+	if (!document.getElementById('s2w-hide-sidebar-clutter')) {
+		var style = document.createElement('style');
+		style.id = 's2w-hide-sidebar-clutter';
+		style.textContent =
+			'.form-assignments { display: none !important; }' +
+			'.form-tags { display: none !important; }' +
+			'.form-shared { display: none !important; }' +
+			'.form-reviews { display: none !important; }' +
+			'.followed-by-section { display: none !important; }' +
+			'.form-sidebar-stats { display: none !important; }' +
+			'.form-sidebar hr { display: none !important; }' +
+			'.sidebar-menu .modified-by { display: none !important; }' +
+			'.sidebar-menu .created-by { display: none !important; }' +
+			'.sidebar-menu .pageview-count { display: none !important; }' +
+			'.sidebar-menu.text-muted { display: none !important; }';
 		document.head.appendChild(style);
 	}
-
-	hideSidebarElements();
 })();
 
+// ======================================================
+// HIDE TIMELINE (AUDIT TRAIL) FOR NON-ADMIN USERS
+// Only System Manager / Administrator can see the timeline
+// ======================================================
+(function () {
+	function hideTimelineForNonAdmin() {
+		if (typeof frappe === 'undefined' || !frappe.boot || !frappe.boot.user) {
+			setTimeout(hideTimelineForNonAdmin, 200);
+			return;
+		}
+
+		var roles = frappe.boot.user.roles || [];
+		var isAdmin = roles.includes('System Manager') || roles.includes('Administrator');
+
+		if (!isAdmin && !document.getElementById('s2w-hide-timeline')) {
+			var style = document.createElement('style');
+			style.id = 's2w-hide-timeline';
+			style.textContent = [
+				'.form-footer .after-save .timeline,',
+				'.form-footer .after-save .comment-box,',
+				'.form-footer .new-timeline {',
+				'    display: none !important;',
+				'}'
+			].join('\n');
+			document.head.appendChild(style);
+		}
+	}
+
+	hideTimelineForNonAdmin();
+})();
+
+// ======================================================
+// HIDE HELP BUTTON FOR NON-ADMIN USERS
+// Only System Manager / Administrator can see the Help dropdown
+// ======================================================
+(function () {
+	function hideHelpForNonAdmin() {
+		if (typeof frappe === 'undefined' || !frappe.boot || !frappe.boot.user) {
+			setTimeout(hideHelpForNonAdmin, 200);
+			return;
+		}
+
+		var roles = frappe.boot.user.roles || [];
+		var isAdmin = roles.includes('System Manager') || roles.includes('Administrator');
+
+		// Only actual Administrator account gets the menu back
+		if (frappe.session.user === 'Administrator') {
+			var immHide = document.getElementById('s2w-immediate-hide');
+			if (immHide) immHide.remove();
+		}
+
+		if (frappe.session.user !== 'Administrator' && !document.getElementById('s2w-hide-help')) {
+			var style = document.createElement('style');
+			style.id = 's2w-hide-help';
+			style.textContent = '.dropdown-help { display: none !important; } #navbar-search, .search-bar { display: none !important; } .onboarding-widget-box { display: none !important; } .print-preview-sidebar { display: none !important; } a[href*="print_designer"] { display: none !important; } a[href="/apps"], a[href*="/apps"], .dropdown-item[href="/apps"] { display: none !important; } .form-page .layout-side-section .form-sidebar { display: none !important; } .form-page .layout-side-section { display: none !important; } .form-page .layout-main-section { flex: 0 0 100% !important; max-width: 100% !important; } .btn-new-workspace { display: none !important; } .menu-btn-group { display: none !important; } .page-icon-group { display: none !important; }';
+			document.head.appendChild(style);
+
+			// Hide specific profile dropdown items
+			var hiddenLabels = ['My Profile', 'Session Defaults', 'Reload', 'View Website', 'Toggle Theme', 'Apps', 'Toggle Full Width'];
+			// Hide from all dropdown menus on the page
+			function hideFromAllMenus() {
+				document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+					hideProfileItems(menu, hiddenLabels);
+				});
+				// Hide notification settings gear icon
+				document.querySelectorAll('use[href="#icon-setting-gear"]').forEach(function(el) {
+					var btn = el.closest('a') || el.closest('button');
+					if (btn) btn.style.display = 'none';
+				});
+			}
+			hideFromAllMenus();
+			// Also observe for late-rendered menus, disconnect after 15 seconds
+			var observer = new MutationObserver(function () {
+				hideFromAllMenus();
+			});
+			observer.observe(document.body, { childList: true, subtree: true });
+			setTimeout(function () { observer.disconnect(); }, 15000);
+		}
+	}
+
+	function hideProfileItems(menu, hiddenLabels) {
+		var items = menu.querySelectorAll('.dropdown-item');
+		items.forEach(function (item) {
+			var label = item.textContent.trim();
+			if (hiddenLabels.indexOf(label) !== -1) {
+				item.style.display = 'none';
+			}
+		});
+	}
+
+	hideHelpForNonAdmin();
+})();
+
+// ======================================================
+// BLOCK DASHBOARD VIEW + /app/build FOR NON-ADMIN USERS
+// Redirect away from /app/dashboard-view/* and /app/build
+// ======================================================
+(function () {
+	function blockRestrictedPages() {
+		if (typeof frappe === 'undefined' || !frappe.boot || !frappe.boot.user) {
+			setTimeout(blockRestrictedPages, 200);
+			return;
+		}
+
+		var roles = frappe.boot.user.roles || [];
+		var isAdmin = roles.includes('System Manager') || roles.includes('Administrator');
+		var path = window.location.pathname;
+
+		if (!isAdmin && path.indexOf('/app/dashboard-view') === 0) {
+			frappe.msgprint(__('You do not have access to this page.'));
+			frappe.set_route('/app');
+		}
+
+		// /app/build is Administrator-only
+		if (frappe.session.user !== 'Administrator' && (path === '/app/build' || path.indexOf('/app/build/') === 0)) {
+			frappe.msgprint(__('You do not have access to this page.'));
+			frappe.set_route('/app');
+		}
+	}
+
+	// Run on page load and on route change
+	blockRestrictedPages();
+	if (typeof frappe !== 'undefined' && frappe.router) {
+		frappe.router.on('change', blockRestrictedPages);
+	} else {
+		document.addEventListener('DOMContentLoaded', function () {
+			if (frappe.router) {
+				frappe.router.on('change', blockRestrictedPages);
+			}
+		});
+	}
+})();
+
+// ======================================================
+// OVERRIDE LOGOUT TO REDIRECT TO CUSTOM LOGIN PAGE
+// ======================================================
+(function () {
+	function overrideLogout() {
+		if (typeof frappe === 'undefined' || !frappe.app) {
+			setTimeout(overrideLogout, 200);
+			return;
+		}
+
+		frappe.app.logout = function () {
+			// Use fetch to call logout, then always redirect to s2w_login
+			// regardless of what the server responds with
+			fetch('/api/method/logout', {
+				method: 'GET',
+				headers: { 'X-Frappe-CSRF-Token': frappe.csrf_token }
+			}).finally(function () {
+				window.location.href = '/s2w_login';
+			});
+		};
+	}
+
+	overrideLogout();
+})();
+
+// ======================================================
+// HIDE "New updates are available" MODAL FOR NON-ADMIN USERS
+// Frappe auto-shows this for users with System Manager; suppress
+// for everyone except the actual Administrator account.
+// ======================================================
+(function () {
+	function isAdministrator() {
+		return typeof frappe !== 'undefined' &&
+			frappe.session && frappe.session.user === 'Administrator';
+	}
+
+	function dismissUpdateModal() {
+		if (isAdministrator()) return;
+		document.querySelectorAll('.modal .modal-title').forEach(function (t) {
+			if ((t.textContent || '').trim() === 'New updates are available') {
+				var modal = t.closest('.modal');
+				if (modal) {
+					if (window.jQuery) {
+						try { window.jQuery(modal).modal('hide'); } catch (e) {}
+					}
+					modal.style.display = 'none';
+					var backdrop = document.querySelector('.modal-backdrop');
+					if (backdrop) backdrop.remove();
+					document.body.classList.remove('modal-open');
+				}
+			}
+		});
+	}
+
+	// Inject CSS to hide any update-log modal content immediately
+	if (!document.getElementById('s2w-hide-update-modal')) {
+		var s = document.createElement('style');
+		s.id = 's2w-hide-update-modal';
+		s.textContent = '.modal .new-version-log { display: none !important; }';
+		document.head.appendChild(s);
+	}
+
+	// Remove the CSS for Administrator once frappe.session is available
+	function restoreForAdmin() {
+		if (typeof frappe === 'undefined' || !frappe.session) {
+			setTimeout(restoreForAdmin, 200);
+			return;
+		}
+		if (isAdministrator()) {
+			var el = document.getElementById('s2w-hide-update-modal');
+			if (el) el.remove();
+		}
+	}
+	restoreForAdmin();
+
+	dismissUpdateModal();
+	var observer = new MutationObserver(dismissUpdateModal);
+	if (document.body) {
+		observer.observe(document.body, { childList: true, subtree: true });
+	} else {
+		document.addEventListener('DOMContentLoaded', function () {
+			observer.observe(document.body, { childList: true, subtree: true });
+		});
+	}
+})();
+
+
+// ======================================================
+// S2W NAVBAR LOGO SIZING FIX
+// Frappe's SCSS sets .app-logo { width: 24px } with no height,
+// causing SVGs to render as 0x0. We fix this imperatively.
+// ======================================================
+(function () {
+	function fixLogoSize() {
+		// Inject a high-specificity style tag if not already present
+		if (!document.getElementById('s2w-logo-style')) {
+			const style = document.createElement('style');
+			style.id = 's2w-logo-style';
+			style.textContent = [
+				'.navbar-home .app-logo,',
+				'a.navbar-brand .app-logo,',
+				'img.app-logo {',
+				'    height: 32px !important;',
+				'    width: 32px !important;',
+				'    min-height: 32px !important;',
+				'    min-width: 32px !important;',
+				'    max-width: none !important;',
+				'    display: inline-block !important;',
+				'    border-radius: 50%;',
+				'    object-fit: contain;',
+				'}',
+			].join('\n');
+			document.head.appendChild(style);
+		}
+
+		// Also set inline style as fallback
+		const logoImgs = document.querySelectorAll('img.app-logo, .navbar-home img, a.navbar-brand img');
+		logoImgs.forEach(function (img) {
+			img.style.height = '32px';
+			img.style.width = '32px';
+			img.style.minHeight = '32px';
+			img.style.minWidth = '32px';
+			img.style.display = 'inline-block';
+			img.style.borderRadius = '50%';
+			img.style.objectFit = 'contain';
+		});
+	}
+
+	// Run at multiple intervals to catch the dynamically-loaded navbar
+	[0, 100, 300, 600, 1000, 2000].forEach(function (delay) {
+		setTimeout(fixLogoSize, delay);
+	});
+
+	// Also observe DOM for when the navbar is inserted
+	if (typeof MutationObserver !== 'undefined') {
+		const obs = new MutationObserver(function () { fixLogoSize(); });
+		if (document.body) {
+			obs.observe(document.body, { childList: true, subtree: true });
+			// Stop observing after 10 seconds to avoid overhead
+			setTimeout(function () { obs.disconnect(); }, 10000);
+		} else {
+			document.addEventListener('DOMContentLoaded', function () {
+				obs.observe(document.body, { childList: true, subtree: true });
+				setTimeout(function () { obs.disconnect(); }, 10000);
+			});
+		}
+	}
+})();
+
+// ======================================================
+// PATIENT ENCOUNTER — clean up toolbar
+// - Remove the entire "Create" dropdown (added by healthcare base form and
+//   client scripts). Uses 1000ms timeout to run after all scripts including
+//   those that use setTimeout(800) internally.
+// - Hide Submit button on rejected (Not Approved) encounters.
+// ======================================================
+frappe.ui.form.on('Patient Encounter', {
+	refresh: function(frm) {
+		setTimeout(function() {
+			// Remove all "Create" group buttons
+			var createBtns = [
+				'Vital Signs', 'Medical Record', 'Clinical Procedure',
+				'Nursing Tasks', 'Inpatient Medication Order',
+				'Refer Patient', 'Clinical Note'
+			];
+			createBtns.forEach(function(label) {
+				frm.remove_custom_button(__(label), __('Create'));
+			});
+
+			// Hide Submit on rejected encounters — they must be corrected first
+			if (frm.doc.custom_encounter_status === 'Not Approved') {
+				frm.page.btn_primary.hide();
+				frm.page.clear_primary_action();
+			}
+		}, 1000);
+	}
+});
