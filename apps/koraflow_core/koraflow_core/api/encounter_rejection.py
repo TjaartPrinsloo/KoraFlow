@@ -12,7 +12,8 @@ def reject_encounter(encounter, reason):
 	rejecting doctor, and timestamp. Also flags the linked patient so the
 	rejection is visible to all internal users on the Patient form.
 	"""
-	if not frappe.user.has_role("Physician") and not frappe.user.has_role("Administrator"):
+	user_roles = frappe.get_roles()
+	if "Physician" not in user_roles and "Administrator" not in user_roles:
 		frappe.throw(_("Only a Doctor (Physician) can reject an encounter."))
 
 	if not reason or not reason.strip():
@@ -70,8 +71,9 @@ def delete_draft_encounter(encounter):
 	and doing a direct DB delete. Only Physicians, System Managers, and
 	Administrators may do this.
 	"""
+	user_roles = frappe.get_roles()
 	allowed_roles = {"Physician", "System Manager", "Administrator"}
-	if not any(frappe.user.has_role(r) for r in allowed_roles):
+	if not allowed_roles.intersection(user_roles):
 		frappe.throw(_("Only a Doctor or Administrator can delete a draft encounter."))
 
 	enc = frappe.get_doc("Patient Encounter", encounter)
@@ -105,7 +107,8 @@ def clear_patient_rejection(patient):
 	Clear the 'Not Approved' flag on a patient, e.g. after a new encounter is
 	submitted and approved by a doctor.
 	"""
-	if not frappe.user.has_role("Physician") and not frappe.user.has_role("Administrator"):
+	user_roles = frappe.get_roles()
+	if "Physician" not in user_roles and "Administrator" not in user_roles:
 		frappe.throw(_("Only a Doctor or Administrator can clear a rejection flag."))
 
 	if frappe.db.has_column("Patient", "custom_encounter_not_approved"):
