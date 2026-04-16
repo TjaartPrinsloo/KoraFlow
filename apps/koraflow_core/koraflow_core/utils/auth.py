@@ -3,7 +3,8 @@
 
 import frappe
 from frappe import _
-from werkzeug.exceptions import Found as WerkzeugRedirect
+from werkzeug.exceptions import abort as _abort
+from werkzeug.utils import redirect as _redirect
 
 
 def on_login(login_manager):
@@ -112,7 +113,7 @@ def redirect_sales_agents():
 		)
 
 		if path and not path.startswith(allowed_prefixes):
-			raise WerkzeugRedirect("/sales_agent_dashboard")
+			_abort(_redirect("/sales_agent_dashboard"))
 
 		# Also override home_page on every request so Frappe SPA doesn't route elsewhere
 		frappe.local.response["home_page"] = "/sales_agent_dashboard"
@@ -145,7 +146,7 @@ def redirect_patients():
 		)
 
 		if path and path.startswith("/app/") and not path.startswith(allowed_prefixes):
-			raise WerkzeugRedirect("/dashboard")
+			_abort(_redirect("/dashboard"))
 
 		# Override home_page on every request
 		frappe.local.response["home_page"] = "/dashboard"
