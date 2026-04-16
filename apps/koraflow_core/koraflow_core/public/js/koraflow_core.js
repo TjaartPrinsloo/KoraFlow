@@ -782,7 +782,7 @@ koraflow.modules = {
 // - Remove the entire "Create" dropdown (added by healthcare base form and
 //   client scripts). Uses 1000ms timeout to run after all scripts including
 //   those that use setTimeout(800) internally.
-// - Hide Submit button on rejected (Not Approved) encounters.
+// - Hide Submit + Cancel Draft buttons on rejected (Not Approved) encounters.
 // ======================================================
 frappe.ui.form.on('Patient Encounter', {
 	refresh: function(frm) {
@@ -797,10 +797,15 @@ frappe.ui.form.on('Patient Encounter', {
 				frm.remove_custom_button(__(label), __('Create'));
 			});
 
-			// Hide Submit on rejected encounters — they must be corrected first
+			// On rejected encounters hide Submit and Cancel Draft —
+			// the nurse must correct the encounter before anything else happens
 			if (frm.doc.custom_encounter_status === 'Not Approved') {
-				frm.page.btn_primary.hide();
+				// Hide Submit (primary action) via DOM — btn_primary may not be set yet
+				frm.page.wrapper.find('.primary-action').hide();
+				frm.page.wrapper.find('.actions-btn-group').hide();
 				frm.page.clear_primary_action();
+				// Hide Cancel Draft injected by nurse_encounter client script
+				frm.page.wrapper.find('#kf-cancel-draft-btn').hide();
 			}
 		}, 1000);
 	}
