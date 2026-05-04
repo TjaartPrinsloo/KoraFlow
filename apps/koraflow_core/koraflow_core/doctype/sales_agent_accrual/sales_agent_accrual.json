@@ -1,7 +1,7 @@
 {
     "actions": [],
     "allow_rename": 1,
-    "autoname": "format:{sales_agent}-{invoice_reference}",
+    "autoname": "hash",
     "creation": "2024-01-14 10:00:00.000000",
     "default_view": "List",
     "doctype": "DocType",

@@ -93,10 +93,6 @@ def on_invoice_paid(doc, method):
 	if agent_doc.status != "Active":
 		return
 
-	# Check if Accrual already exists for this invoice to prevent duplicates
-	if frappe.db.exists("Sales Agent Accrual", {"invoice_reference": doc.name, "sales_agent": sales_agent}):
-		return
-
 	# Resolve the Sales Partner name for commission rule lookup
 	sales_partner_name = None
 	if frappe.db.has_column("Patient", "custom_ref_sales_partner"):
@@ -108,6 +104,14 @@ def on_invoice_paid(doc, method):
 	accruals_created = False
 
 	for item in doc.items:
+		# Per-item idempotency: skip if an accrual already exists for this invoice line
+		if frappe.db.exists("Sales Agent Accrual", {
+			"invoice_reference": doc.name,
+			"sales_agent": sales_agent,
+			"item_code": item.item_code,
+		}):
+			continue
+
 		commission_amount = 0
 
 		# Priority 1: Check Sales Partner Commission Rule (fixed amount per item)
@@ -141,7 +145,7 @@ def on_invoice_paid(doc, method):
 				"accrued_amount": commission_amount,
 				"status": "Accrued"
 			})
-			accrual.insert(ignore_permissions=True)
+			accrual.insert(ignore_permissions=True, ignore_if_duplicate=True)
 			accruals_created = True
 
 	if accruals_created:
